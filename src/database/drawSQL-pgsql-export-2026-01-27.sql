@@ -178,7 +178,19 @@ CREATE TABLE "stats_positioning"(
 ALTER TABLE "stats_positioning" ADD PRIMARY KEY("participation_id");
 
 /* ==========================================
-   4. RELATIONS ET CLÉS ÉTRANGÈRES
+   4. FONCTION DE HASH PASSWORD
+   ========================================== */
+
+CREATE OR REPLACE FUNCTION hash_password(password TEXT, sel TEXT)
+RETURNS TEXT AS $$
+BEGIN
+    RETURN encode(sha256((password || sel)::bytea), 'hex');
+END;
+$$ LANGUAGE plpgsql
+;
+
+/* ==========================================
+   5. RELATIONS ET CLÉS ÉTRANGÈRES
    ========================================== */
 
 /* Link Player -> Plateform */
