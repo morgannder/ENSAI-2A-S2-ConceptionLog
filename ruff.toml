@@ -40,6 +40,8 @@ select = [
 # Règles ignorées
 ignore = [
     "E501", # Longueur de ligne (gérée par le formatter)
+    "N999", # Fichiers Init
+
 ]
 
 [lint.isort]
