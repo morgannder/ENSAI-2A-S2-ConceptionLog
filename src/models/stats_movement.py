@@ -1,34 +1,42 @@
-class StatsBoost:
+class StatsMovement:
     def __init__(
         self,
         participation_id: int = 0,
-        boost_per_minute: float = 0.0,
-        boost_consumed_per_minute: float = 0.0,
-        average_amount: float = 0.0,
-        amount_collected: int = 0,
-        amount_stolen: int = 0,
-        amount_collected_big: int = 0,
-        amount_stolen_big: int = 0,
-        amount_collected_small: int = 0,
-        amount_stolen_small: int = 0,
-        count_collected_big: int = 0,
-        count_stolen_big: int = 0,
-        count_collected_small: int = 0,
-        count_stolen_small: int = 0,
-        amount_overfill: int = 0,
-        amount_overfill_stolen: int = 0,
-        amount_used_while_supersonic: int = 0,
-        time_zero_boost: float = 0.0,
-        percent_zero_boost: float = 0.0,
-        time_full_boost: float = 0.0,
-        percent_full_boost: float = 0.0,
-        time_boost_0_25: float = 0.0,
-        time_boost_25_50: float = 0.0,
-        time_boost_50_75: float = 0.0,
-        time_boost_75_100: float = 0.0,
-        percent_boost_0_25: float = 0.0,
-        percent_boost_25_50: float = 0.0,
-        percent_boost_50_75: float = 0.0,
-        percent_boost_75_100: float = 0.0,
+        avg_speed: int = 0,
+        total_distance: int = 0,
+        time_supersonic_speed: float = 0.0,
+        time_boost_speed: float = 0.0,
+        time_slow_speed: float = 0.0,
+        time_ground: float = 0.0,
+        time_low_air: float = 0.0,
+        time_high_air: float = 0.0,
+        time_powerslide: float = 0.0,
+        count_powerslide: int = 0,
+        average_powerslide_duration: float = 0.0,
+        average_speed_percentage: float = 0.0,
+        percent_slow_speed: float = 0.0,
+        percent_boost_speed: float = 0.0,
+        percent_supersonic_speed: float = 0.0,
+        percent_ground: float = 0.0,
+        percent_low_air: float = 0.0,
+        percent_high_air: float = 0.0,
     ):
-        pass
+        self.participation_id = participation_id
+        self.avg_speed = avg_speed
+        self.total_distance = total_distance
+        self.time_supersonic_speed = time_supersonic_speed
+        self.time_boost_speed = time_boost_speed
+        self.time_slow_speed = time_slow_speed
+        self.time_ground = time_ground
+        self.time_low_air = time_low_air
+        self.time_high_air = time_high_air
+        self.time_powerslide = time_powerslide
+        self.count_powerslide = count_powerslide
+        self.average_powerslide_duration = average_powerslide_duration
+        self.average_speed_percentage = average_speed_percentage
+        self.percent_slow_speed = percent_slow_speed
+        self.percent_boost_speed = percent_boost_speed
+        self.percent_supersonic_speed = percent_supersonic_speed
+        self.percent_ground = percent_ground
+        self.percent_low_air = percent_low_air
+        self.percent_high_air = percent_high_air
