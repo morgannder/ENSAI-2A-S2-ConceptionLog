@@ -1,4 +1,4 @@
-class StatsPositioning:
+class StatsPositionning:
     def __init__(
         self,
         participation_id: int = 0,
