@@ -163,8 +163,6 @@ cython_debug/
 logs/*
 .ruff_cache/
 uv.lock
-
-
 node_modules
-
 *.csv
+rocket_league.db
