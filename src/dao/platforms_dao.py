@@ -27,7 +27,7 @@ class PlatformDAO(metaclass=Singleton):
             platf = Platform(id, res["namebigint"])
             return platf
 
-    def get_platform_by_platform(self, platform: str):
+    def get_platform_by_name(self, platform_name: str):
         with self.db_connector.connection as connection, connection.cursor() as cursor:
             cursor.excecute(
                 """
@@ -35,12 +35,12 @@ class PlatformDAO(metaclass=Singleton):
                     FROM platforms
                     WHERE namebigint= %(platf)s
                     """,
-                {"platf": platform},
+                {"platf": platform_name},
             )
             res = cursor.fetchone()
             if not res:
                 return None
-            platf = Platform(res["id"], platform)
+            platf = Platform(res["id"], platform_name)
             return platf
 
     def update_platform(self):

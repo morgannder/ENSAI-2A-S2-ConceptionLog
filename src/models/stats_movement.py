@@ -21,7 +21,7 @@ class StatsMovement:
         percent_low_air: float = 0.0,
         percent_high_air: float = 0.0,
     ):
-        self.participation_id = participation_id
+        self._participation_id = participation_id
         self.avg_speed = avg_speed
         self.total_distance = total_distance
         self.time_supersonic_speed = time_supersonic_speed
@@ -40,3 +40,7 @@ class StatsMovement:
         self.percent_ground = percent_ground
         self.percent_low_air = percent_low_air
         self.percent_high_air = percent_high_air
+
+    @property
+    def participation_id(self):
+        return self._participation_id

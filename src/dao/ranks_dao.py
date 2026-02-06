@@ -5,7 +5,7 @@ from utils.singleton import Singleton
 
 
 class RanksDAO(metaclass=Singleton):
-    allowed_columns = {"id", "tier", "division", "name"}
+    allowed_columns = {"id", "name"}
 
     def __init__(self):
         self.db_connector = DBConnection

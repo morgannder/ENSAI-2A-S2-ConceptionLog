@@ -5,7 +5,7 @@ from utils.singleton import Singleton
 
 
 class PlayerDAO(metaclass=Singleton):
-    allowed_columns = {"id", "platform_id", "platform_usbiginter_id", "name"}
+    allowed_columns = {"id", "name"}
 
     def __init__(self):
         self.db_connector = DBConnection
