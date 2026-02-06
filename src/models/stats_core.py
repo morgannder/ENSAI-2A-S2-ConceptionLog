@@ -11,4 +11,17 @@ class StatsCore:
         demo_inflicted: int = 0,
         demo_taken: int = 0,
     ):
-        pass
+        self._participation_id = participation_id
+
+        self.shots = shots
+        self.goals = goals
+        self.saves = saves
+        self.assists = assists
+        self.score = score
+        self.shooting_percentage = shooting_percentage
+        self.demo_inflicted = demo_inflicted
+        self.demo_taken = demo_taken
+
+    @property
+    def participation_id(self) -> int:
+        return self._participation_id
