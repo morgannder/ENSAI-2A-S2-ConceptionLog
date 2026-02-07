@@ -60,3 +60,21 @@ class PlatformDAO(metaclass=Singleton):
                     """,
                 (platform.namebigint,),
             )
+
+    def get_number_player_by_platform(self, platform: Platform) -> int:
+        connection = self.db_connector.connection
+        with connection:
+            cursor = connection.cursor()
+            cursor.execute(
+                """
+                    SELECT COUNT(DISTINTC pl.id)
+                    FROM platforms p
+                    JOIN players pl ON pl.platform_id = p.id
+                    WHERE p.name = ?
+                    """,
+                (platform.name,),
+            )
+            res = cursor.fetchone()
+            if not res:
+                return 0
+            return res
