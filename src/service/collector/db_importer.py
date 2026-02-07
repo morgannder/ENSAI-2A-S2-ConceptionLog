@@ -64,22 +64,16 @@ def get_rank_id(session, r_data):
     """Récupère ou crée un rang."""
     if not r_data:
         return None
-
     # Gestion du nom pour éviter les erreurs si manquant
     name = r_data.get("name")
     if not name:
         return None
-
     # On cherche d'abord en base
     res = session.execute(
         text("SELECT id FROM ranks WHERE name = :n"), {"n": name}
     ).fetchone()
-
     if res:
         return res[0]
-
-    # Sinon on crée (Attention: cela suppose que les rangs sont déjà peuplés/ordonnés,
-    # sinon il sera ajouté à la fin)
     ins = session.execute(
         ranks.insert().values(
             tier=r_data.get("tier", 0), division=r_data.get("division", 0), name=name
@@ -153,6 +147,7 @@ def add_single_match(json_path):
             return
 
         # 2. Insertion du Match
+        json_date = data.get("date")
         session.execute(
             matches.insert().values(
                 id=m_id,
@@ -160,7 +155,7 @@ def add_single_match(json_path):
                 season=data.get("season", 0),
                 duration=data.get("duration", 0),
                 overtime=data.get("overtime", False),
-                date_upload="2024-01-01",  # Tu peux rendre ça dynamique si le JSON a une date
+                date_upload=json_date,  
             )
         )
 
