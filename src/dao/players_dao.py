@@ -1,41 +1,42 @@
-from db_connection import DBConnection
-
-from models.players import Player
-from utils.singleton import Singleton
+from ..models.players import Player
+from ..utils.singleton import Singleton
+from .db_connection import DBConnection
 
 
 class PlayerDAO(metaclass=Singleton):
     allowed_columns = {"id", "name"}
 
     def __init__(self):
-        self.db_connector = DBConnection
+        self.db_connector = DBConnection()
 
     def create_player(self, player: Player) -> bool:
-        with self.db_connector.connection as connection, connection.cursor() as cursor:
-            cursor.excecute(
+        connection = self.db_connector.connection
+        with connection:
+            cursor = connection.cursor()
+            cursor.execute(
                 """
                     SELECT 1
                     FROM players
-                    WHERE name = %(player_name)s
+                    WHERE name = ?
                     """,
-                {"player_name": player.name},
+                (player.name,),
             )
 
             res = cursor.fetchone()
             if res:
                 return False
 
-            cursor.excecute(
+            cursor.execute(
                 """
-                    INSERT INTO players (id, platform_id, platform_usbiginter_id, name)
-                    VALUES (%(id)s, %(platform_id)s, %(platform_usbiginter_id)s, %(name)s)
+                    INSERT INTO players (id, platform_id, platform_user_id, name)
+                    VALUES (?, ?, ?, ?)
                     """,
-                {
-                    "id": player.id,
-                    "platform_id": player.platform_id,
-                    "platform_usbiginter_id": player.platform_usbiginter_id,
-                    "name": player.name,
-                },
+                (
+                    player.id,
+                    player.platform_id,
+                    player.platform_user_id,
+                    player.name,
+                ),
             )
 
             return True
@@ -49,17 +50,19 @@ class PlayerDAO(metaclass=Singleton):
         query = f"""
             SELECT *
             FROM players
-            WHERE {parameter_name}= %s
+            WHERE {parameter_name}= ?
             """
-        with self.db_connector.connection as connection, connection.cursor() as cursor:
-            cursor.excecute(query, (parameter_value,))
+        connection = self.db_connector.connection
+        with connection:
+            cursor = connection.cursor()
+            cursor.execute(query, (parameter_value,))
             res = cursor.fetchone()
             if not res:
                 return None
             player = Player(
                 res["id"],
                 res["platform_id"],
-                res["platform_usbiginter_id"],
+                res["platform_user_id"],
                 res["name"],
             )
             return player
@@ -68,11 +71,13 @@ class PlayerDAO(metaclass=Singleton):
         pass
 
     def delete_player(self, player: Player) -> None:
-        with self.db_connector.connection as connection, connection.cursor() as cursor:
-            cursor.excecute(
+        connection = self.db_connector.connection
+        with connection:
+            cursor = connection.cursor()
+            cursor.execute(
                 """
                     DELETE FROM players
-                    WHERE name= %(player_name)s
+                    WHERE name = ?
                     """,
-                {"player_name": player.name},
+                (player.name,),
             )

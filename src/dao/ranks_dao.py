@@ -1,41 +1,38 @@
-from db_connection import DBConnection
-
-from models.ranks import Ranks
-from utils.singleton import Singleton
+from ..models.players import Player
+from ..models.ranks import Ranks
+from ..utils.singleton import Singleton
+from .db_connection import DBConnection
 
 
 class RanksDAO(metaclass=Singleton):
     allowed_columns = {"id", "name"}
 
     def __init__(self):
-        self.db_connector = DBConnection
+        self.db_connector = DBConnection()
 
     def create_rank(self, rank: Ranks) -> bool:
-        with self.db_connector.connection as connection, connection.cursor() as cursor:
-            cursor.excecute(
+        connection = self.db_connector.connection
+        with connection:
+            cursor = connection.cursor()
+            cursor.execute(
                 """
                     SELECT 1
                     FROM ranks
-                    WHERE name = %(rank_name)s
+                    WHERE name = ?
                     """,
-                {"rank_name": rank.name},
+                (rank.name,),
             )
 
             res = cursor.fetchone()
             if res:
                 return False
 
-            cursor.excecute(
+            cursor.execute(
                 """
                     INSERT INTO ranks (id, tier, division, name)
-                    VALUES (%(id)s, %(tier)s, %(division)s, %(name)s)
+                    VALUES (?, ?, ?, ?)
                     """,
-                {
-                    "id": rank.id,
-                    "tier": rank.tier,
-                    "division": rank.division,
-                    "name": rank.name,
-                },
+                (rank.id, rank.tier, rank.division, rank.name),
             )
 
             return True
@@ -49,10 +46,12 @@ class RanksDAO(metaclass=Singleton):
         query = f"""
             SELECT *
             FROM ranks
-            WHERE {parameter_name} = %s
+            WHERE {parameter_name} = ?
         """
 
-        with self.db_connector.connection as connection, connection.cursor() as cursor:
+        connection = self.db_connector.connection
+        with connection:
+            cursor = connection.cursor()
             cursor.execute(query, (parameter_value,))
             res = cursor.fetchone()
 
@@ -70,11 +69,39 @@ class RanksDAO(metaclass=Singleton):
         pass
 
     def delete_rank(self, rank: Ranks) -> None:
-        with self.db_connector.connection as connection, connection.cursor() as cursor:
-            cursor.excecute(
+        connection = self.db_connector.connection
+        with connection:
+            cursor = connection.cursor()
+            cursor.execute(
                 """
                     DELETE FROM ranks
-                    WHERE name = %(rank_name)s
+                    WHERE name = ?
                     """,
-                {"rank_name": rank.name},
+                (rank.name,),
             )
+
+    def get_rank_by_player(self, player: Player) -> Ranks | None:
+        id_player = player.id
+        connection = self.db_connector.connection
+        with connection:
+            cursor = connection.cursor()
+            cursor.execute(
+                """
+                    SELECT r.id, r.tier, r.division, r.name
+                    FROM ranks r
+                    JOIN match_participation mp ON mp.rank_id=r.id
+                    JOIN match_teams mt ON mt.id=mp.match_team_id
+                    JOIN matches m ON m.id=mt.match_id
+                    JOIN players p ON p.id=mp.player_id
+                    WHERE p.id = ?
+                    ORDER BY m.date_upload DESC
+                    LIMIT 1
+                """,
+                (id_player,),
+            )
+            res = cursor.fetchone()
+
+            if not res:
+                return None
+
+            return Ranks(res["id"], res["tier"], res["division"], res["name"])
