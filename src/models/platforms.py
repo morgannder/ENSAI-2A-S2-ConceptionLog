@@ -1,12 +1,12 @@
 class Platform:
-    def __init__(self, id: int, namebigint: str):
+    def __init__(self, id: int, name: str):
         self._id = id
-        self._namebigint = namebigint
+        self._name = name
 
     @property
     def id(self):
         return self._id
 
     @property
-    def namebigint(self):
-        return self._namebigint
+    def name(self):
+        return self._name
