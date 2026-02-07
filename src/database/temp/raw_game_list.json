@@ -1,0 +1,280 @@
+{
+    "count": 925,
+    "list": [
+        {
+            "id": "d316c771-b88d-4557-a1bd-f36f41d97ad1",
+            "link": "https://ballchasing.com/api/replays/d316c771-b88d-4557-a1bd-f36f41d97ad1",
+            "rocket_league_id": "4AD8B3914C1E051896B25591E34C84C0",
+            "replay_title": "2024-01-29.10.55 stones reach Ranked Standard Loss",
+            "map_code": "stadium_day_p",
+            "map_name": "DFH Stadium (Day)",
+            "playlist_id": "ranked-standard",
+            "playlist_name": "Ranked Standard",
+            "duration": 337,
+            "overtime": false,
+            "season": 13,
+            "season_type": "free2play",
+            "date": "2024-01-29T10:55:26Z",
+            "date_has_tz": true,
+            "visibility": "public",
+            "created": "2024-01-29T10:55:24.06163Z",
+            "min_rank": {
+                "tier": 15,
+                "division": 3,
+                "name": "Diamond III Division 3",
+                "id": "diamond-3"
+            },
+            "max_rank": {
+                "tier": 16,
+                "division": 1,
+                "name": "Champion I Division 1",
+                "id": "champion-1"
+            },
+            "uploader": {
+                "steam_id": "76561198052717380",
+                "name": "magalh\u00e3es",
+                "profile_url": "https://steamcommunity.com/id/cynlik/",
+                "avatar": "https://avatars.steamstatic.com/c2c51159307ac0e5c3960f0df31732a07cd85cd0.jpg"
+            },
+            "blue": {
+                "goals": 1,
+                "players": [
+                    {
+                        "start_time": 0,
+                        "end_time": 337.6856,
+                        "name": "stones reach",
+                        "id": {
+                            "platform": "epic",
+                            "id": "0cfe72cf29f844c798017c09495e59a8"
+                        },
+                        "rank": {
+                            "tier": 15,
+                            "division": 4,
+                            "name": "Diamond III Division 4",
+                            "id": "diamond-3"
+                        },
+                        "score": 312
+                    },
+                    {
+                        "start_time": 0,
+                        "end_time": 337.6856,
+                        "name": "XxCrstnxX",
+                        "id": {
+                            "platform": "epic",
+                            "id": "66dbffc57c2f4f268fe445350084bc59"
+                        },
+                        "rank": {
+                            "tier": 16,
+                            "division": 1,
+                            "name": "Champion I Division 1",
+                            "id": "champion-1"
+                        },
+                        "score": 248
+                    },
+                    {
+                        "start_time": 0,
+                        "end_time": 337.6856,
+                        "name": "cicarito0",
+                        "id": {
+                            "platform": "epic",
+                            "id": "c76be949997048f1bbf08bed5e6b550e"
+                        },
+                        "rank": {
+                            "tier": 15,
+                            "division": 3,
+                            "name": "Diamond III Division 3",
+                            "id": "diamond-3"
+                        },
+                        "score": 174
+                    }
+                ]
+            },
+            "orange": {
+                "goals": 3,
+                "players": [
+                    {
+                        "start_time": 0,
+                        "end_time": 337.6856,
+                        "name": "oeht ",
+                        "id": {
+                            "platform": "epic",
+                            "id": "6f28e3ec6b6c41c19f83ffd7b6df2a9e"
+                        },
+                        "mvp": true,
+                        "rank": {
+                            "tier": 16,
+                            "division": 1,
+                            "name": "Champion I Division 1",
+                            "id": "champion-1"
+                        },
+                        "score": 592
+                    },
+                    {
+                        "start_time": 0,
+                        "end_time": 337.6856,
+                        "name": "Artur__21",
+                        "id": {
+                            "platform": "ps4",
+                            "id": "Artur__21"
+                        },
+                        "rank": {
+                            "tier": 15,
+                            "division": 4,
+                            "name": "Diamond III Division 4",
+                            "id": "diamond-3"
+                        },
+                        "score": 334
+                    },
+                    {
+                        "start_time": 0,
+                        "end_time": 337.6856,
+                        "name": "Verdure Celeste",
+                        "id": {
+                            "platform": "xbox",
+                            "id": "b545ab59f1010900"
+                        },
+                        "rank": {
+                            "tier": 15,
+                            "division": 4,
+                            "name": "Diamond III Division 4",
+                            "id": "diamond-3"
+                        },
+                        "score": 188
+                    }
+                ]
+            }
+        },
+        {
+            "id": "27568f07-18a0-4103-98b6-18ae23f782a7",
+            "link": "https://ballchasing.com/api/replays/27568f07-18a0-4103-98b6-18ae23f782a7",
+            "rocket_league_id": "742792F144BF1E463768E2973F772864",
+            "replay_title": "2024-02-21.16.30 Birkaros Ranked Standard Win",
+            "map_code": "eurostadium_dusk_p",
+            "map_name": "Mannfield (Dusk)",
+            "playlist_id": "ranked-standard",
+            "playlist_name": "Ranked Standard",
+            "duration": 436,
+            "overtime": false,
+            "season": 13,
+            "season_type": "free2play",
+            "date": "2024-02-21T16:30:02+01:00",
+            "date_has_tz": true,
+            "visibility": "public",
+            "created": "2024-02-21T15:30:02.449287Z",
+            "min_rank": {
+                "tier": 15,
+                "division": 4,
+                "name": "Diamond III Division 4",
+                "id": "diamond-3"
+            },
+            "max_rank": {
+                "tier": 15,
+                "division": 4,
+                "name": "Diamond III Division 4",
+                "id": "diamond-3"
+            },
+            "uploader": {
+                "steam_id": "76561198003506784",
+                "name": "Detective Whiskers",
+                "profile_url": "https://steamcommunity.com/id/Iglosen/",
+                "avatar": "https://avatars.steamstatic.com/9145c8b514f92e62395ed4f77875d7c3958c45d5.jpg"
+            },
+            "blue": {
+                "goals": 1,
+                "players": [
+                    {
+                        "start_time": 0,
+                        "end_time": 436.68695,
+                        "name": "NappingOnClouds",
+                        "id": {
+                            "platform": "ps4",
+                            "id": "NappingOnClouds"
+                        },
+                        "rank": {
+                            "tier": 15,
+                            "division": 4,
+                            "name": "Diamond III Division 4",
+                            "id": "diamond-3"
+                        },
+                        "score": 286
+                    },
+                    {
+                        "start_time": 0,
+                        "end_time": 436.68695,
+                        "name": "Urth.",
+                        "id": {
+                            "platform": "steam",
+                            "id": "76561198210166336"
+                        },
+                        "rank": {
+                            "tier": 15,
+                            "division": 4,
+                            "name": "Diamond III Division 4",
+                            "id": "diamond-3"
+                        },
+                        "score": 228
+                    },
+                    {
+                        "start_time": 0,
+                        "end_time": 436.68695,
+                        "name": "Verdure Celeste",
+                        "id": {
+                            "platform": "xbox",
+                            "id": "b545ab59f1010900"
+                        },
+                        "rank": {
+                            "tier": 15,
+                            "division": 4,
+                            "name": "Diamond III Division 4",
+                            "id": "diamond-3"
+                        },
+                        "score": 126
+                    }
+                ]
+            },
+            "orange": {
+                "goals": 13,
+                "players": [
+                    {
+                        "start_time": 0,
+                        "end_time": 436.68695,
+                        "name": "Birkaros",
+                        "id": {
+                            "platform": "steam",
+                            "id": "76561198003506784"
+                        },
+                        "mvp": true,
+                        "rank": {
+                            "tier": 15,
+                            "division": 4,
+                            "name": "Diamond III Division 4",
+                            "id": "diamond-3"
+                        },
+                        "score": 1081
+                    },
+                    {
+                        "start_time": 0,
+                        "end_time": 436.68695,
+                        "name": "fibonacki",
+                        "id": {
+                            "platform": "steam",
+                            "id": "76561198025408375"
+                        },
+                        "score": 733
+                    },
+                    {
+                        "start_time": 0,
+                        "end_time": 436.68695,
+                        "name": "Slim Peler",
+                        "id": {
+                            "platform": "epic",
+                            "id": "0cb06b164c854ec881fa5bf8d7fa1bd3"
+                        },
+                        "score": 698
+                    }
+                ]
+            }
+        }
+    ],
+    "next": "https://ballchasing.com/api/replays?after=MS43MDg1Mjk0MDJlKzEyXzI3NTY4ZjA3LTE4YTAtNDEwMy05OGI2LTE4YWUyM2Y3ODJhNw%3D%3D&count=2&player-name=Celeste&sort-by=replay-date&sort-dir=asc"
+}
