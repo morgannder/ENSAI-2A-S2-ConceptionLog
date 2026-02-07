@@ -1,25 +1,26 @@
-from db_connection import DBConnection
-
-from models.platforms import Platform
-from utils.singleton import Singleton
+from ..models.platforms import Platform
+from ..utils.singleton import Singleton
+from .db_connection import DBConnection
 
 
 class PlatformDAO(metaclass=Singleton):
     def __init__(self):
-        self.db_connector = DBConnection
+        self.db_connector = DBConnection()
 
     def create_platform(self, platform: Platform):
         pass
 
     def get_platform_by_id(self, id: int):
-        with self.db_connector.connection as connection, connection.cursor() as cursor:
-            cursor.excecute(
+        connection = self.db_connector.connection
+        with connection:
+            cursor = connection.cursor()
+            cursor.execute(
                 """
                     SELECT *
                     FROM platforms
-                    WHERE id = %(id)s
+                    WHERE id = ?
                     """,
-                {"id": id},
+                (id,),
             )
             res = cursor.fetchone()
             if not res:
@@ -28,14 +29,16 @@ class PlatformDAO(metaclass=Singleton):
             return platf
 
     def get_platform_by_name(self, platform_name: str):
-        with self.db_connector.connection as connection, connection.cursor() as cursor:
-            cursor.excecute(
+        connection = self.db_connector.connection
+        with connection:
+            cursor = connection.cursor()
+            cursor.execute(
                 """
                     SELECT *
                     FROM platforms
-                    WHERE namebigint= %(platf)s
+                    WHERE namebigint = ?
                     """,
-                {"platf": platform_name},
+                (platform_name,),
             )
             res = cursor.fetchone()
             if not res:
@@ -47,11 +50,13 @@ class PlatformDAO(metaclass=Singleton):
         pass
 
     def delete_platform(self, platform: Platform) -> bool:
-        with self.db_connector.connection as connection, connection.cursor() as cursor:
-            cursor.excecute(
+        connection = self.db_connector.connection
+        with connection:
+            cursor = connection.cursor()
+            cursor.execute(
                 """
                     DELETE FROM platforms
-                    WHERE namebigint= %(platf)s
+                    WHERE namebigint = ?
                     """,
-                {"platf": platform.namebigint},
+                (platform.namebigint,),
             )

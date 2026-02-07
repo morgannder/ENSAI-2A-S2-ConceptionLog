@@ -1,25 +1,18 @@
 import os
+import sqlite3
 
-import dotenv
-import psycopg2
-from psycopg2.extras import RealDictCursor
-
-from utils.singleton import Singleton
+from ..utils.singleton import Singleton
 
 
 class DBConnection(metaclass=Singleton):
-    def __init__(self):
-        dotenv.load_dotenv()
-
-        self.__connection = psycopg2.connect(
-            host=os.environ["POSTGRES_HOST"],
-            port=os.environ["POSTGRES_PORT"],
-            database=os.environ["POSTGRES_DATABASE"],
-            user=os.environ["POSTGRES_USER"],
-            password=os.environ["POSTGRES_PASSWORD"],
-            options=f"-c search_path={os.environ['POSTGRES_SCHEMA']}",
-            cursor_factory=RealDictCursor,
-        )
+    def __init__(self, db_path=None):
+        # Par défaut : fichier mydatabase.db dans src/database/
+        if db_path is None:
+            db_path = os.path.join(
+                os.path.dirname(__file__), "..", "database", "rocket_league.db"
+            )
+        self.__connection = sqlite3.connect(db_path)
+        self.__connection.row_factory = sqlite3.Row  # pour accéder aux colonnes par nom
 
     @property
     def connection(self):
