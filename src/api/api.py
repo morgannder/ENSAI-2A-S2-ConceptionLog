@@ -1,13 +1,17 @@
 from fastapi import APIRouter
 
-from .routers import login
+from src.api.routers.global_stats_router import router as global_stats_router
 
 
-api_router = APIRouter()
+# from src.api.routers import login_router
 
-api_router.include_router(login.router, prefix="/log_in", tags=["Log in"])
-# api_router.include_router(users.router, prefix="/my_account", tags=["User"])
-# api_router.include_router(Les autres routers à rajouter)
+
+api_router = APIRouter(prefix="/api")
+
+# api_router.include_router(login_router)
+# api_router.include_router(users.router)
+api_router.include_router(global_stats_router)
 
 # Export explicite
+
 __all__ = ["api_router"]
