@@ -7,7 +7,7 @@ from .db_connection import DBConnection
 
 
 class PlayerDAO(metaclass=Singleton):
-    allowed_columns = {"id", "name", "platform_id"}
+    allowed_columns = {"id", "name", "platform_id", "platform_user_id"}
 
     def __init__(self):
         self.db_connector = DBConnection()
@@ -69,10 +69,10 @@ class PlayerDAO(metaclass=Singleton):
                 res["name"],
             )
             return player
-        
+
     def find_players_by_partial_name(self, partial_name: str) -> list[tuple]:
         """
-        Retourne une liste de tuples (nom, plateforme, user_id) 
+        Retourne une liste de tuples (nom, plateforme, user_id)
         pour la recherche interactive.
         """
         query = """
@@ -87,10 +87,10 @@ class PlayerDAO(metaclass=Singleton):
             # On ajoute les % ici pour le LIKE SQL
             cursor.execute(query, (f"%{partial_name}%",))
             results = cursor.fetchall()
-            
+
             # On convertit les résultats sqlite3.Row en tuples simples ou dicts
             return [
-                (row["name"], row["platform_name"], row["platform_user_id"]) 
+                (row["name"], row["platform_name"], row["platform_user_id"])
                 for row in results
             ]
 
