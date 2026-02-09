@@ -113,14 +113,68 @@ class MatchParticipationDAO(metaclass=Singleton):
             cursor = connection.cursor()
             cursor.execute(query, (player.id, nb_match,))
             res = cursor.fetchall()
+            list_match = []
             if not res:
                 return None
-            list_match = []
-            for match in res:
-                list_match.append(MatchParticipation(match["id"],
-                                                     match["playlist_id"],
-                                                     match["season"],
-                                                     match["duration"],
-                                                     match["overtime"],
-                                                     match["date_upload"]))
+            for val in res:
+                match_part = MatchParticipation(
+                    val["id"],
+                    val["match_tema_id"],
+                    val["player_id"],
+                    val["rank_id"],
+                    val["car_id"],
+                    val["car_name"],
+                    val["mvp"],
+                    val["start_time"],
+                    val["end_time"],
+                )
+                list_match.append(match_part)
             return list_match
+
+    def get_player_match_mvp(self, player: Player) -> list[MatchParticipation] | None:
+        connection = self.db_connector.connection
+        with connection:
+            cursor = connection.cursor()
+            cursor.execute(
+                """
+                    SELECT mp.*
+                    FROM match_participation mp
+                    WHERE mp.player_id = ? and mvp = TRUE
+                    """,
+                (player.id,),
+            )
+            res = cursor.fetchall()
+            list_match = []
+            if not res:
+                return None
+            for val in res:
+                match_part = MatchParticipation(
+                    val["id"],
+                    val["match_tema_id"],
+                    val["player_id"],
+                    val["rank_id"],
+                    val["car_id"],
+                    val["car_name"],
+                    val["mvp"],
+                    val["start_time"],
+                    val["end_time"],
+                )
+                list_match.append(match_part)
+            return list_match
+
+    def get_player_nb_mvp(self, player: Player) -> int:
+        connection = self.db_connector.connection
+        with connection:
+            cursor = connection.cursor()
+            cursor.execute(
+                """
+                    SELECT COUNT(id)
+                    FROM match_participation
+                    WHERE player_id = ? and mvp = TRUE
+                    """,
+                (player.id,),
+            )
+            res = cursor.fetchone
+            if not res:
+                return 0
+            return res
