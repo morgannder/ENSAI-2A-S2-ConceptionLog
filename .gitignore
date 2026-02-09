@@ -166,4 +166,4 @@ uv.lock
 node_modules
 *.csv
 rocket_league.db
-database/temp/
+database/
