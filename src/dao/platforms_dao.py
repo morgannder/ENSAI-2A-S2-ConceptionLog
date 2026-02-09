@@ -7,8 +7,35 @@ class PlatformDAO(metaclass=Singleton):
     def __init__(self):
         self.db_connector = DBConnection()
 
-    def create_platform(self, platform: Platform):
-        pass
+    def create_platform(self, platform: Platform) -> bool:
+        connection = self.db_connector.connection
+        with connection:
+            cursor = connection.cursor()
+            cursor.execute(
+                """
+                    SELECT 1
+                    FROM platform
+                    WHERE id = ?
+                    """,
+                (platform.id,),
+            )
+
+            res = cursor.fetchone()
+            if res:
+                return False
+
+            cursor.execute(
+                """
+                    INSERT INTO platform (id, name)
+                    VALUES (?, ?)
+                    """,
+                (
+                    platform.id,
+                    platform.name
+                ),
+            )
+
+            return True
 
     def get_platform_by_id(self, id: int):
         connection = self.db_connector.connection
@@ -56,9 +83,9 @@ class PlatformDAO(metaclass=Singleton):
             cursor.execute(
                 """
                     DELETE FROM platforms
-                    WHERE namebigint = ?
+                    WHERE name = ?
                     """,
-                (platform.namebigint,),
+                (platform.name,),
             )
 
     def get_number_player_by_platform(self, platform: Platform) -> int:
