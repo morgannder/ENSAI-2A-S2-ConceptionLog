@@ -33,7 +33,7 @@ try:
     stats_movement = metadata.tables["stats_movement"]
     stats_positioning = metadata.tables["stats_positioning"]
 except KeyError as e:
-    print(f"Erreur critique: La table {e} n'existe pas dans la base de données.")
+    print(f"Critical error, table {e} does not exist in DB .")
     sys.exit(1)
 
 
@@ -41,7 +41,10 @@ except KeyError as e:
 
 
 def generate_match_hash(data):
-    """Génère un ID unique basé sur les joueurs, la durée et le score."""
+    """
+    Generate an unique ID based on players, match duration and score.
+    """
+
     p_ids = []
     for side in ["blue", "orange"]:
         for p in data.get(side, {}).get("players", []):
@@ -61,14 +64,15 @@ def generate_match_hash(data):
 
 
 def get_rank_id(session, r_data):
-    """Récupère ou crée un rang."""
+    """
+    Retrieve or create a rank
+    """
+
     if not r_data:
         return None
-    # Gestion du nom pour éviter les erreurs si manquant
     name = r_data.get("name")
     if not name:
         return None
-    # On cherche d'abord en base
     res = session.execute(
         text("SELECT id FROM ranks WHERE name = :n"), {"n": name}
     ).fetchone()
@@ -83,12 +87,15 @@ def get_rank_id(session, r_data):
 
 
 def get_player_id(session, p_data):
-    """Récupère ou crée un joueur et sa plateforme."""
+    """
+    Retrieve or create a player in DB.
+    """
+
     plat_info = p_data.get("id", {})
     plat_name = plat_info.get("platform", "unknown")
     plat_uid = plat_info.get("id", "unknown")
 
-    # 1. Chercher le joueur
+    # Search for player
     res = session.execute(
         text("SELECT id FROM players WHERE platform_user_id = :u"), {"u": plat_uid}
     ).fetchone()
@@ -96,7 +103,7 @@ def get_player_id(session, p_data):
     if res:
         return res[0]
 
-    # 2. Si pas trouvé, gérer la plateforme
+    # If no : Select platform
     p_res = session.execute(
         text("SELECT id FROM platforms WHERE name = :n"), {"n": plat_name}
     ).fetchone()
@@ -108,7 +115,7 @@ def get_player_id(session, p_data):
             platforms.insert().values(name=plat_name)
         ).inserted_primary_key[0]
 
-    # 3. Créer le joueur
+    # Create player in DB
     ins = session.execute(
         players.insert().values(
             platform_id=plat_id,
@@ -119,23 +126,22 @@ def get_player_id(session, p_data):
     return ins.inserted_primary_key[0]
 
 
-# --- FONCTION PRINCIPALE ---
+# MAIN FUNCTION
 
 
 def add_single_match(json_path):
     path = Path(json_path)
     if not path.exists():
-        print(f"Erreur : Le fichier {json_path} est introuvable.")
+        print(f"Error : file {json_path} is missing.")
         return
 
-    print(f"Traitement du fichier : {path.name}")
     session = Session()
 
     try:
         with open(path, encoding="utf-8") as f:
             data = json.load(f)
 
-        # 1. Génération et Vérification du Hash
+        # Hash génération and verification
         m_id = generate_match_hash(data)
 
         exists = session.execute(
@@ -143,10 +149,10 @@ def add_single_match(json_path):
         ).fetchone()
 
         if exists:
-            print(f"⚠️ Le match {m_id} existe déjà en base. Ajout ignoré.")
+            print(f"Match {m_id} Already exist in DB, attempt ignored.")
             return
 
-        # 2. Insertion du Match
+        # Match insertion in DB
         json_date = data.get("date")
         session.execute(
             matches.insert().values(
@@ -155,11 +161,11 @@ def add_single_match(json_path):
                 season=data.get("season", 0),
                 duration=data.get("duration", 0),
                 overtime=data.get("overtime", False),
-                date_upload=json_date,  
+                date_upload=json_date,
             )
         )
 
-        # 3. Insertion Équipes & Joueurs
+        # Teams and players insertion
         for color in ["blue", "orange"]:
             team = data.get(color, {})
             ball = team.get("stats", {}).get("ball", {})
@@ -193,7 +199,7 @@ def add_single_match(json_path):
                 )
                 part_id = res_part.inserted_primary_key[0]
 
-                # 4. Insertion des Stats
+                # Stats insertion
                 st = p.get("stats", {})
 
                 # CORE
@@ -212,7 +218,7 @@ def add_single_match(json_path):
                     )
                 )
 
-                # BOOST
+                # BOOOOOOOOOOST
                 b = st.get("boost", {})
                 session.execute(
                     stats_boost.insert().values(
@@ -250,7 +256,7 @@ def add_single_match(json_path):
                     )
                 )
 
-                # MOVEMENT
+                # SCHMOVEMENT
                 m = st.get("movement", {})
                 session.execute(
                     stats_movement.insert().values(
@@ -312,17 +318,17 @@ def add_single_match(json_path):
                 )
 
         session.commit()
-        print(f"Match {m_id} ajouté avec succès !")
+        print(f"Match {m_id} added to DB !")
 
     except Exception as e:
         session.rollback()
-        print(f"Erreur lors de l'ajout du match : {e}")
+        print(f"Error while adding match to DB : {e}")
     finally:
         session.close()
 
 
 if __name__ == "__main__":
     if len(sys.argv) < 2:
-        print("Usage : python add_match.py <chemin_vers_le_fichier.json>")
+        print("Usage : python add_match.py <path_to_file.json>")
     else:
         add_single_match(sys.argv[1])
