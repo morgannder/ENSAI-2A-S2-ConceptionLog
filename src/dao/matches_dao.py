@@ -1,11 +1,18 @@
-from .db_connection import DBConnection
 from ..models.matches import Match
-from ..utils.singleton import Singleton
 from ..models.players import Player
+from ..utils.singleton import Singleton
+from .db_connection import DBConnection
 
 
 class MatchDAO(metaclass=Singleton):
-    allowed_columns = {"id", "playlist_id", "season", "date_upload", "overtime", "duration"}
+    allowed_columns = {
+        "id",
+        "playlist_id",
+        "season",
+        "date_upload",
+        "overtime",
+        "duration",
+    }
 
     def __init__(self):
         self.db_connector = DBConnection
@@ -38,7 +45,7 @@ class MatchDAO(metaclass=Singleton):
                     match.season,
                     match.duration,
                     match.overtime,
-                    match.date_upload
+                    match.date_upload,
                 ),
             )
 
@@ -64,12 +71,16 @@ class MatchDAO(metaclass=Singleton):
                 return None
             list_match = []
             for match in res:
-                list_match.append(Match(match["id"],
-                                        match["playlist_id"],
-                                        match["season"],
-                                        match["duration"],
-                                        match["overtime"],
-                                        match["date_upload"]))
+                list_match.append(
+                    Match(
+                        match["id"],
+                        match["playlist_id"],
+                        match["season"],
+                        match["duration"],
+                        match["overtime"],
+                        match["date_upload"],
+                    )
+                )
             return list_match
 
     def update_match(self, match: Match):
@@ -98,22 +109,28 @@ class MatchDAO(metaclass=Singleton):
                     ORDER BY date_upload DESC
                     LIMIT ?
                     """,
-                    (nb_match,),
+                (nb_match,),
             )
         res = cursor.fetchall()
         if not res:
             return None
         list_match = []
         for match in res:
-            list_match.append(Match(match["id"],
-                                    match["playlist_id"],
-                                    match["season"],
-                                    match["duration"],
-                                    match["overtime"],
-                                    match["date_upload"]))
+            list_match.append(
+                Match(
+                    match["id"],
+                    match["playlist_id"],
+                    match["season"],
+                    match["duration"],
+                    match["overtime"],
+                    match["date_upload"],
+                )
+            )
         return list_match
 
-    def get_player_last_matches(self, player: Player, nb_match: int = 20) -> list[Match] | None:
+    def get_player_last_matches(
+        self, player: Player, nb_match: int = 20
+    ) -> list[Match] | None:
         query = """
             SELECT m.*
             FROM matches m
@@ -127,16 +144,26 @@ class MatchDAO(metaclass=Singleton):
         connection = self.db_connector.connection
         with connection:
             cursor = connection.cursor()
-            cursor.execute(query, (player.id, nb_match,))
+            cursor.execute(
+                query,
+                (
+                    player.id,
+                    nb_match,
+                ),
+            )
             res = cursor.fetchall()
             if not res:
                 return None
             list_match = []
             for match in res:
-                list_match.append(Match(match["id"],
-                                        match["playlist_id"],
-                                        match["season"],
-                                        match["duration"],
-                                        match["overtime"],
-                                        match["date_upload"]))
+                list_match.append(
+                    Match(
+                        match["id"],
+                        match["playlist_id"],
+                        match["season"],
+                        match["duration"],
+                        match["overtime"],
+                        match["date_upload"],
+                    )
+                )
             return list_match

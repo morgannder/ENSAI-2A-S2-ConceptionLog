@@ -1,7 +1,7 @@
+from ..models.match_teams import MatchTeam
+from ..models.matches import Match
 from ..models.players import Player
 from ..models.ranks import Ranks
-from ..models.matches import Match
-from ..models.match_teams import MatchTeam
 from ..utils.singleton import Singleton
 from .db_connection import DBConnection
 
@@ -146,10 +146,14 @@ class PlayerDAO(metaclass=Singleton):
                 return None
             list_play = []
             for player in res:
-                list_play.append(Player(player["id"],
-                                        player["platform_id"],
-                                        player["platform_user_id"],
-                                        player["name"]))
+                list_play.append(
+                    Player(
+                        player["id"],
+                        player["platform_id"],
+                        player["platform_user_id"],
+                        player["name"],
+                    )
+                )
             return list_play
 
     def get_players_in_team(self, match_team: MatchTeam) -> list[Player] | None:
@@ -171,10 +175,14 @@ class PlayerDAO(metaclass=Singleton):
             return None
         list_player = []
         for player in res:
-            list_player.append(Player(player["id"],
-                                      player["platform_id"],
-                                      player["platform_user_id"],
-                                      player["name"]))
+            list_player.append(
+                Player(
+                    player["id"],
+                    player["platform_id"],
+                    player["platform_user_id"],
+                    player["name"],
+                )
+            )
         return list_player
 
     def get_players_in_match(self, match: Match) -> list[Player] | None:
@@ -197,8 +205,12 @@ class PlayerDAO(metaclass=Singleton):
             return None
         list_player = []
         for player in res:
-            list_player.append(Player(player["id"],
-                                      player["platform_id"],
-                                      player["platform_user_id"],
-                                      player["name"]))
+            list_player.append(
+                Player(
+                    player["id"],
+                    player["platform_id"],
+                    player["platform_user_id"],
+                    player["name"],
+                )
+            )
         return list_player

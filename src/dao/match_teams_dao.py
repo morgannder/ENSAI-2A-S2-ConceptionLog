@@ -1,13 +1,18 @@
-from .db_connection import DBConnection
-
-from ..utils.singleton import Singleton
-from ..models.players import Player
 from ..models.match_teams import MatchTeam
+from ..models.players import Player
+from ..utils.singleton import Singleton
+from .db_connection import DBConnection
 
 
 class MatchTeamDAO(metaclass=Singleton):
-
-    allowed_columns = {"id","match_id","score","color", "time_in_side","possession_time"}
+    allowed_columns = {
+        "id",
+        "match_id",
+        "score",
+        "color",
+        "time_in_side",
+        "possession_time",
+    }
 
     def __init__(self):
         self.db_connector = DBConnection
@@ -31,7 +36,7 @@ class MatchTeamDAO(metaclass=Singleton):
 
             cursor.execute(
                 """
-                    INSERT INTO matches (id, match_id, color, score, possession_time, time_in_side)
+                    INSERT INTO match_teams (id, match_id, color, score, possession_time, time_in_side)
                     VALUES (?, ?, ?, ?, ?, ?)
                     """,
                 (
@@ -40,7 +45,7 @@ class MatchTeamDAO(metaclass=Singleton):
                     match.color,
                     match.score,
                     match.possession_time,
-                    match.time_in_side
+                    match.time_in_side,
                 ),
             )
 
@@ -54,7 +59,7 @@ class MatchTeamDAO(metaclass=Singleton):
 
         query = f"""
             SELECT *
-            FROM match_participation
+            FROM match_teams
             WHERE {parameter_name}= ?
             """
         connection = self.db_connector.connection
@@ -66,12 +71,16 @@ class MatchTeamDAO(metaclass=Singleton):
                 return None
             list_match = []
             for match in res:
-                list_match.append(MatchTeam(match["id"],
-                                            match["match_id"],
-                                            match["color"],
-                                            match["score"],
-                                            match["possession_time"],
-                                            match["time_in_side"]))
+                list_match.append(
+                    MatchTeam(
+                        match["id"],
+                        match["match_id"],
+                        match["color"],
+                        match["score"],
+                        match["possession_time"],
+                        match["time_in_side"],
+                    )
+                )
             return list_match
 
     def update(self, match: MatchTeam):
@@ -89,7 +98,9 @@ class MatchTeamDAO(metaclass=Singleton):
                 (match.id,),
             )
 
-    def get_player_last_match_teams(self, player: Player, nb_match: int = 20) -> list[MatchTeam] | None:
+    def get_player_last_match_teams(
+        self, player: Player, nb_match: int = 20
+    ) -> list[MatchTeam] | None:
         query = """
             SELECT mt.*
             FROM matches m
@@ -103,16 +114,26 @@ class MatchTeamDAO(metaclass=Singleton):
         connection = self.db_connector.connection
         with connection:
             cursor = connection.cursor()
-            cursor.execute(query, (player.id, nb_match,))
+            cursor.execute(
+                query,
+                (
+                    player.id,
+                    nb_match,
+                ),
+            )
             res = cursor.fetchall()
             if not res:
                 return None
             list_match = []
             for match in res:
-                list_match.append(MatchTeam(match["id"],
-                                            match["playlist_id"],
-                                            match["season"],
-                                            match["duration"],
-                                            match["overtime"],
-                                            match["date_upload"]))
+                list_match.append(
+                    MatchTeam(
+                        match["id"],
+                        match["match_id"],
+                        match["color"],
+                        match["score"],
+                        match["possession_time"],
+                        match["time_in_side"],
+                    )
+                )
             return list_match

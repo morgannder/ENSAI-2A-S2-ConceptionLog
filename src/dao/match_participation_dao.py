@@ -1,13 +1,21 @@
 from ..models.match_participation import MatchParticipation
+from ..models.players import Player
 from ..utils.singleton import Singleton
 from .db_connection import DBConnection
-from ..models.players import Player
 
 
 class MatchParticipationDAO(metaclass=Singleton):
-
-    allowed_columns = {"id", "match_team_id", "playerd_id", "rank_id",
-                       "car_id", "car_name", "mvp", "start_time", "end_time"}
+    allowed_columns = {
+        "id",
+        "match_team_id",
+        "player_id",
+        "rank_id",
+        "car_id",
+        "car_name",
+        "mvp",
+        "start_time",
+        "end_time",
+    }
 
     def __init__(self):
         self.db_connector = DBConnection()
@@ -31,7 +39,7 @@ class MatchParticipationDAO(metaclass=Singleton):
 
             cursor.execute(
                 """
-                    INSERT INTO match_participation (id, match_team_id, player_id, rank_id, car_id, car_name, mvp, strat_time, end_time)
+                    INSERT INTO match_participation (id, match_team_id, player_id, rank_id, car_id, car_name, mvp, start_time, end_time)
                     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """,
                 (
@@ -43,7 +51,7 @@ class MatchParticipationDAO(metaclass=Singleton):
                     match.car_name,
                     match.mvp,
                     match.start_time,
-                    match.end_time
+                    match.end_time,
                 ),
             )
 
@@ -70,7 +78,7 @@ class MatchParticipationDAO(metaclass=Singleton):
             for val in res:
                 match_part = MatchParticipation(
                     val["id"],
-                    val["match_tema_id"],
+                    val["match_team_id"],
                     val["player_id"],
                     val["rank_id"],
                     val["car_id"],
@@ -97,7 +105,9 @@ class MatchParticipationDAO(metaclass=Singleton):
                 (match.id,),
             )
 
-    def get_player_last_match_participation(self, player: Player, nb_match: int = 20) -> list[MatchParticipation] | None:
+    def get_player_last_match_participation(
+        self, player: Player, nb_match: int = 20
+    ) -> list[MatchParticipation] | None:
         query = """
             SELECT mp.*
             FROM matches m
@@ -111,7 +121,13 @@ class MatchParticipationDAO(metaclass=Singleton):
         connection = self.db_connector.connection
         with connection:
             cursor = connection.cursor()
-            cursor.execute(query, (player.id, nb_match,))
+            cursor.execute(
+                query,
+                (
+                    player.id,
+                    nb_match,
+                ),
+            )
             res = cursor.fetchall()
             list_match = []
             if not res:
@@ -119,7 +135,7 @@ class MatchParticipationDAO(metaclass=Singleton):
             for val in res:
                 match_part = MatchParticipation(
                     val["id"],
-                    val["match_tema_id"],
+                    val["match_team_id"],
                     val["player_id"],
                     val["rank_id"],
                     val["car_id"],
@@ -150,7 +166,7 @@ class MatchParticipationDAO(metaclass=Singleton):
             for val in res:
                 match_part = MatchParticipation(
                     val["id"],
-                    val["match_tema_id"],
+                    val["match_team_id"],
                     val["player_id"],
                     val["rank_id"],
                     val["car_id"],
@@ -174,7 +190,7 @@ class MatchParticipationDAO(metaclass=Singleton):
                     """,
                 (player.id,),
             )
-            res = cursor.fetchone
+            res = cursor.fetchone()
             if not res:
                 return 0
             return res
