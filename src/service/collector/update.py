@@ -14,7 +14,9 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
 DUMP_DIR = BASE_DIR / "src" / "database" / "temp" / "file-dump-tmp"
 
 
-def run_full_update(user_input=None, player_id=None, num_input=1):
+def run_full_update(
+    user_input=None, player_id=None, num_input=1, date_max="2024-01-01T00:00:00Z"
+):
     """
     Run update based on user playername or user id
     """
@@ -29,7 +31,10 @@ def run_full_update(user_input=None, player_id=None, num_input=1):
             player_id = input("player ID (ex: steam:76561198...) : ")
 
     raw_list = client.search_games(
-        player_name=user_input, player_id=player_id, count=num_input
+        player_name=user_input,
+        player_id=player_id,
+        count=num_input,
+        created_after=date_max,
     )
 
     if not raw_list:

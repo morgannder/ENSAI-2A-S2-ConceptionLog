@@ -9,14 +9,21 @@ router = APIRouter(prefix="/global", tags=["Player research"])
 @router.get(
     "/player-research-update/",
     response_model=None,
-    summary="Récupère le pourcentage de tir moyen par rang",
-    description="Retourne le pourcentage de tir moyen pour un rang donné",
+    summary="Update player in DB",
+    description="Retourne la réussite ou l'échec de l'actualisation des parties d'un "
+    "joueur dans la DB. Prend en argument au choix : "
+    "\n- Une plateforme et un ID associé"
+    "\n- Un pseudo exact"
+    "\n- Un compteur qui correspond au nombre de match maximum que l'on peut télécharger "
+    "(max 200)"
+    "\n- Une date au format ISO-8601 : YYY-MM-DDTHH:MM:SSZ",
 )
 def update_player(
     player_platform: str | None = None,
     player_id: str | None = None,
     player_exact_name: str | None = None,
     game_count: int = 1,
+    created_after: str = "2024-01-01T00:00:00Z",
 ):
     """
     Endpoint pour mettre à jour les informations d'un joueur. Cette fonction
@@ -36,6 +43,13 @@ def update_player(
     player_exact_name: Optional[str] = None
         Le pseudo exact de l'utilisateur
 
+    created_after: str = "2024-01-01T00:00:00Z"
+        Date de création du replay de la partie sur Ballchasing API.
+        Format : ISO-8601
+        Date : YYY-MM-DDTHH:MM:SSZ
+        Après le "T" dans le format -> Indique la timezone à la base UTC
+        (ex : UTC+1 -> T01:00:00Z)
+
     Returns
     -------
         Bool : Réussite / Echec
@@ -49,15 +63,18 @@ def update_player(
 
     Examples
     --------
-        GET /api/stats/shooting-percentage/rank/Gold III
-        GET /api/stats/shooting-percentage/rank/Platinum II
+        GET /api/global/player-research-update/?player_exact_name=Player&game_count=1
+        GET /api/global/player-research-update/?player_platform=epic&player_id=5273935696c041b28fc021eb9a0ef852&game_count=10
+
     """
     player_exact_id = None
     if player_id is not None:
-        player_exact_id = f"{player_platform}={player_id}"
+        player_exact_id = f"{player_platform}:{player_id}"
 
     try:
-        update = run_full_update(player_exact_name, player_exact_id, game_count)
+        update = run_full_update(
+            player_exact_name, player_exact_id, game_count, created_after
+        )
 
         if update is None:
             raise HTTPException(
