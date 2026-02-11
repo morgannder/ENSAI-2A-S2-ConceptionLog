@@ -1,7 +1,8 @@
-from fastapi import APIRouter, HTTPException, Path
+from fastapi import APIRouter, HTTPException
 
 from src.api.schemas.global_stats import AverageStatsResponse
 from src.service.stats_core_service import StatsCoreService
+from src.utils.enumeration import Ranks
 
 
 router = APIRouter(prefix="/global", tags=["Global Statistics"])
@@ -10,71 +11,62 @@ stats_service = StatsCoreService()
 
 
 @router.get(
-    "/average-stats/rank/{rank_name}",
+    "/stats/{rank}",
     response_model=AverageStatsResponse,
-    summary="Récupère le pourcentage de tir moyen par rang",
-    description="Retourne le pourcentage de tir moyen pour un rang donné",
+    summary="Récupère des statistiques globales par rang",
+    description="Retourne des statistiques globales pour un rang donné",
 )
 def get_average_stats_by_rank(
-    rank_name: str = Path(
-        ...,
-        description="Le nom du rang (tier p division q)",
-        examples="Gold III Division I",
-    ),
-):
+    rank: Ranks,
+) -> AverageStatsResponse:
     """
     Endpoint pour récupérer la moyenne des statistiques d'un rang.
 
     Parameters
     ----------
-    rank_name: str
-        Le nom du rang (passé dans l'URL)
+    rank: Ranks
+        Le nom du rang (tier).
 
     Returns
     -------
-        JSON avec le pourcentage moyen ou une erreur
+        JSON contenant les statistiques.
 
     Raises
     ------
-        HTTPException 400: Si le nom du rang est invalide
         HTTPException 404: Si aucune donnée n'existe pour ce rang
         HTTPException 500: Erreur serveur
-
-    Examples
-    --------
-        GET /api/stats/shooting-percentage/rank/Gold III
-        GET /api/stats/shooting-percentage/rank/Platinum II
     """
+
     try:
-        stats = stats_service.get_average_stats_by_rank_name(rank_name)
+        stats = stats_service.get_average_stats_by_rank_name(rank)
 
         if stats is None:
             raise HTTPException(
                 status_code=404,
-                detail=f"Aucune donnée trouvée pour le rang '{rank_name}'",
+                detail=f"Aucune donnée trouvée pour le rang '{rank}'",
             )
+
         avg_percentage = stats["avg_shooting"] * 100
-        avg_saves = stats["avg_saves"] * 100
-        avg_assists = stats["avg_assists"] * 100
-        avg_demo_inflicted = stats["demo_inflicted"] * 100
-        avg_demo_taken = stats["demo_taken"] * 100
+        avg_saves = stats["avg_saves"]
+        avg_assists = stats["avg_assists"]
+        avg_demo_inflicted = stats["demo_inflicted"]
+        avg_demo_taken = stats["demo_taken"]
 
         return AverageStatsResponse(
-            success=True,
             message="Statistiques globales récupérées avec succès",
             data={
-                "rank_name": rank_name,
-                "number_matches": stats["nb_matches"],
-                "shooting_accuracy": round(avg_percentage, 2),
-                "average_saves": round(avg_saves, 2),
-                "average_assists": round(avg_assists, 2),
-                "average_demolition_inflicted": round(avg_demo_inflicted, 2),
-                "average_demolition_taken": round(avg_demo_taken, 2),
+                "rank name": rank,
+                "number of matches": stats["nb_matches"],
+                "shooting accuracy": round(avg_percentage, 2),
+                "average saves": round(avg_saves, 2),
+                "average assists": round(avg_assists, 2),
+                "average demolition_inflicted": round(avg_demo_inflicted, 2),
+                "average demolition_taken": round(avg_demo_taken, 2),
             },
         )
 
     except ValueError as e:
-        raise HTTPException(status_code=400, detail=str(e)) from e
+        raise HTTPException(status_code=404, detail=str(e)) from e
 
     except Exception as e:
         raise HTTPException(

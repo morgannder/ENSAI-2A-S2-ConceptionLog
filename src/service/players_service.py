@@ -44,7 +44,7 @@ class PlayerService:
 
         return self.player_dao.get_player_by_parameter("id", player_id)
 
-    def get_player_by_(self, name: str) -> Player | None:
+    def get_player_by_name(self, name: str) -> Player | None:
         """
         Récupère un joueur par son nom.
         """
