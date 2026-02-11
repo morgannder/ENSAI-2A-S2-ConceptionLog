@@ -65,9 +65,7 @@ def parse_game_list():
         if exists:
             skipped_count += 1
         else:
-            matches_to_download.append(
-                {"id": replay.get("id"), "date": replay.get("date")}
-            )
+            matches_to_download.append({"id": replay.get("id")})
 
     session.close()
 

@@ -14,25 +14,26 @@ BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
 DUMP_DIR = BASE_DIR / "src" / "database" / "temp" / "file-dump-tmp"
 
 
-def run_full_update(user_input=None, player_id=None):
+def run_full_update(user_input=None, player_id=None, num_input=1):
     """
     Run update based on user playername or user id
     """
 
     client = BallchasingClient()
-    num_input = input("How many matches ? (Max 200) : ")
-    user_input = input("Pseudo (let empty for ID) : ")
-    player_id = None
-    if not user_input:
-        player_id = input("player ID (ex: steam:76561198...) : ")
+    if user_input is None and player_id is None:
+        num_input = input("How many matches ? (Max 200) : ")
+        user_input = input("Pseudo (let empty for ID) : ").strip()
+        user_input = f'"{user_input}"'
+        player_id = None
+        if not user_input:
+            player_id = input("player ID (ex: steam:76561198...) : ")
 
     raw_list = client.search_games(
         player_name=user_input, player_id=player_id, count=num_input
     )
 
     if not raw_list:
-        print("No game found/API error.")
-        return
+        return None
 
     print("Parsing match list")
     parse_game_list()
@@ -54,6 +55,7 @@ def run_full_update(user_input=None, player_id=None):
     Path("src/database/temp/id-date-list-temp.json").write_text("[]")
     Path("src/database/temp/raw_game_list.json").write_text("[]")
     print("Update finished")
+    return True
 
 
 if __name__ == "__main__":
