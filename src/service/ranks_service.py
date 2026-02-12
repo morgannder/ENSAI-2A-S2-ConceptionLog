@@ -19,7 +19,6 @@ class RanksService(metaclass=Singleton):
         success = self.ranks_dao.create_rank(rank)
 
         if success:
-            # Récupérer le rang créé pour avoir l'ID généré
             return self.get_rank_by_name(name)
         return None
 
