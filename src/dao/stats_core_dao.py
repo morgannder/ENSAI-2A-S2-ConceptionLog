@@ -23,7 +23,7 @@ class StatsCoreDAO(metaclass=Singleton):
                     WHEN r.tier = 22 THEN 'Supersonic Legend'
                     ELSE 'Unknown'
                 END AS rank_group,
-                COUNT(*) AS nb_matches,
+                COUNT(*) AS nb_players,
                 AVG(saves) AS avg_saves,
                 AVG(assists) AS avg_assists,
                 AVG(demo_inflicted) AS avg_demo_inflicted,
@@ -55,7 +55,7 @@ class StatsCoreDAO(metaclass=Singleton):
 
             return {
                 "avg_shooting": res["avg_shooting"],
-                "nb_matches": res["nb_matches"],
+                "nb_players": res["nb_players"],
                 "avg_saves": res["avg_saves"],
                 "demo_taken": res["avg_demo_taken"],
                 "avg_assists": res["avg_assists"],

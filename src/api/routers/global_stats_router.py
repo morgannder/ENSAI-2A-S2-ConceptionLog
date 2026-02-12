@@ -56,7 +56,7 @@ def get_average_stats_by_rank(
             message="Statistiques globales récupérées avec succès",
             data={
                 "rank name": rank,
-                "number of matches": stats["nb_matches"],
+                "players number": stats["nb_players"],
                 "shooting accuracy": round(avg_percentage, 2),
                 "average saves": round(avg_saves, 2),
                 "average assists": round(avg_assists, 2),
