@@ -1,7 +1,7 @@
 from typing import Literal
 
 
-Ranks = Literal[
+Ranks_enum = Literal[
     "Bronze",
     "Silver",
     "Gold",

@@ -66,39 +66,32 @@ class RanksService(metaclass=Singleton):
         if rank is None:
             return "Non classé"
 
-        return f"{rank.tier.capitalize()} {rank.division}"
+        return rank.name
 
     def compare_ranks(self, rank1: Ranks, rank2: Ranks) -> int:
         """
-        Compare deux rangs
+        Compare deux rangs numériques.
+
+        Retourne :
+        - 1  si rank1 > rank2
+        - -1 si rank1 < rank2
+        - 0  si égaux
         """
-        tier = {
-            "IRON": 0,
-            "BRONZE": 1,
-            "SILVER": 2,
-            "GOLD": 3,
-            "PLATINUM": 4,
-            "DIAMOND": 5,
-            "MASTER": 6,
-            "GRANDMASTER": 7,
-            "CHALLENGER": 8,
-        }
 
-        division = {"IV": 0, "III": 1, "II": 2, "I": 3}
+        if rank1 is None or rank2 is None:
+            raise ValueError("Les rangs ne peuvent pas être None")
 
-        tier1 = tier.get(rank1.tier.upper(), 0)
-        tier2 = tier.get(rank2.tier.upper(), 0)
+        # Sécurité : si valeur invalide → 0
+        tier1 = rank1.tier if isinstance(rank1.tier, int) else 0
+        tier2 = rank2.tier if isinstance(rank2.tier, int) else 0
 
         if tier1 != tier2:
-            if tier1 < tier2:
-                return -1
-            return 1
+            return 1 if tier1 > tier2 else -1
 
-        div1 = division.get(rank1.division.upper(), 0)
-        div2 = division.get(rank2.division.upper(), 0)
+        div1 = rank1.division if isinstance(rank1.division, int) else 0
+        div2 = rank2.division if isinstance(rank2.division, int) else 0
 
-        if div1 < div2:
-            return -1
-        elif div1 > div2:
-            return 1
+        if div1 != div2:
+            return 1 if div1 > div2 else -1
+
         return 0

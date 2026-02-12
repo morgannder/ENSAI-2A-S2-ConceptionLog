@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException
 
 from src.api.schemas.global_stats import AverageStatsResponse
 from src.service.stats_core_service import StatsCoreService
-from src.utils.enumeration import Ranks
+from src.utils.enumeration import Ranks_enum
 
 
 router = APIRouter(prefix="/global", tags=["Global Statistics"])
@@ -17,7 +17,7 @@ stats_service = StatsCoreService()
     description="Retourne des statistiques globales pour un rang donné",
 )
 def get_average_stats_by_rank(
-    rank: Ranks,
+    rank: Ranks_enum,
 ) -> AverageStatsResponse:
     """
     Endpoint pour récupérer la moyenne des statistiques d'un rang.
