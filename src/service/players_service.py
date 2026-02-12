@@ -44,7 +44,7 @@ class PlayerService:
 
         return self.player_dao.get_player_by_parameter("id", player_id)
 
-    def get_player_by_name(self, name: str) -> Player | None:
+    def get_player_by_(self, name: str) -> Player | None:
         """
         Récupère un joueur par son nom.
         """
@@ -102,7 +102,6 @@ class PlayerService:
         # Créer le joueur s'il n'existe pas
         new_player = self.create_player(platform_id, platform_user_id, name)
         if new_player is None:
-            # Si la création échoue, réessayer de récupérer (race condition possible)
             existing_player = self.get_player_by_name(name)
             if existing_player:
                 return existing_player
@@ -124,9 +123,6 @@ class PlayerService:
 
         if len(name) > 50:
             return False, "Le nom ne peut pas dépasser 50 caractères"
-
-        # Ajouter d'autres règles si nécessaire
-        # Par exemple : caractères autorisés, pas de caractères spéciaux, etc.
 
         return True, ""
 

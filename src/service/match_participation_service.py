@@ -38,11 +38,11 @@ class MatchParticipationService:
             raise ValueError("Le player_id est requis")
 
         if (
-            participation.start_time
-            and participation.end_time
-            and participation.start_time > participation.end_time
+            participation.start_time < 0
+            or participation.end_time < 0
+            or participation.start_time > participation.end_time
         ):
-            raise ValueError("Le temps de début ne peut pas être après le temps de fin")
+            raise ValueError("Les temps de début et de fin ne conviennent pas")
 
         return self.match_participation_dao.create_match_participation(participation)
 
@@ -291,7 +291,7 @@ class MatchParticipationService:
             return None
 
         play_time = None
-        if participation.start_time and participation.end_time:
+        if participation.start_time is not None and participation.end_time is not None:
             play_time = participation.end_time - participation.start_time
 
         return {
