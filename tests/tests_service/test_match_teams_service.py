@@ -13,7 +13,7 @@ from src.service.match_teams_service import MatchTeamService
 def mock_match_team():
     """Crée une équipe de match de test."""
     return MatchTeam(
-        id="1",
+        id=1,
         match_id="match_456",
         color="blue",
         score=3,
@@ -26,8 +26,8 @@ def mock_match_team():
 def mock_player():
     """Crée un joueur de test."""
     return Player(
-        id="1",
-        platform_id="2",
+        id=1,
+        platform_id=2,
         platform_user_id="Steam_2",
         name="TestPlayer",
     )
@@ -241,7 +241,7 @@ def test_get_player_teams_no_player():
 def test_get_player_teams_player_no_id():
     """Le joueur n'a pas d'ID -> le service lève une ValueError."""
     # GIVEN
-    player_sans_id = Player(None, "2", "Steam_2", "TestPlayer")
+    player_sans_id = Player(None, 2, "Steam_2", "TestPlayer")
     # WHEN / THEN
     with pytest.raises(ValueError, match="ID valide"):
         MatchTeamService().get_player_teams(player_sans_id, 20)
@@ -343,7 +343,7 @@ def test_get_team_statistics_ok(mock_match_team):
     result = MatchTeamService().get_team_statistics("team_123")
     # THEN
     assert result == {
-        "id": "1",
+        "id": 1,
         "match_id": "match_456",
         "color": "blue",
         "score": 3,

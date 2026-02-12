@@ -9,9 +9,9 @@ from src.service.match_participation_service import MatchParticipationService
 
 # Fixtures de données de test
 PARTICIPATION_1 = MatchParticipation(
-    id="1",
-    match_team_id="1",
-    player_id="1",
+    id=1,
+    match_team_id=1,
+    player_id=1,
     rank_id=1,
     car_id=10,
     car_name="Octane",
@@ -21,9 +21,9 @@ PARTICIPATION_1 = MatchParticipation(
 )
 
 PARTICIPATION_2 = MatchParticipation(
-    id="1",
-    match_team_id="1",
-    player_id="2",
+    id=1,
+    match_team_id=1,
+    player_id=2,
     rank_id=2,
     car_id=11,
     car_name="Fennec",
@@ -35,8 +35,8 @@ PARTICIPATION_2 = MatchParticipation(
 PARTICIPATION_LIST = [PARTICIPATION_1, PARTICIPATION_2]
 
 PLAYER = Player(
-    id="1",
-    platform_id="2",
+    id=1,
+    platform_id=2,
     platform_user_id="Steam_2",
     name="TestPlayer",
 )
@@ -82,8 +82,8 @@ def test_create_no_id():
     # GIVEN
     participation = MatchParticipation(
         id=None,
-        match_team_id="1",
-        player_id="1",
+        match_team_id=1,
+        player_id=1,
         rank_id=1,
         car_id=10,
         car_name="Octane",
@@ -101,9 +101,9 @@ def test_create_no_match_team_id():
     """Participation sans match_team_id -> ValueError."""
     # GIVEN
     participation = MatchParticipation(
-        id="1",
+        id=1,
         match_team_id=None,
-        player_id="1",
+        player_id=1,
         rank_id=1,
         car_id=10,
         car_name="Octane",
@@ -121,8 +121,8 @@ def test_create_no_player_id():
     """Participation sans player_id -> ValueError."""
     # GIVEN
     participation = participation = MatchParticipation(
-        id="1",
-        match_team_id="1",
+        id=1,
+        match_team_id=1,
         player_id=None,
         rank_id=1,
         car_id=10,
@@ -141,9 +141,9 @@ def test_create_invalid_times():
     """Temps de début après temps de fin -> ValueError."""
     # GIVEN
     participation = participation = MatchParticipation(
-        id="1",
-        match_team_id="1",
-        player_id="1",
+        id=1,
+        match_team_id=1,
+        player_id=1,
         rank_id=1,
         car_id=10,
         car_name="Octane",
@@ -310,7 +310,7 @@ def test_get_recent_no_player_id():
     # GIVEN
     player = Player(
         id=None,
-        platform_id="2",
+        platform_id=2,
         platform_user_id="Steam_2",
         name="TestPlayer",
     )
@@ -353,7 +353,7 @@ def test_get_mvp_no_player_id():
     # GIVEN
     player = Player(
         id=None,
-        platform_id="2",
+        platform_id=2,
         platform_user_id="Steam_2",
         name="TestPlayer",
     )
@@ -383,7 +383,7 @@ def test_get_mvp_count_no_player_id():
     # GIVEN
     player = Player(
         None,
-        platform_id="2",
+        platform_id=2,
         platform_user_id="Steam_2",
         name="TestPlayer",
     )
@@ -414,8 +414,8 @@ def test_delete_no_id():
     # GIVEN
     participation = MatchParticipation(
         id=None,
-        match_team_id="1",
-        player_id="1",
+        match_team_id=1,
+        player_id=1,
         rank_id=1,
         car_id=10,
         car_name="Octane",
@@ -464,7 +464,7 @@ def test_get_mvp_rate_no_player_id():
     # GIVEN
     player = Player(
         id=None,
-        platform_id="2",
+        platform_id=2,
         platform_user_id="Steam_2",
         name="TestPlayer",
     )
@@ -485,12 +485,12 @@ def test_get_statistics_ok():
         return_value=[PARTICIPATION_1]
     )
     # WHEN
-    result = service.get_participation_statistics("1")
+    result = service.get_participation_statistics(1)
     # THEN
     assert result == {
-        "id": "1",
-        "match_team_id": "1",
-        "player_id": "1",
+        "id": 1,
+        "match_team_id": 1,
+        "player_id": 1,
         "rank_id": 1,
         "car_id": 10,
         "car_name": "Octane",
@@ -518,9 +518,9 @@ def test_get_statistics_no_times():
     """Participation sans temps -> play_time_seconds est None."""
     # GIVEN
     participation = MatchParticipation(
-        id="1",
-        match_team_id="1",
-        player_id="1",
+        id=1,
+        match_team_id=1,
+        player_id=1,
         rank_id=1,
         car_id=10,
         car_name="Octane",
@@ -533,7 +533,7 @@ def test_get_statistics_no_times():
         return_value=[participation]
     )
     # WHEN
-    result = service.get_participation_statistics("1")
+    result = service.get_participation_statistics(1)
     # THEN
     assert result["play_time_seconds"] is None
 
@@ -548,9 +548,9 @@ def test_get_most_used_cars_ok():
         PARTICIPATION_1,  # Octane
         PARTICIPATION_2,  # Fennec
         MatchParticipation(
-            id="1",
-            match_team_id="1",
-            player_id="1",
+            id=1,
+            match_team_id=1,
+            player_id=1,
             rank_id=1,
             car_id=10,
             car_name="Octane",
@@ -574,9 +574,9 @@ def test_get_most_used_cars_with_limit():
     # GIVEN
     participations = [
         MatchParticipation(
-            id="1",
-            match_team_id="1",
-            player_id="1",
+            id=1,
+            match_team_id=1,
+            player_id=1,
             rank_id=1,
             car_id=10,
             car_name="Car1",
@@ -585,9 +585,9 @@ def test_get_most_used_cars_with_limit():
             end_time=300,
         ),
         MatchParticipation(
-            id="2",
-            match_team_id="1",
-            player_id="1",
+            id=2,
+            match_team_id=1,
+            player_id=1,
             rank_id=1,
             car_id=10,
             car_name="Car2",
@@ -597,8 +597,8 @@ def test_get_most_used_cars_with_limit():
         ),
         MatchParticipation(
             id="3",
-            match_team_id="1",
-            player_id="1",
+            match_team_id=1,
+            player_id=1,
             rank_id=1,
             car_id=10,
             car_name="Car3",
@@ -635,7 +635,7 @@ def test_get_most_used_cars_no_player_id():
     # GIVEN
     player = Player(
         id=None,
-        platform_id="2",
+        platform_id=2,
         platform_user_id="Steam_2",
         name="TestPlayer",
     )

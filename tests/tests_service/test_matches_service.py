@@ -14,7 +14,7 @@ def mock_match():
     """Crée un match de test."""
     return Match(
         id="1",
-        playlist_id=13,
+        playlist_id="13",
         season=5,
         duration=300,
         overtime=False,
@@ -26,8 +26,8 @@ def mock_match():
 def mock_player():
     """Crée un joueur de test."""
     return Player(
-        id="2",
-        platform_id="2",
+        id=2,
+        platform_id=2,
         platform_user_id="Steam_2",
         name="TestPlayer",
     )
@@ -37,9 +37,9 @@ def mock_player():
 def mock_match_list():
     """Crée une liste de matchs de test."""
     return [
-        Match("match_1", 13, 5, 300, False, "2024-01-15 14:30:00"),
-        Match("match_2", 13, 5, 350, True, "2024-01-15 15:00:00"),
-        Match("match_3", 10, 4, 280, False, "2024-01-14 18:00:00"),
+        Match("match_1", "13", 5, 300, False, "2024-01-15 14:30:00"),
+        Match("match_2", "13", 5, 350, True, "2024-01-15 15:00:00"),
+        Match("match_3", "10", 4, 280, False, "2024-01-14 18:00:00"),
     ]
 
 
@@ -271,7 +271,7 @@ def test_delete_match_no_match():
 def test_delete_match_no_id():
     """Le match n'a pas d'ID -> le service lève une ValueError."""
     # GIVEN
-    match_sans_id = Match(None, 13, 5, 300, False, "2024-01-15 14:30:00")
+    match_sans_id = Match(None, "13", 5, 300, False, "2024-01-15 14:30:00")
     # WHEN / THEN
     with pytest.raises(ValueError, match="ID valide"):
         MatchService().delete_match(match_sans_id)
@@ -287,7 +287,7 @@ def test_get_match_statistics_ok(mock_match):
     # THEN
     assert result == {
         "id": "1",
-        "playlist_id": 13,
+        "playlist_id": "13",
         "season": 5,
         "duration": 300,
         "overtime": False,
