@@ -10,7 +10,7 @@ import requests
 # CONFIG
 BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
 
-env_path = BASE_DIR / ".env.local"
+env_path = BASE_DIR / ".env"
 load_dotenv(dotenv_path=env_path)
 
 API_KEY = os.getenv("BALLCHASING_API_KEY")
