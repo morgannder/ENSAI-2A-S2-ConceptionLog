@@ -1,5 +1,6 @@
+from src.dao.players_dao import PlayerDAO
+
 from ..dao.ranks_dao import RanksDAO
-from ..models.players import Player
 from ..models.ranks import Ranks
 from ..utils.singleton import Singleton
 
@@ -9,6 +10,7 @@ class RanksService(metaclass=Singleton):
 
     def __init__(self):
         self.ranks_dao = RanksDAO()
+        self.player_dao = PlayerDAO()
 
     def create_rank(self, tier: str, division: str, name: str) -> Ranks | None:
         """
@@ -34,14 +36,18 @@ class RanksService(metaclass=Singleton):
         """
         return self.ranks_dao.get_rank_by_parameter("name", name)
 
-    def get_current_rank_for_player(self, player: Player) -> Ranks | None:
+    def get_player_rank_by_platform_id(self, platform_id: str) -> Ranks | None:
         """
         Récupère le rang actuel d'un joueur (basé sur son match le plus récent).
         """
-        if player is None:
-            raise ValueError("Le joueur ne peut pas être None")
+        player = self.player_dao.get_player_by_parameter(
+            "platform_user_id", platform_id
+        )
 
-        return self.ranks_dao.get_rank_by_player(player)
+        if platform_id is None:
+            raise ValueError("Veuillez insérer un identifiant.")
+
+        return self.ranks_dao.get_player_rank(player)
 
     def delete_rank(self, rank: Ranks) -> bool:
         """

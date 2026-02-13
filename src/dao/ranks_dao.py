@@ -60,10 +60,9 @@ class RanksDAO(metaclass=Singleton):
 
             list_rank = []
             for rank in res:
-                list_rank.append(Ranks(rank["id"],
-                                       rank["tier"],
-                                       rank["division"],
-                                       rank["name"]))
+                list_rank.append(
+                    Ranks(rank["id"], rank["tier"], rank["division"], rank["name"])
+                )
             return list_rank
 
     def update_rank(self, rank: Ranks):
@@ -117,7 +116,10 @@ class RanksDAO(metaclass=Singleton):
                     FROM ranks
                     WHERE tier = ? And division =?
                     """,
-                (rank.tier, rank.division,),
+                (
+                    rank.tier,
+                    rank.division,
+                ),
             )
             res = cursor.fetchone()
             if not res:

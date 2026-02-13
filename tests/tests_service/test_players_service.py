@@ -54,24 +54,26 @@ def test_create_player_missing_platform_ids():
         service.create_player(None, None, "PlayerOne")
 
 
-# get_player_by_id
+# get_player_by_platform_id
 
 
-def test_get_player_by_id_ok():
+def test_get_player_by_platform_id_ok():
     service = PlayerService()
     service.player_dao.get_player_by_parameter = MagicMock(return_value=PLAYER)
 
-    result = service.get_player_by_id(1)
+    result = service.get_player_by_platform_id(123)
 
     assert result == PLAYER
-    service.player_dao.get_player_by_parameter.assert_called_once_with("id", 1)
+    service.player_dao.get_player_by_parameter.assert_called_once_with(
+        "platform_user_id", 123
+    )
 
 
-def test_get_player_by_id_invalid():
+def test_get_player_by_platform_id_invalid():
     service = PlayerService()
 
-    with pytest.raises(ValueError):
-        service.get_player_by_id(-1)
+    with pytest.raises(ValueError, match="Le platform_id du joueur doit être non vide"):
+        service.get_player_by_platform_id(None)
 
 
 # get_player_by_
@@ -81,7 +83,7 @@ def test_get_player_by_name_ok():
     service = PlayerService()
     service.player_dao.get_player_by_parameter = MagicMock(return_value=PLAYER)
 
-    result = service.get_player_by_("PlayerOne")
+    result = service.get_player_by_name("PlayerOne")
 
     assert result == PLAYER
     service.player_dao.get_player_by_parameter.assert_called_once_with(
@@ -93,7 +95,7 @@ def test_get_player_by_name_invalid():
     service = PlayerService()
 
     with pytest.raises(ValueError):
-        service.get_player_by_("   ")
+        service.get_player_by_name("   ")
 
 
 # delete_player
@@ -158,24 +160,27 @@ def test_player_exists_false():
 # player_exists_by_id
 
 
-def test_player_exists_by_id_true():
+def test_player_exists_by_platform_id_true():
     service = PlayerService()
-    service.get_player_by_id = MagicMock(return_value=PLAYER)
+    service.get_player_by_platform_id = MagicMock(return_value=PLAYER)
 
-    assert service.player_exists_by_id(1) is True
+    assert service.player_exists_by_platform_id(1) is True
 
 
-def test_player_exists_by_id_false():
+def test_player_exists_by_platform_id_false():
     service = PlayerService()
-    service.get_player_by_id = MagicMock(return_value=None)
+    service.get_player_by_platform_id = MagicMock(return_value=None)
 
-    assert service.player_exists_by_id(1) is False
+    assert service.player_exists_by_platform_id(1) is False
 
 
-def test_player_exists_by_id_invalid():
+def test_player_exists_by_platform_id_invalid():
     service = PlayerService()
+    service.player_dao.get_player_by_parameter = MagicMock(
+        side_effect=ValueError("Le platform_id du joueur doit être non vide")
+    )
 
-    assert service.player_exists_by_id(-1) is False
+    assert service.player_exists_by_platform_id("abc123") is False
 
 
 # get_or_create_player

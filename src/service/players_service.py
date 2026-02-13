@@ -35,16 +35,16 @@ class PlayerService:
             return self.get_player_by_name(name)
         return None
 
-    def get_player_by_id(self, player_id: int) -> Player | None:
+    def get_player_by_platform_id(self, platform_id: str) -> Player | None:
         """
         Récupère un joueur par son ID.
         """
-        if player_id is None or player_id < 0:
-            raise ValueError("L'ID du joueur doit être un entier positif")
+        if platform_id is None:
+            raise ValueError("Le platform_id du joueur doit être non vide")
 
-        return self.player_dao.get_player_by_parameter("id", player_id)
+        return self.player_dao.get_player_by_parameter("platform_user_id", platform_id)
 
-    def get_player_by_(self, name: str) -> Player | None:
+    def get_player_by_name(self, name: str) -> Player | None:
         """
         Récupère un joueur par son nom.
         """
@@ -79,12 +79,12 @@ class PlayerService:
         """
         return self.get_player_by_name(name) is not None
 
-    def player_exists_by_id(self, player_id: int) -> bool:
+    def player_exists_by_platform_id(self, platform_id: str) -> bool:
         """
         Vérifie si un joueur existe par son ID.
         """
         try:
-            return self.get_player_by_id(player_id) is not None
+            return self.get_player_by_platform_id(platform_id) is not None
         except ValueError:
             return False
 

@@ -100,31 +100,34 @@ def test_get_rank_by_name_not_found():
 # Rang actuel d'un joueur
 
 
-def test_get_current_rank_for_player_ok():
+def test_get_player_rank_by_platform_id_ok():
     service = RanksService()
-    service.ranks_dao.get_rank_by_player = MagicMock(return_value=RANK_GOLD_I_DIV_2)
+    service.player_dao.get_player_by_parameter = MagicMock(return_value=PLAYER)
+    service.ranks_dao.get_player_rank = MagicMock(return_value=RANK_GOLD_I_DIV_2)
 
-    result = service.get_current_rank_for_player(PLAYER)
+    result = service.get_player_rank_by_platform_id("player_123")
 
     assert result == RANK_GOLD_I_DIV_2
-    service.ranks_dao.get_rank_by_player.assert_called_once_with(PLAYER)
+    service.player_dao.get_player_by_parameter.assert_called_once_with(
+        "platform_user_id", "player_123"
+    )
+    service.ranks_dao.get_player_rank.assert_called_once_with(PLAYER)
 
 
-def test_get_current_rank_for_player_none():
+def test_get_player_rank_by_platform_id_none():
     service = RanksService()
 
-    with pytest.raises(ValueError, match="Le joueur ne peut pas être None"):
-        service.get_current_rank_for_player(None)
+    with pytest.raises(ValueError, match="Veuillez insérer un identifiant."):
+        service.get_player_rank_by_platform_id(None)
 
 
-def test_get_current_rank_for_player_not_found():
+def test_get_player_rank_by_id_not_found():
     service = RanksService()
-    service.ranks_dao.get_rank_by_player = MagicMock(return_value=None)
+    service.player_dao.get_player_by_parameter = MagicMock(return_value=PLAYER)
+    service.ranks_dao.get_player_rank = MagicMock(return_value=None)
 
-    result = service.get_current_rank_for_player(PLAYER)
-
-    assert result is None
-    service.ranks_dao.get_rank_by_player.assert_called_once_with(PLAYER)
+    with pytest.raises(AttributeError):
+        service.get_player_rank_by_id("player_123")
 
 
 # Suppression
