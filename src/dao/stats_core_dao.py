@@ -1,5 +1,6 @@
-from src.dao.db_connection import DBConnection
-from src.utils.singleton import Singleton
+from db_connection import DBConnection
+
+from utils.singleton import Singleton
 
 
 class StatsCoreDAO(metaclass=Singleton):
