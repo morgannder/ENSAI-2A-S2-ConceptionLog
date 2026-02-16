@@ -9,7 +9,7 @@ class StatsCoreDAO(metaclass=Singleton):
     def __init__(self):
         self.db_connector = DBConnection()
 
-    def get_stats_core_per_rank(self, rank_name: str) -> dict | None:
+    def get_sum_stats_core_per_rank(self, rank_name: str) -> dict | None:
         """
         Récupère les stats globales des joueurs pour un rang donné.
         """
