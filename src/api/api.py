@@ -10,13 +10,10 @@ from src.api.routers.stats_positionning_router import (
 )
 
 
-# from src.api.routers import login_router
-
 api_router = APIRouter(prefix="/api")
 
-# api_router.include_router(login_router)
-api_router.include_router(rank_router)
 api_router.include_router(player_router)
+api_router.include_router(rank_router)
 api_router.include_router(core_stats_router)
 api_router.include_router(boost_stats_router)
 api_router.include_router(movement_stats_router)
