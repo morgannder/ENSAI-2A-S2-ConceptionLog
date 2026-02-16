@@ -16,17 +16,19 @@ class MatchParticipationService:
         Parameters
         ----------
         participation : MatchParticipation
-            L'objet participation à créer
+            L'objet participation à créer.
 
         Returns
         -------
         bool
-            True si la participation a été créée, False si elle existait déjà
+            True si la participation a été créée, False si elle existait déjà.
 
         Raises
         ------
         ValueError
-            Si les données de la participation sont invalides
+            Si l'ID de la participation est manquant, si le match_team_id est manquant,
+            si le player_id est manquant, ou si les temps de début et de fin sont invalides
+            (négatifs ou start_time > end_time).
         """
         if not participation.id:
             raise ValueError("L'ID de la participation est requis")
@@ -55,12 +57,12 @@ class MatchParticipationService:
         Parameters
         ----------
         participation_id : str
-            L'ID de la participation
+            L'identifiant unique de la participation.
 
         Returns
         -------
         MatchParticipation | None
-            La participation trouvée ou None
+            La participation trouvée, ou None si aucune participation ne correspond.
         """
         participations = self.match_participation_dao.get_matches_by_parameter(
             "id", participation_id
@@ -76,12 +78,12 @@ class MatchParticipationService:
         Parameters
         ----------
         match_team_id : str
-            L'ID de l'équipe de match
+            L'identifiant de l'équipe de match.
 
         Returns
         -------
         list[MatchParticipation] | None
-            Liste des participations de l'équipe ou None
+            Liste des participations de l'équipe, ou None si aucune participation trouvée.
         """
         return self.match_participation_dao.get_matches_by_parameter(
             "match_team_id", match_team_id
@@ -96,12 +98,12 @@ class MatchParticipationService:
         Parameters
         ----------
         player_id : str
-            L'ID du joueur
+            L'identifiant du joueur.
 
         Returns
         -------
         list[MatchParticipation] | None
-            Liste des participations du joueur ou None
+            Liste des participations du joueur, ou None si aucune participation trouvée.
         """
         return self.match_participation_dao.get_matches_by_parameter(
             "player_id", player_id
@@ -116,12 +118,12 @@ class MatchParticipationService:
         Parameters
         ----------
         rank_id : int
-            L'ID du rang
+            L'identifiant du rang.
 
         Returns
         -------
         list[MatchParticipation] | None
-            Liste des participations de ce rang ou None
+            Liste des participations de ce rang, ou None si aucune participation trouvée.
         """
         return self.match_participation_dao.get_matches_by_parameter("rank_id", rank_id)
 
@@ -132,12 +134,12 @@ class MatchParticipationService:
         Parameters
         ----------
         car_id : int
-            L'ID de la voiture
+            L'identifiant de la voiture.
 
         Returns
         -------
         list[MatchParticipation] | None
-            Liste des participations avec cette voiture ou None
+            Liste des participations avec cette voiture, ou None si aucune participation trouvée.
         """
         return self.match_participation_dao.get_matches_by_parameter("car_id", car_id)
 
@@ -150,19 +152,20 @@ class MatchParticipationService:
         Parameters
         ----------
         player : Player
-            Le joueur dont on veut récupérer les participations
+            Le joueur dont on veut récupérer les participations.
         limit : int, optional
-            Nombre de participations à récupérer (par défaut: 20)
+            Nombre maximum de participations à récupérer (par défaut: 20).
 
         Returns
         -------
         list[MatchParticipation] | None
-            Liste des participations du joueur ou None
+            Liste des participations du joueur triées par date décroissante,
+            ou None si aucune participation trouvée.
 
         Raises
         ------
         ValueError
-            Si le joueur n'a pas d'ID ou si limit est invalide
+            Si le joueur n'a pas d'ID valide ou si limit est inférieur ou égal à 0.
         """
         if not player or not player.id:
             raise ValueError("Le joueur doit avoir un ID valide")
@@ -183,17 +186,18 @@ class MatchParticipationService:
         Parameters
         ----------
         player : Player
-            Le joueur dont on veut récupérer les MVPs
+            Le joueur dont on veut récupérer les participations MVP.
 
         Returns
         -------
         list[MatchParticipation] | None
-            Liste des participations MVP du joueur ou None
+            Liste des participations où le joueur a été MVP,
+            ou None si aucune participation MVP trouvée.
 
         Raises
         ------
         ValueError
-            Si le joueur n'a pas d'ID
+            Si le joueur n'a pas d'ID valide.
         """
         if not player or not player.id:
             raise ValueError("Le joueur doit avoir un ID valide")
@@ -207,17 +211,17 @@ class MatchParticipationService:
         Parameters
         ----------
         player : Player
-            Le joueur dont on veut compter les MVPs
+            Le joueur dont on veut compter les MVPs.
 
         Returns
         -------
         int
-            Nombre de MVPs du joueur
+            Nombre total de MVPs du joueur.
 
         Raises
         ------
         ValueError
-            Si le joueur n'a pas d'ID
+            Si le joueur n'a pas d'ID valide.
         """
         if not player or not player.id:
             raise ValueError("Le joueur doit avoir un ID valide")
@@ -231,12 +235,12 @@ class MatchParticipationService:
         Parameters
         ----------
         participation : MatchParticipation
-            La participation à supprimer
+            La participation à supprimer.
 
         Raises
         ------
         ValueError
-            Si la participation n'a pas d'ID
+            Si la participation n'a pas d'ID valide.
         """
         if not participation or not participation.id:
             raise ValueError("La participation doit avoir un ID valide")
@@ -250,17 +254,18 @@ class MatchParticipationService:
         Parameters
         ----------
         player : Player
-            Le joueur dont on veut calculer le taux de MVP
+            Le joueur dont on veut calculer le taux de MVP.
 
         Returns
         -------
         float | None
-            Pourcentage de MVP (0-100) ou None si aucune participation
+            Pourcentage de MVP arrondi à 2 décimales (0-100),
+            ou None si le joueur n'a aucune participation.
 
         Raises
         ------
         ValueError
-            Si le joueur n'a pas d'ID
+            Si le joueur n'a pas d'ID valide.
         """
         if not player or not player.id:
             raise ValueError("Le joueur doit avoir un ID valide")
@@ -274,17 +279,28 @@ class MatchParticipationService:
 
     def get_participation_statistics(self, participation_id: str) -> dict | None:
         """
-        Récupère des statistiques sur une participation.
+        Récupère des statistiques détaillées sur une participation.
 
         Parameters
         ----------
         participation_id : str
-            L'ID de la participation
+            L'identifiant de la participation.
 
         Returns
         -------
         dict | None
-            Dictionnaire contenant les statistiques de la participation ou None
+            Dictionnaire contenant les statistiques de la participation :
+            - id : identifiant de la participation
+            - match_team_id : identifiant de l'équipe
+            - player_id : identifiant du joueur
+            - rank_id : identifiant du rang
+            - car_id : identifiant de la voiture
+            - car_name : nom de la voiture
+            - mvp : si le joueur a été MVP (bool)
+            - play_time_seconds : temps de jeu en secondes
+            - start_time : temps de début
+            - end_time : temps de fin
+            Retourne None si la participation n'existe pas.
         """
         participation = self.get_participation_by_id(participation_id)
         if not participation:
@@ -314,19 +330,25 @@ class MatchParticipationService:
         Parameters
         ----------
         player : Player
-            Le joueur dont on veut analyser les voitures
+            Le joueur dont on veut analyser les voitures.
         limit : int, optional
-            Nombre de voitures à retourner (par défaut: 5)
+            Nombre maximum de voitures à retourner (par défaut: 5).
 
         Returns
         -------
         dict | None
-            Dictionnaire {car_name: count} ou None
+            Dictionnaire {car_name: count} trié par nombre d'utilisations décroissant,
+            ou None si le joueur n'a aucune participation.
 
         Raises
         ------
         ValueError
-            Si le joueur n'a pas d'ID ou si limit est invalide
+            Si le joueur n'a pas d'ID valide ou si limit est inférieur ou égal à 0.
+
+        Examples
+        --------
+        >>> service.get_most_used_cars(player, limit=3)
+        {'Octane': 45, 'Fennec': 32, 'Dominus': 18}
         """
         if not player or not player.id:
             raise ValueError("Le joueur doit avoir un ID valide")

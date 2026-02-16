@@ -16,17 +16,19 @@ class MatchTeamService:
         Parameters
         ----------
         match_team : MatchTeam
-            L'objet équipe de match à créer
+            L'objet équipe de match à créer.
 
         Returns
         -------
         bool
-            True si l'équipe a été créée, False si elle existait déjà
+            True si l'équipe a été créée, False si elle existait déjà.
 
         Raises
         ------
         ValueError
-            Si les données de l'équipe sont invalides
+            Si l'ID de l'équipe est manquant, si le match_id est manquant,
+            si le score est négatif, si la couleur n'est pas 'blue' ou 'orange',
+            si possession_time ou time_in_side sont négatifs.
         """
         if not match_team.id:
             raise ValueError("L'ID de l'équipe est requis")
@@ -55,12 +57,12 @@ class MatchTeamService:
         Parameters
         ----------
         team_id : str
-            L'ID de l'équipe
+            L'identifiant unique de l'équipe.
 
         Returns
         -------
         MatchTeam | None
-            L'équipe trouvée ou None
+            L'équipe trouvée, ou None si aucune équipe ne correspond.
         """
         teams = self.match_team_dao.get_match_teams_by_parameter("id", team_id)
         return teams[0] if teams else None
@@ -72,12 +74,12 @@ class MatchTeamService:
         Parameters
         ----------
         match_id : str
-            L'ID du match
+            L'identifiant du match.
 
         Returns
         -------
         list[MatchTeam] | None
-            Liste des équipes du match (généralement 2) ou None
+            Liste des équipes du match (généralement 2), ou None si aucune équipe trouvée.
         """
         return self.match_team_dao.get_match_teams_by_parameter("match_id", match_id)
 
@@ -88,17 +90,17 @@ class MatchTeamService:
         Parameters
         ----------
         color : str
-            La couleur de l'équipe ('blue' ou 'orange')
+            La couleur de l'équipe ('blue' ou 'orange').
 
         Returns
         -------
         list[MatchTeam] | None
-            Liste des équipes de cette couleur ou None
+            Liste des équipes de cette couleur, ou None si aucune équipe trouvée.
 
         Raises
         ------
         ValueError
-            Si la couleur n'est pas valide
+            Si la couleur n'est pas 'blue' ou 'orange'.
         """
         if color not in ["blue", "orange"]:
             raise ValueError("La couleur doit être 'blue' ou 'orange'")
@@ -112,17 +114,17 @@ class MatchTeamService:
         Parameters
         ----------
         score : int
-            Le score recherché
+            Le score recherché.
 
         Returns
         -------
         list[MatchTeam] | None
-            Liste des équipes avec ce score ou None
+            Liste des équipes avec ce score, ou None si aucune équipe trouvée.
 
         Raises
         ------
         ValueError
-            Si le score est négatif
+            Si le score est négatif.
         """
         if score < 0:
             raise ValueError("Le score ne peut pas être négatif")
@@ -138,19 +140,20 @@ class MatchTeamService:
         Parameters
         ----------
         player : Player
-            Le joueur dont on veut récupérer les équipes
+            Le joueur dont on veut récupérer les équipes.
         limit : int, optional
-            Nombre d'équipes à récupérer (par défaut: 20)
+            Nombre maximum d'équipes à récupérer (par défaut: 20).
 
         Returns
         -------
         list[MatchTeam] | None
-            Liste des équipes du joueur ou None
+            Liste des équipes du joueur triées par date décroissante,
+            ou None si aucune équipe trouvée.
 
         Raises
         ------
         ValueError
-            Si le joueur n'a pas d'ID ou si limit est invalide
+            Si le joueur n'a pas d'ID valide ou si limit est inférieur ou égal à 0.
         """
         if not player or not player.id:
             raise ValueError("Le joueur doit avoir un ID valide")
@@ -167,12 +170,12 @@ class MatchTeamService:
         Parameters
         ----------
         match_team : MatchTeam
-            L'équipe à supprimer
+            L'équipe à supprimer.
 
         Raises
         ------
         ValueError
-            Si l'équipe n'a pas d'ID
+            Si l'équipe n'a pas d'ID valide.
         """
         if not match_team or not match_team.id:
             raise ValueError("L'équipe doit avoir un ID valide")
@@ -186,12 +189,18 @@ class MatchTeamService:
         Parameters
         ----------
         match_id : str
-            L'ID du match
+            L'identifiant du match.
 
         Returns
         -------
         MatchTeam | None
-            L'équipe gagnante ou None si match nul ou introuvable
+            L'équipe ayant le score le plus élevé, ou None si le match
+            est nul, introuvable, ou ne contient pas exactement 2 équipes.
+
+        Notes
+        -----
+        En cas d'égalité de score (possible dans les matchs personnalisés
+        avec overtime désactivée), retourne None.
         """
         teams = self.get_teams_by_match(match_id)
         if not teams or len(teams) != 2:
@@ -208,17 +217,30 @@ class MatchTeamService:
 
     def get_team_statistics(self, team_id: str) -> dict | None:
         """
-        Récupère des statistiques sur une équipe.
+        Récupère des statistiques détaillées sur une équipe.
 
         Parameters
         ----------
         team_id : str
-            L'ID de l'équipe
+            L'identifiant de l'équipe.
 
         Returns
         -------
         dict | None
-            Dictionnaire contenant les statistiques de l'équipe ou None
+            Dictionnaire contenant les statistiques de l'équipe :
+            - id : identifiant de l'équipe
+            - match_id : identifiant du match
+            - color : couleur de l'équipe
+            - score : score de l'équipe
+            - possession_time : temps de possession en secondes
+            - time_in_side : temps passé dans le camp adverse en secondes
+            - possession_percentage : pourcentage de possession (basé sur un match de 5 min)
+            Retourne None si l'équipe n'existe pas.
+
+        Notes
+        -----
+        Le pourcentage de possession est calculé en supposant une durée
+        de match de 300 secondes (5 minutes).
         """
         team = self.get_match_team_by_id(team_id)
         if not team:

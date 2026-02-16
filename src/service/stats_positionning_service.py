@@ -6,14 +6,31 @@ from src.models.stats_positionning import StatsPositionning
 
 
 class StatPositionningService:
-    """Doc."""
+    """Service pour gérer les opérations métier liées aux statistiques de positionnement."""
 
     def __init__(self):
         self.stats_positionning_dao = StatPositionningDAO()
 
     def get_rank_positionning_statistics(self, rank: Ranks) -> dict | None:
         """
-        Doc.
+        Récupère les statistiques moyennes de positionnement pour un rang donné.
+
+        Parameters
+        ----------
+        rank : Ranks
+            Le rang pour lequel on veut obtenir les statistiques de positionnement.
+
+        Returns
+        -------
+        dict | None
+            Dictionnaire contenant les statistiques moyennes de positionnement pour ce rang,
+            ou None si aucune statistique n'est disponible.
+
+        Notes
+        -----
+        Les statistiques de positionnement incluent typiquement le temps passé en zone
+        offensive, défensive, neutre, la position moyenne sur le terrain, et autres
+        métriques de placement tactique pour tous les joueurs de ce rang.
         """
         return self.stats_positionning_dao.get_average_stats_positionning_per_rank(rank)
 
@@ -21,14 +38,63 @@ class StatPositionningService:
         self, player: Player, match: Match
     ) -> StatsPositionning | None:
         """
-        Doc.
+        Récupère les statistiques de positionnement d'un joueur pour un match spécifique.
+
+        Parameters
+        ----------
+        player : Player
+            Le joueur dont on veut récupérer les statistiques de positionnement.
+        match : Match
+            Le match pour lequel on veut obtenir les statistiques.
+
+        Returns
+        -------
+        StatsPositionning | None
+            Les statistiques de positionnement du joueur pour ce match,
+            ou None si aucune donnée n'est disponible.
+
+        Raises
+        ------
+        ValueError
+            Si le joueur ou le match n'a pas d'ID valide.
+
+        Notes
+        -----
+        Les statistiques incluent le temps passé dans chaque tiers du terrain
+        (offensif, neutre, défensif), la position moyenne, et autres métriques
+        de placement tactique durant le match.
         """
+        if not player or not player.id:
+            raise ValueError("Le joueur doit avoir un ID valide")
+
+        if not match or not match.id:
+            raise ValueError("Le match doit avoir un ID valide")
+
         return self.stats_positionning_dao.get_player_match_stats_positionning(
             player, match
         )
 
     def get_player_average_positionning_stats(self, player: Player) -> dict | None:
         """
-        Doc.
+        Récupère les statistiques moyennes de positionnement d'un joueur sur tous ses matchs.
+
+        Parameters
+        ----------
+        player : Player
+            Le joueur dont on veut récupérer les statistiques moyennes de positionnement.
+
+        Returns
+        -------
+        dict | None
+            Dictionnaire contenant les statistiques moyennes de positionnement du joueur,
+            ou None si le joueur n'a aucune statistique disponible.
+
+        Raises
+        ------
+        ValueError
+            Si le joueur n'a pas d'ID valide.
         """
+        if not player or not player.id:
+            raise ValueError("Le joueur doit avoir un ID valide")
+
         return self.stats_positionning_dao.get_player_average_stats_positionning(player)
