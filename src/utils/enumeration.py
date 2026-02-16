@@ -11,5 +11,3 @@ Ranks_enum = Literal[
     "Grand Champion",
     "Supersonic Legend",
 ]
-
-Stats_type = Literal["Average", "Sum"]

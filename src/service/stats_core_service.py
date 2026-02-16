@@ -10,26 +10,6 @@ class StatsCoreService:
     def __init__(self):
         self.stats_core_dao = StatsCoreDAO()
 
-    def get_sum_stats_core_by_rank_name(self, rank_name: str) -> float | None:
-        """
-        Récupère les statistiques core pour un rang donné (par nom).
-
-        Parameters
-        ----------
-        rank_name : str
-            Le nom du rang (ex: "Bronze I", "Silver II", "Gold III").
-
-        Returns
-        -------
-        float | None
-            Les statistiques core pour ce rang, ou None si aucune donnée n'est disponible.
-
-        Notes
-        -----
-        Cette méthode retourne les statistiques brutes (non moyennées) pour le rang.
-        """
-        return self.stats_core_dao.get_sum_stats_core_per_rank(rank_name)
-
     def get_average_stats_core_by_rank_name(self, rank_name: str) -> float | None:
         """
         Récupère les statistiques core moyennes pour un rang donné (par nom).

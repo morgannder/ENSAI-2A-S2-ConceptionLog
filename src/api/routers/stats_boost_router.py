@@ -27,7 +27,7 @@ def get_rank_statistics(rank_name: Ranks_enum):
     """doc."""
 
     rank = Ranks(name=rank_name)
-    stats = stats_boost_service.get_rank_boost_statistics(rank)
+    stats = stats_boost_service.get_average_stats_boost_by_rank(rank)
 
     if stats is None:
         raise HTTPException(

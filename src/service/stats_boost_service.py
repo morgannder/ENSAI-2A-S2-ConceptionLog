@@ -11,7 +11,7 @@ class StatBoostService:
     def __init__(self):
         self.stats_boost_dao = StatBoostDAO()
 
-    def get_rank_boost_statistics(self, rank: Ranks) -> dict | None:
+    def get_average_stats_boost_by_rank(self, rank: Ranks) -> dict | None:
         """
         Récupère les statistiques moyennes de boost pour un rang donné.
 

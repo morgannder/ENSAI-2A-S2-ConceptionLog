@@ -32,7 +32,6 @@ class StatsBoost:
         percent_boost_75_100: float = 0.0,
     ):
         self._participation_id = participation_id
-
         self.boost_per_minute = boost_per_minute
         self.boost_consumed_per_minute = boost_consumed_per_minute
         self.average_amount = average_amount
