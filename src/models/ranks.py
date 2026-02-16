@@ -48,13 +48,13 @@ class Ranks:
             21: "Grand Champion",
             22: "Supersonic Legend",
         }
-        return rank_groups.get(self._tier, "Unknown")
+        return rank_groups.get(self.tier, "Unknown")
 
     @property
     def division_roman(self) -> str:
         """Retourne la division en chiffres romains"""
         divisions = {1: "I", 2: "II", 3: "III", 4: "IV"}
-        return divisions.get(self._division, "")
+        return divisions.get(self.division, "")
 
     @property
     def display_name(self) -> str:

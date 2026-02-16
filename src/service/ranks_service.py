@@ -100,7 +100,7 @@ class RanksService(metaclass=Singleton):
         if rank1 is None or rank2 is None:
             raise ValueError("Les rangs ne peuvent pas être None")
 
-        # Sécurité : si valeur invalide → 0
+        # Sécurité : si valeur invalide => 0
         tier1 = rank1.tier if isinstance(rank1.tier, int) else 0
         tier2 = rank2.tier if isinstance(rank2.tier, int) else 0
 
