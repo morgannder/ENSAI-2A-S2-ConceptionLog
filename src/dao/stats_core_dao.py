@@ -1,13 +1,72 @@
-from db_connection import DBConnection
-
-from utils.singleton import Singleton
+from src.dao.db_connection import DBConnection
+from src.models.matches import Match
+from src.models.players import Player
+from src.models.stats_core import StatsCore
+from src.utils.singleton import Singleton
 
 
 class StatsCoreDAO(metaclass=Singleton):
     def __init__(self):
         self.db_connector = DBConnection()
 
-    def get_average_stats_per_rank(self, rank_name: str) -> dict | None:
+    def get_stats_core_per_rank(self, rank_name: str) -> dict | None:
+        """
+        Récupère les stats globales des joueurs pour un rang donné.
+        """
+        query = """
+            SELECT
+                CASE
+                    WHEN r.tier BETWEEN 1 AND 3 THEN 'Bronze'
+                    WHEN r.tier BETWEEN 4 AND 6 THEN 'Silver'
+                    WHEN r.tier BETWEEN 7 AND 9 THEN 'Gold'
+                    WHEN r.tier BETWEEN 10 AND 12 THEN 'Platinum'
+                    WHEN r.tier BETWEEN 13 AND 15 THEN 'Diamond'
+                    WHEN r.tier BETWEEN 16 AND 18 THEN 'Champion'
+                    WHEN r.tier BETWEEN 19 AND 21 THEN 'Grand Champion'
+                    WHEN r.tier = 22 THEN 'Supersonic Legend'
+                    ELSE 'Unknown'
+                END AS rank_group,
+                COUNT(*) AS nb_players,
+                SUM(saves) AS sum_saves,
+                SUM(assists) AS sum_assists,
+                SUM(demo_inflicted) AS sum_demo_inflicted,
+                SUM(demo_taken) AS sum_demo_taken,
+                SUM(goals) AS sum_goals,
+                SUM(shots) AS sum_shots
+            FROM stats_core sc
+            INNER JOIN match_participation mp ON sc.participation_id = mp.id
+            INNER JOIN ranks r ON mp.rank_id = r.id
+            WHERE CASE
+                WHEN r.tier BETWEEN 1 AND 3 THEN 'Bronze'
+                WHEN r.tier BETWEEN 4 AND 6 THEN 'Silver'
+                WHEN r.tier BETWEEN 7 AND 9 THEN 'Gold'
+                WHEN r.tier BETWEEN 10 AND 12 THEN 'Platinum'
+                WHEN r.tier BETWEEN 13 AND 15 THEN 'Diamond'
+                WHEN r.tier BETWEEN 16 AND 18 THEN 'Champion'
+                WHEN r.tier BETWEEN 19 AND 21 THEN 'Grand Champion'
+                WHEN r.tier = 22 THEN 'Supersonic Legend'
+                ELSE 'Unknown'
+            END = ?
+            GROUP BY rank_group
+            """
+        connection = self.db_connector.connection
+        with connection:
+            cursor = connection.cursor()
+            cursor.execute(query, (rank_name,))
+            res = cursor.fetchone()
+            if not res:
+                return None
+
+            return {
+                "players_number": res["nb_players"],
+                "sum_shots": res["sum_shots"],
+                "sum_assists": res["sum_assists"],
+                "sum_saves": res["sum_saves"],
+                "sum_demo_taken": res["sum_demo_taken"],
+                "sum_demo_inflicted": res["sum_demo_inflicted"],
+            }
+
+    def get_average_stats_core_per_rank(self, rank_name: str) -> dict | None:
         """
         Récupère les stats globales des joueurs pour un rang donné.
         """
@@ -61,4 +120,70 @@ class StatsCoreDAO(metaclass=Singleton):
                 "demo_taken": res["avg_demo_taken"],
                 "avg_assists": res["avg_assists"],
                 "demo_inflicted": res["avg_demo_inflicted"],
+            }
+
+    def get_player_match_stats_core(
+        self, player: Player, match: Match
+    ) -> StatsCore | None:
+        query = """
+                SELECT sc.*
+                FROM stats_core sc
+                JOIN match_participation mp ON mp.id = sc.participation_id
+                JOIN match_teams mt ON mt.id = mp.match_team_id
+                JOIN matches m ON m.id = mt.match_id
+                JOIN players p ON p.id = mp.player_id
+                WHERE m.id = ? and p.id = ?
+                """
+        connection = self.db_connector.connection
+        with connection:
+            cursor = connection.cursor()
+            cursor.execute(
+                query,
+                (
+                    match.id,
+                    player.id,
+                ),
+            )
+            res = cursor.fetchone()
+            if not res:
+                return None
+            return StatsCore(
+                participation_id=res["participation_id"],
+                shots=res["shots"],
+                goals=res["goals"],
+                saves=res["saves"],
+                assists=res["assists"],
+                score=res["score"],
+                shooting_percentage=res["shooting_percentage"],
+                demo_inflicted=res["demo_inflicted"],
+                demo_taken=res["demo_taken"],
+            )
+
+    def get_player_average_stats_core(self, player: Player) -> dict | None:
+        query = """
+                SELECT
+                    AVG(sc.shots) AS avg_shots,
+                    AVG(sc.goals) AS avg_goals,
+                    AVG(sc.saves) AS avg_saves,
+                    AVG(sc.assists) AS avg_assists,
+                    AVG(sc.demo_inflicted) AS avg_demo_inflicted,
+                    AVG(sc.demo_taken) AS avg_demo_taken
+                FROM stats_core sc
+                JOIN match_participation mp ON sc.participation_id = mp.id
+                JOIN players p on p.id = ?
+                """
+        connection = self.db_connector.connection
+        with connection:
+            cursor = connection.cursor()
+            cursor.execute(query, (player.id,))
+            res = cursor.fetchone()
+            if not res:
+                return None
+            return {
+                "avg_shots": res["avg_shots"],
+                "avg_goals": res["avg_goals"],
+                "avg_saves": res["avg_saves"],
+                "avg_assists": res["avg_assists"],
+                "avg_demo_inflicted": res["avg_demo_inflicted"],
+                "avg_demo_taken": res["avg_demo_taken"],
             }

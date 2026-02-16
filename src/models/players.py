@@ -2,7 +2,7 @@ class Player:
     def __init__(self, id: int, platform_id: int, platform_user_id: str, name: str):
         self._id = id
         self._platform_id = platform_id
-        self._platform_usbiginter_id = platform_user_id
+        self._platform_user_id = platform_user_id
         self._name = name
 
     @property

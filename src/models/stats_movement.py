@@ -44,3 +44,27 @@ class StatsMovement:
     @property
     def participation_id(self):
         return self._participation_id
+
+    def to_dict(self) -> dict:
+        """Convertit StatsMovement en dictionnaire pour l'API."""
+        return {
+            "participation_id": self.participation_id,
+            "avg_speed": self.avg_speed,
+            "total_distance": self.total_distance,
+            "time_supersonic_speed": self.time_supersonic_speed,
+            "time_boost_speed": self.time_boost_speed,
+            "time_slow_speed": self.time_slow_speed,
+            "time_ground": self.time_ground,
+            "time_low_air": self.time_low_air,
+            "time_high_air": self.time_high_air,
+            "time_powerslide": self.time_powerslide,
+            "count_powerslide": self.count_powerslide,
+            "average_powerslide_duration": self.average_powerslide_duration,
+            "average_speed_percentage": self.average_speed_percentage,
+            "percent_slow_speed": self.percent_slow_speed,
+            "percent_boost_speed": self.percent_boost_speed,
+            "percent_supersonic_speed": self.percent_supersonic_speed,
+            "percent_ground": self.percent_ground,
+            "percent_low_air": self.percent_low_air,
+            "percent_high_air": self.percent_high_air,
+        }

@@ -1,9 +1,9 @@
-from ..models.matches import Match
-from ..models.players import Player
-from ..models.ranks import Ranks
-from ..models.stats_boost import StatsBoost
-from ..utils.singleton import Singleton
-from .db_connection import DBConnection
+from src.dao.db_connection import DBConnection
+from src.models.matches import Match
+from src.models.players import Player
+from src.models.ranks import Ranks
+from src.models.stats_boost import StatsBoost
+from src.utils.singleton import Singleton
 
 
 class StatBoostDAO(metaclass=Singleton):
