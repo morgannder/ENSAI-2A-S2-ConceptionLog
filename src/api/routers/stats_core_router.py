@@ -46,7 +46,7 @@ def get_average_stats_core_by_rank(
     """
 
     try:
-        stats = stats_core_service.get_average_stats_core_by_rank_name(rank)
+        stats = stats_core_service.get_average_stats_core_by_rank(rank)
 
         if stats is None:
             raise HTTPException(

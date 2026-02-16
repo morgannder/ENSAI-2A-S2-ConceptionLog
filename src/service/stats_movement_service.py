@@ -11,7 +11,7 @@ class StatMovementService:
     def __init__(self):
         self.stats_movement_dao = StatMovementDAO()
 
-    def get_rank_movement_statistics(self, rank: Ranks) -> dict | None:
+    def get_average_stats_movement_by_rank(self, rank: Ranks) -> dict | None:
         """
         Récupère les statistiques moyennes de mouvement pour un rang donné.
 

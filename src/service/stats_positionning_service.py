@@ -11,7 +11,7 @@ class StatPositionningService:
     def __init__(self):
         self.stats_positionning_dao = StatPositionningDAO()
 
-    def get_rank_positionning_statistics(self, rank: Ranks) -> dict | None:
+    def get_average_stats_positionning_by_rank(self, rank: Ranks) -> dict | None:
         """
         Récupère les statistiques moyennes de positionnement pour un rang donné.
 

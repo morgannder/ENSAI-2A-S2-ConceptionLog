@@ -10,7 +10,7 @@ class StatsCoreService:
     def __init__(self):
         self.stats_core_dao = StatsCoreDAO()
 
-    def get_average_stats_core_by_rank_name(self, rank_name: str) -> float | None:
+    def get_average_stats_core_by_rank(self, rank_name: str) -> float | None:
         """
         Récupère les statistiques core moyennes pour un rang donné (par nom).
 
