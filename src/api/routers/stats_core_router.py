@@ -4,6 +4,8 @@ from src.api.schemas.stats_response import (
     StatsByPlayerMatchResponse,
     StatsByPlayerResponse,
     StatsByRankResponse,
+    StatsResponseFactory,
+    StatsType,
 )
 from src.service.matches_service import MatchService
 from src.service.players_service import PlayerService
@@ -106,7 +108,9 @@ def get_player_average_statistics(platform_id: str) -> StatsByPlayerResponse:
             detail="Aucune statistique core trouvée pour ce joueur",
         )
 
-    return StatsByPlayerResponse(platform_id=platform_id, data=stats)
+    return StatsResponseFactory.create_player_response(
+        platform_id=platform_id, stats_type=StatsType.CORE, data=stats
+    )
 
 
 @router.get(
