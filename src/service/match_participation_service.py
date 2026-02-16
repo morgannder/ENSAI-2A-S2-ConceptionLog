@@ -271,10 +271,12 @@ class MatchParticipationService:
             raise ValueError("Le joueur doit avoir un ID valide")
 
         total_participations = self.get_participations_by_player(player.id)
-        if not total_participations:
+        if not total_participations or len(total_participations) == 0:
             return None
 
-        mvp_count = self.get_player_mvp_count(player)
+        # Compter directement les MVP dans les participations récupérées
+        mvp_count = sum(1 for p in total_participations if p.mvp)
+
         return round((mvp_count / len(total_participations)) * 100, 2)
 
     def get_participation_statistics(self, participation_id: str) -> dict | None:
