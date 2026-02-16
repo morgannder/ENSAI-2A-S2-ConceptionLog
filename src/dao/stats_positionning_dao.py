@@ -6,7 +6,7 @@ from ..utils.singleton import Singleton
 from .db_connection import DBConnection
 
 
-class StatPositionningAO(metaclass=Singleton):
+class StatPositionningDAO(metaclass=Singleton):
     def __init__(self):
         self.db_connector = DBConnection()
 
@@ -32,20 +32,16 @@ class StatPositionningAO(metaclass=Singleton):
                         END AS rank_group,
                         COUNT(DISTINCT mp.player_id) AS nb_players,
                         AVG(sp.average_distance_to_ball) AS avg_average_distance_to_ball,
-                        AVG(sp.average_distance_to_ball_possession) AS avg_distance_to_ball_possession,
-                        AVG(sp.average_distance_to_ball_no_possession) AS avg_distance_to_ball_no_possession,
                         AVG(sp.average_distance_to_mates) AS avg_average_distance_to_mates,
                         AVG(sp.time_defensive_third) AS avg_time_defensive_third,
                         AVG(sp.time_neutral_third) AS avg_time_neutral_third,
                         AVG(sp.time_offensive_third) AS avg_time_offensive_third,
-                        AVG(sp.time_defensive_half) AS avg_time_defensive_half,
-                        AVG(sp.time_offensive_half) AS avg_time_offensive_half,
                         AVG(sp.time_behind_ball) AS avg_time_behind_ball,
                         AVG(sp.time_infront_ball) AS avg_time_infront_ball,
                         AVG(sp.time_most_back) AS avg_time_most_back,
                         AVG(sp.time_most_forward) AS avg_time_most_forward,
                         AVG(sp.time_closest_to_ball) AS avg_time_closest_to_ball,
-                        AVG(sp.time_farthest_from_ball) AS avg_time_farthest_from_ball,
+                        AVG(sp.time_farthest_to_ball) AS avg_time_farthest_to_ball,
                         AVG(sp.goals_against_while_last_defender) AS avg_goals_against_while_last_defender,
                         AVG(sp.percent_defensive_third) AS avg_percent_defensive_third,
                         AVG(sp.percent_offensive_third) AS avg_percent_offensive_third,
@@ -74,6 +70,10 @@ class StatPositionningAO(metaclass=Singleton):
                     END = ?
                     GROUP BY rank_group
                 """
+        # AVG(sp.average_distance_to_ball_possession) AS avg_distance_to_ball_possession,
+        # AVG(sp.average_distance_to_ball_no_possession) AS avg_distance_to_ball_no_possession,
+        # AVG(sp.time_defensive_half) AS avg_time_defensive_half,
+        # AVG(sp.time_offensive_half) AS avg_time_offensive_half,
         connection = self.db_connector.connection
         with connection:
             cursor = connection.cursor()
@@ -86,24 +86,24 @@ class StatPositionningAO(metaclass=Singleton):
                 "rank_group": res["rank_group"],
                 "nb_players": res["nb_players"],
                 "avg_average_distance_to_ball": res["avg_average_distance_to_ball"],
-                "avg_distance_to_ball_possession": res[
-                    "avg_distance_to_ball_possession"
-                ],
-                "avg_distance_to_ball_no_possession": res[
-                    "avg_distance_to_ball_no_possession"
-                ],
+                # "avg_distance_to_ball_possession": res[
+                #    "avg_distance_to_ball_possession"
+                # ],
+                # "avg_distance_to_ball_no_possession": res[
+                #    "avg_distance_to_ball_no_possession"
+                # ],
                 "avg_average_distance_to_mates": res["avg_average_distance_to_mates"],
                 "avg_time_defensive_third": res["avg_time_defensive_third"],
                 "avg_time_neutral_third": res["avg_time_neutral_third"],
                 "avg_time_offensive_third": res["avg_time_offensive_third"],
-                "avg_time_defensive_half": res["avg_time_defensive_half"],
-                "avg_time_offensive_half": res["avg_time_offensive_half"],
+                # "avg_time_defensive_half": res["avg_time_defensive_half"],
+                # "avg_time_offensive_half": res["avg_time_offensive_half"],
                 "avg_time_behind_ball": res["avg_time_behind_ball"],
                 "avg_time_infront_ball": res["avg_time_infront_ball"],
                 "avg_time_most_back": res["avg_time_most_back"],
                 "avg_time_most_forward": res["avg_time_most_forward"],
                 "avg_time_closest_to_ball": res["avg_time_closest_to_ball"],
-                "avg_time_farthest_from_ball": res["avg_time_farthest_from_ball"],
+                "avg_time_farthest_to_ball": res["avg_time_farthest_to_ball"],
                 "avg_goals_against_while_last_defender": res[
                     "avg_goals_against_while_last_defender"
                 ],
@@ -142,18 +142,18 @@ class StatPositionningAO(metaclass=Singleton):
             return StatsPositionning(
                 participation_id=res["participation_id"],
                 average_distance_to_ball=res["average_distance_to_ball"],
-                average_distance_to_ball_possession=res[
-                    "average_distance_to_ball_possession"
-                ],
-                average_distance_to_ball_no_possession=res[
-                    "average_distance_to_ball_no_possession"
-                ],
+                # average_distance_to_ball_possession=res[
+                #    "average_distance_to_ball_possession"
+                # ],
+                # average_distance_to_ball_no_possession=res[
+                #    "average_distance_to_ball_no_possession"
+                # ],
                 average_distance_to_mates=res["average_distance_to_mates"],
                 time_defensive_third=res["time_defensive_third"],
                 time_neutral_third=res["time_neutral_third"],
                 time_offensive_third=res["time_offensive_third"],
-                time_defensive_half=res["time_defensive_half"],
-                time_offensive_half=res["time_offensive_half"],
+                # time_defensive_half=res["time_defensive_half"],
+                # time_offensive_half=res["time_offensive_half"],
                 time_behind_ball=res["time_behind_ball"],
                 time_infront_ball=res["time_infront_ball"],
                 time_most_back=res["time_most_back"],
@@ -162,9 +162,7 @@ class StatPositionningAO(metaclass=Singleton):
                     "goals_against_while_last_defender"
                 ],
                 time_closest_to_ball=res["time_closest_to_ball"],
-                time_farthest_to_ball=res.get(
-                    "time_farthest_from_ball", res.get("time_farthest_to_ball")
-                ),
+                time_farthest_to_ball=res["time_farthest_to_ball"],
                 percent_defensive_third=res["percent_defensive_third"],
                 percent_neutral_third=res["percent_neutral_third"],
                 percent_offensive_third=res["percent_offensive_third"],
@@ -182,20 +180,16 @@ class StatPositionningAO(metaclass=Singleton):
         query = """
                 SELECT
                     AVG(sp.average_distance_to_ball) AS avg_average_distance_to_ball,
-                    AVG(sp.average_distance_to_ball_possession) AS avg_distance_to_ball_possession,
-                    AVG(sp.average_distance_to_ball_no_possession) AS avg_distance_to_ball_no_possession,
                     AVG(sp.average_distance_to_mates) AS avg_average_distance_to_mates,
                     AVG(sp.time_defensive_third) AS avg_time_defensive_third,
                     AVG(sp.time_neutral_third) AS avg_time_neutral_third,
                     AVG(sp.time_offensive_third) AS avg_time_offensive_third,
-                    AVG(sp.time_defensive_half) AS avg_time_defensive_half,
-                    AVG(sp.time_offensive_half) AS avg_time_offensive_half,
                     AVG(sp.time_behind_ball) AS avg_time_behind_ball,
                     AVG(sp.time_infront_ball) AS avg_time_infront_ball,
                     AVG(sp.time_most_back) AS avg_time_most_back,
                     AVG(sp.time_most_forward) AS avg_time_most_forward,
                     AVG(sp.time_closest_to_ball) AS avg_time_closest_to_ball,
-                    AVG(sp.time_farthest_from_ball) AS avg_time_farthest_from_ball,
+                    AVG(sp.time_farthest_to_ball) AS avg_time_farthest_to_ball,
                     AVG(sp.goals_against_while_last_defender) AS avg_goals_against_while_last_defender,
                     AVG(sp.percent_defensive_third) AS avg_percent_defensive_third,
                     AVG(sp.percent_offensive_third) AS avg_percent_offensive_third,
@@ -213,6 +207,10 @@ class StatPositionningAO(metaclass=Singleton):
                 JOIN players p ON mp.player_id = p.id
                 WHERE p.id = ?
                 """
+        # AVG(sp.average_distance_to_ball_possession) AS avg_distance_to_ball_possession,
+        # AVG(sp.average_distance_to_ball_no_possession) AS avg_distance_to_ball_no_possession,
+        # AVG(sp.time_defensive_half) AS avg_time_defensive_half,
+        # AVG(sp.time_offensive_half) AS avg_time_offensive_half,
         connection = self.db_connector.connection
         with connection:
             cursor = connection.cursor()
@@ -222,24 +220,24 @@ class StatPositionningAO(metaclass=Singleton):
                 return None
             return {
                 "avg_average_distance_to_ball": res["avg_average_distance_to_ball"],
-                "avg_distance_to_ball_possession": res[
-                    "avg_distance_to_ball_possession"
-                ],
-                "avg_distance_to_ball_no_possession": res[
-                    "avg_distance_to_ball_no_possession"
-                ],
+                # "avg_distance_to_ball_possession": res[
+                #    "avg_distance_to_ball_possession"
+                # ],
+                # "avg_distance_to_ball_no_possession": res[
+                #    "avg_distance_to_ball_no_possession"
+                # ],
                 "avg_average_distance_to_mates": res["avg_average_distance_to_mates"],
                 "avg_time_defensive_third": res["avg_time_defensive_third"],
                 "avg_time_neutral_third": res["avg_time_neutral_third"],
                 "avg_time_offensive_third": res["avg_time_offensive_third"],
-                "avg_time_defensive_half": res["avg_time_defensive_half"],
-                "avg_time_offensive_half": res["avg_time_offensive_half"],
+                # "avg_time_defensive_half": res["avg_time_defensive_half"],
+                # "avg_time_offensive_half": res["avg_time_offensive_half"],
                 "avg_time_behind_ball": res["avg_time_behind_ball"],
                 "avg_time_infront_ball": res["avg_time_infront_ball"],
                 "avg_time_most_back": res["avg_time_most_back"],
                 "avg_time_most_forward": res["avg_time_most_forward"],
                 "avg_time_closest_to_ball": res["avg_time_closest_to_ball"],
-                "avg_time_farthest_from_ball": res["avg_time_farthest_from_ball"],
+                "avg_time_farthest_to_ball": res["avg_time_farthest_to_ball"],
                 "avg_goals_against_while_last_defender": res[
                     "avg_goals_against_while_last_defender"
                 ],
