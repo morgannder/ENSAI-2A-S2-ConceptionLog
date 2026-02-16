@@ -1,11 +1,9 @@
-from unittest.mock import MagicMock, Mock, PropertyMock, patch
+from unittest.mock import MagicMock, Mock, patch
 from uuid import uuid4
 
 import pytest
 
 from src.dao.matches_dao import MatchDAO
-
-# Ajustez ces imports selon votre structure de projet
 from src.models.matches import Match
 from src.models.players import Player
 
@@ -34,8 +32,6 @@ def mock_connection(mock_cursor):
     """Fixture pour créer une connexion mockée"""
     connection = MagicMock()
     connection.cursor.return_value = mock_cursor
-    connection.__enter__ = MagicMock(return_value=connection)
-    connection.__exit__ = MagicMock(return_value=None)
     return connection
 
 
@@ -43,8 +39,10 @@ def mock_connection(mock_cursor):
 def match_dao(mock_connection):
     """Fixture pour créer une instance de MatchDAO avec mock"""
     with patch("src.dao.matches_dao.DBConnection") as mock_db_conn:
-        # Mock de la classe DBConnection elle-même (pas d'instance)
-        type(mock_db_conn).connection = PropertyMock(return_value=mock_connection)
+        # Mock l'instance retournée par DBConnection()
+        mock_instance = MagicMock()
+        mock_instance.connection = mock_connection
+        mock_db_conn.return_value = mock_instance
 
         dao = MatchDAO()
         yield dao
