@@ -1,6 +1,8 @@
 from src.dao.db_connection import DBConnection
+from src.dto.stats_core_dto import StatsCoreAggregatedDTO
 from src.models.matches import Match
 from src.models.players import Player
+from src.models.ranks import Ranks
 from src.models.stats_core import StatsCore
 from src.utils.singleton import Singleton
 
@@ -9,10 +11,13 @@ class StatsCoreDAO(metaclass=Singleton):
     def __init__(self):
         self.db_connector = DBConnection()
 
-    def get_average_stats_core_per_rank(self, rank_name: str) -> dict | None:
+    def get_average_stats_core_per_rank(
+        self, rank: Ranks
+    ) -> StatsCoreAggregatedDTO | None:
         """
         Récupère les stats globales des joueurs pour un rang donné.
         """
+        rank_name = rank.name
         query = """
             SELECT
                 CASE
@@ -26,12 +31,14 @@ class StatsCoreDAO(metaclass=Singleton):
                     WHEN r.tier = 22 THEN 'Supersonic Legend'
                     ELSE 'Unknown'
                 END AS rank_group,
-                COUNT(*) AS nb_players,
+                AVG(shots) AS avg_shots,
+                AVG(goals) AS avg_goals,
                 AVG(saves) AS avg_saves,
                 AVG(assists) AS avg_assists,
                 AVG(demo_inflicted) AS avg_demo_inflicted,
                 AVG(demo_taken) AS avg_demo_taken,
-                SUM(sc.goals) * 1.0 / NULLIF(SUM(sc.shots), 0) AS avg_shooting
+                AVG(score) AS avg_score,
+                AVG(shooting_percentage) AS avg_shooting_percentage
             FROM stats_core sc
             INNER JOIN match_participation mp ON sc.participation_id = mp.id
             INNER JOIN ranks r ON mp.rank_id = r.id
@@ -56,14 +63,16 @@ class StatsCoreDAO(metaclass=Singleton):
             if not res:
                 return None
 
-            return {
-                "avg_shooting": res["avg_shooting"],
-                "nb_players": res["nb_players"],
-                "avg_saves": res["avg_saves"],
-                "demo_taken": res["avg_demo_taken"],
-                "avg_assists": res["avg_assists"],
-                "demo_inflicted": res["avg_demo_inflicted"],
-            }
+            return StatsCoreAggregatedDTO(
+                shots=res["avg_shots"],
+                goals=res["avg_goals"],
+                saves=res["avg_saves"],
+                assists=res["avg_assists"],
+                score=res["avg_score"],
+                shooting_percentage=res["avg_shooting_percentage"],
+                demo_inflicted=res["avg_demo_inflicted"],
+                demo_taken=res["avg_demo_taken"],
+            )
 
     def get_player_match_stats_core(
         self, player: Player, match: Match
@@ -102,7 +111,9 @@ class StatsCoreDAO(metaclass=Singleton):
                 demo_taken=res["demo_taken"],
             )
 
-    def get_player_average_stats_core(self, player: Player) -> dict | None:
+    def get_player_average_stats_core(
+        self, player: Player
+    ) -> StatsCoreAggregatedDTO | None:
         query = """
                 SELECT
                     AVG(sc.shots) AS avg_shots,
@@ -110,7 +121,9 @@ class StatsCoreDAO(metaclass=Singleton):
                     AVG(sc.saves) AS avg_saves,
                     AVG(sc.assists) AS avg_assists,
                     AVG(sc.demo_inflicted) AS avg_demo_inflicted,
-                    AVG(sc.demo_taken) AS avg_demo_taken
+                    AVG(sc.demo_taken) AS avg_demo_taken,
+                    AVG(sc.score) AS avg_score,
+                    AVG(sc.shooting_percentage) AS avg_shooting_percentage
                 FROM stats_core sc
                 JOIN match_participation mp ON sc.participation_id = mp.id
                 JOIN players p on p.id = ?
@@ -122,11 +135,13 @@ class StatsCoreDAO(metaclass=Singleton):
             res = cursor.fetchone()
             if not res:
                 return None
-            return {
-                "avg_shots": res["avg_shots"],
-                "avg_goals": res["avg_goals"],
-                "avg_saves": res["avg_saves"],
-                "avg_assists": res["avg_assists"],
-                "avg_demo_inflicted": res["avg_demo_inflicted"],
-                "avg_demo_taken": res["avg_demo_taken"],
-            }
+            return StatsCoreAggregatedDTO(
+                shots=res["avg_shots"],
+                goals=res["avg_goals"],
+                saves=res["avg_saves"],
+                assists=res["avg_assists"],
+                score=res["avg_score"],
+                shooting_percentage=res["avg_shooting_percentage"],
+                demo_inflicted=res["avg_demo_inflicted"],
+                demo_taken=res["avg_demo_taken"],
+            )

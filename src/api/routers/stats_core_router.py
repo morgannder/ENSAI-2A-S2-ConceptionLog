@@ -7,6 +7,8 @@ from src.api.schemas.stats_response import (
     StatsResponseFactory,
     StatsType,
 )
+from src.dto.stats_core_dto import StatsCoreDTO
+from src.models.ranks import Ranks
 from src.service.matches_service import MatchService
 from src.service.players_service import PlayerService
 from src.service.stats_core_service import StatsCoreService
@@ -27,7 +29,7 @@ player_service = PlayerService()
     description="Retourne des statistiques Core moyennes pour un rang donné",
 )
 def get_average_stats_core_by_rank(
-    rank: Ranks_enum,
+    rank_name: Ranks_enum,
 ) -> StatsByRankResponse:
     """
     Endpoint pour récupérer la moyenne des statistiques Core d'un rang.
@@ -46,32 +48,20 @@ def get_average_stats_core_by_rank(
         HTTPException 404: Si aucune donnée n'existe pour ce rang
         HTTPException 500: Erreur serveur
     """
+    rank = Ranks(name=rank_name)
 
     try:
-        stats = stats_core_service.get_average_stats_core_by_rank(rank)
+        # Service retourne directement StatsBoostAggregatedDTO
+        stats_dto = stats_core_service.get_average_stats_core_by_rank(rank)
 
-        if stats is None:
+        if stats_dto is None:
             raise HTTPException(
                 status_code=404,
-                detail=f"Aucune donnée trouvée pour le rang '{rank}'",
+                detail=f"Aucune donnée trouvée pour le rang '{rank_name}'",
             )
-
-        avg_percentage = stats["avg_shooting"] * 100
-        avg_saves = stats["avg_saves"]
-        avg_assists = stats["avg_assists"]
-        avg_demo_inflicted = stats["demo_inflicted"]
-        avg_demo_taken = stats["demo_taken"]
-
-        return StatsByRankResponse(
-            rank=rank,
-            data={
-                "players": stats["nb_players"],
-                "shooting_accuracy": round(avg_percentage, 2),
-                "avg_saves": round(avg_saves, 2),
-                "avg_assists": round(avg_assists, 2),
-                "avg_demolition_inflicted": round(avg_demo_inflicted, 2),
-                "avg_demolition_taken": round(avg_demo_taken, 2),
-            },
+        # Pas besoin de conversion, c'est déjà un DTO
+        return StatsResponseFactory.create_rank_response(
+            rank=rank_name, stats_type=StatsType.CORE, data=stats_dto
         )
 
     except ValueError as e:
@@ -100,16 +90,18 @@ def get_player_average_statistics(platform_id: str) -> StatsByPlayerResponse:
             status_code=status.HTTP_404_NOT_FOUND, detail="Joueur introuvable"
         )
 
-    stats = stats_core_service.get_player_average_stats_core(player)
+    # Service retourne directement StatsBoostAggregatedDTO
+    stats_dto = stats_core_service.get_player_average_stats_core(player)
 
-    if stats is None:
+    if stats_dto is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Aucune statistique core trouvée pour ce joueur",
         )
 
+    # Pas besoin de conversion, c'est déjà un DTO
     return StatsResponseFactory.create_player_response(
-        platform_id=platform_id, stats_type=StatsType.CORE, data=stats
+        platform_id=platform_id, stats_type=StatsType.CORE, data=stats_dto
     )
 
 
@@ -134,14 +126,20 @@ def get_player_match_statistics(
             status_code=status.HTTP_404_NOT_FOUND, detail="Match introuvable"
         )
 
-    stats = stats_core_service.get_player_match_stats_core(player, match)
+    # Service retourne un Business Object (StatsCore)
+    stats_bo = stats_core_service.get_player_match_stats_core(player, match)
 
-    if stats is None:
+    if stats_bo is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Erreur serveur lors de la récupération des statistiques core",
         )
 
-    return StatsByPlayerMatchResponse(
-        platform_id=platform_id, match_id=match_id, data=stats.to_dict()
+    # Conversion BO -> DTO
+    stats_dto = StatsCoreDTO.from_business_object(stats_bo)
+    return StatsResponseFactory.create_player_match_response(
+        platform_id=platform_id,
+        match_id=match_id,
+        stats_type=StatsType.CORE,
+        data=stats_dto,
     )

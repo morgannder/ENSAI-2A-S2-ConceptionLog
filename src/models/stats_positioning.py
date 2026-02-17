@@ -1,4 +1,4 @@
-class StatsPositionning:
+class StatsPositioning:
     def __init__(
         self,
         participation_id: int = 0,
@@ -30,7 +30,7 @@ class StatsPositionning:
         percent_closest_to_ball: float = 0.0,
         percent_farthest_from_ball: float = 0.0,
     ):
-        self.participation_id = participation_id
+        self._participation_id = participation_id
         self.average_distance_to_ball = average_distance_to_ball
         # self.average_distance_to_ball_possession = average_distance_to_ball_possession,
         # self.average_distance_to_ball_no_possession = average_distance_to_ball_no_possession,
@@ -58,36 +58,3 @@ class StatsPositionning:
         self.percent_most_forward = percent_most_forward
         self.percent_closest_to_ball = percent_closest_to_ball
         self.percent_farthest_from_ball = percent_farthest_from_ball
-
-    def to_dict(self) -> dict:
-        """Convertit StatsPositionning en dictionnaire pour l'API."""
-        return {
-            "participation_id": self.participation_id,
-            "average_distance_to_ball": self.average_distance_to_ball,
-            "average_distance_to_mates": self.average_distance_to_mates,
-            # "average_distance_to_ball_possession" : self.average_distance_to_ball_possession,
-            # "average_distance_to_ball_no_possession": self.average_distance_to_ball_no_possession,
-            "time_defensive_third": self.time_defensive_third,
-            "time_neutral_third": self.time_neutral_third,
-            "time_offensive_third": self.time_offensive_third,
-            # "time_defensive_half": self.time_defensive_half,
-            # "time_offensive_half": self.time_offensive_half,
-            "time_behind_ball": self.time_behind_ball,
-            "time_infront_ball": self.time_infront_ball,
-            "time_most_back": self.time_most_back,
-            "time_most_forward": self.time_most_forward,
-            "goals_against_while_last_defender": self.goals_against_while_last_defender,
-            "time_closest_to_ball": self.time_closest_to_ball,
-            "time_farthest_to_ball": self.time_farthest_to_ball,
-            "percent_defensive_third": self.percent_defensive_third,
-            "percent_neutral_third": self.percent_neutral_third,
-            "percent_offensive_third": self.percent_offensive_third,
-            "percent_defensive_half": self.percent_defensive_half,
-            "percent_offensive_half": self.percent_offensive_half,
-            "percent_behind_ball": self.percent_behind_ball,
-            "percent_infront_ball": self.percent_infront_ball,
-            "percent_most_back": self.percent_most_back,
-            "percent_most_forward": self.percent_most_forward,
-            "percent_closest_to_ball": self.percent_closest_to_ball,
-            "percent_farthest_from_ball": self.percent_farthest_from_ball,
-        }

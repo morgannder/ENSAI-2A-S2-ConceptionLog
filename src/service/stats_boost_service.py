@@ -1,4 +1,5 @@
 from src.dao.stats_boost_dao import StatBoostDAO
+from src.dto.stats_boost_dto import StatsBoostAggregatedDTO
 from src.models.matches import Match
 from src.models.players import Player
 from src.models.ranks import Ranks
@@ -11,7 +12,9 @@ class StatBoostService:
     def __init__(self):
         self.stats_boost_dao = StatBoostDAO()
 
-    def get_average_stats_boost_by_rank(self, rank: Ranks) -> dict | None:
+    def get_average_stats_boost_by_rank(
+        self, rank: Ranks
+    ) -> StatsBoostAggregatedDTO | None:
         """
         Récupère les statistiques moyennes de boost pour un rang donné.
 
@@ -22,8 +25,8 @@ class StatBoostService:
 
         Returns
         -------
-        dict | None
-            Dictionnaire contenant les statistiques moyennes de boost pour ce rang,
+        StatsBoostAggregatedDTO | None
+            DTO contenant les statistiques moyennes de boost pour ce rang,
             ou None si aucune statistique n'est disponible.
 
         Notes
@@ -50,7 +53,7 @@ class StatBoostService:
         Returns
         -------
         StatsBoost | None
-            Les statistiques de boost du joueur pour ce match,
+            Business Object contenant les statistiques de boost du joueur pour ce match,
             ou None si aucune donnée n'est disponible.
 
         Raises
@@ -66,7 +69,9 @@ class StatBoostService:
 
         return self.stats_boost_dao.get_player_match_stats_boost(player, match)
 
-    def get_player_average_boost_stats(self, player: Player) -> dict | None:
+    def get_player_average_boost_stats(
+        self, player: Player
+    ) -> StatsBoostAggregatedDTO | None:
         """
         Récupère les statistiques moyennes de boost d'un joueur sur tous ses matchs.
 
@@ -77,8 +82,8 @@ class StatBoostService:
 
         Returns
         -------
-        dict | None
-            Dictionnaire contenant les statistiques moyennes de boost du joueur,
+        StatsBoostAggregatedDTO | None
+            DTO contenant les statistiques moyennes de boost du joueur,
             ou None si le joueur n'a aucune statistique disponible.
 
         Raises

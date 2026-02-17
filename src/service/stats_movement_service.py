@@ -1,4 +1,5 @@
 from src.dao.stats_movement_dao import StatMovementDAO
+from src.dto.stats_movement_dto import StatsMovementAggregatedDTO
 from src.models.matches import Match
 from src.models.players import Player
 from src.models.ranks import Ranks
@@ -11,7 +12,9 @@ class StatMovementService:
     def __init__(self):
         self.stats_movement_dao = StatMovementDAO()
 
-    def get_average_stats_movement_by_rank(self, rank: Ranks) -> dict | None:
+    def get_average_stats_movement_by_rank(
+        self, rank: Ranks
+    ) -> StatsMovementAggregatedDTO | None:
         """
         Récupère les statistiques moyennes de mouvement pour un rang donné.
 
@@ -71,7 +74,9 @@ class StatMovementService:
 
         return self.stats_movement_dao.get_player_match_stats_movement(player, match)
 
-    def get_player_average_movement_stats(self, player: Player) -> dict | None:
+    def get_player_average_movement_stats(
+        self, player: Player
+    ) -> StatsMovementAggregatedDTO | None:
         """
         Récupère les statistiques moyennes de mouvement d'un joueur sur tous ses matchs.
 

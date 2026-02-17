@@ -25,17 +25,3 @@ class StatsCore:
     @property
     def participation_id(self) -> int:
         return self._participation_id
-
-    def to_dict(self) -> dict:
-        """Convertit StatsCore en dictionnaire pour l'API."""
-        return {
-            "participation_id": self._participation_id,
-            "shots": self.shots,
-            "goals": self.goals,
-            "saves": self.saves,
-            "assists": self.assists,
-            "score": self.score,
-            "shooting_percentage": self.shooting_percentage,
-            "demo_inflicted": self.demo_inflicted,
-            "demo_taken": self.demo_taken,
-        }

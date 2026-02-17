@@ -1,10 +1,14 @@
+# src/api/routes/stats_boost_router.py
 from fastapi import APIRouter, HTTPException, status
 
 from src.api.schemas.stats_response import (
     StatsByPlayerMatchResponse,
     StatsByPlayerResponse,
     StatsByRankResponse,
+    StatsResponseFactory,
+    StatsType,
 )
+from src.dto.stats_boost_dto import StatsBoostDTO
 from src.models.ranks import Ranks
 from src.service.matches_service import MatchService
 from src.service.players_service import PlayerService
@@ -21,30 +25,46 @@ match_service = MatchService()
 
 @router.get(
     "/rank/{rank}",
+    response_model=StatsByRankResponse,
     summary="Récupère les statistiques de boost moyennes par rang",
 )
-def get_rank_statistics(rank_name: Ranks_enum):
-    """doc."""
+def get_rank_statistics(rank_name: Ranks_enum) -> StatsByRankResponse:
+    """
+    Récupère les statistiques de boost moyennes pour un rang donné.
 
+    Returns:
+        StatsByRankResponse avec un StatsBoostAggregatedDTO dans data
+    """
     rank = Ranks(name=rank_name)
-    stats = stats_boost_service.get_average_stats_boost_by_rank(rank)
 
-    if stats is None:
+    # Service retourne directement StatsBoostAggregatedDTO
+    stats_dto = stats_boost_service.get_average_stats_boost_by_rank(rank)
+
+    if stats_dto is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail=f"Aucune donnée trouvée pour le rang '{rank_name}'",
         )
 
-    return StatsByRankResponse(rank=rank_name, data=stats)
+    # Pas besoin de conversion, c'est déjà un DTO
+    return StatsResponseFactory.create_rank_response(
+        rank=rank_name,
+        stats_type=StatsType.BOOST,
+        data=stats_dto,
+    )
 
 
 @router.get(
-    "/player/{player_id}/averageboost",
+    "/player/{platform_id}/averageboost",
+    response_model=StatsByPlayerResponse,
     summary="Récupère les statistiques de boost moyennes d'un joueur",
 )
-def get_player_average_statistics(platform_id: str):
+def get_player_average_statistics(platform_id: str) -> StatsByPlayerResponse:
     """
-    Doc.
+    Récupère les statistiques de boost moyennes d'un joueur sur tous ses matchs.
+
+    Returns:
+        StatsByPlayerResponse avec un StatsBoostAggregatedDTO dans data
     """
     player = player_service.get_player_by_platform_id(platform_id)
 
@@ -53,23 +73,35 @@ def get_player_average_statistics(platform_id: str):
             status_code=status.HTTP_404_NOT_FOUND, detail="Joueur introuvable"
         )
 
-    stats = stats_boost_service.get_player_average_boost_stats(player)
+    # Service retourne directement StatsBoostAggregatedDTO
+    stats_dto = stats_boost_service.get_player_average_boost_stats(player)
 
-    if stats is None:
+    if stats_dto is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Aucune statistique trouvée pour ce joueur",
         )
 
-    return StatsByPlayerResponse(platform_id=platform_id, data=stats)
+    # Pas besoin de conversion, c'est déjà un DTO
+    return StatsResponseFactory.create_player_response(
+        platform_id=platform_id, stats_type=StatsType.BOOST, data=stats_dto
+    )
 
 
 @router.get(
-    "/player/{player_id}/match/{match_id}",
+    "/player/{platform_id}/match/{match_id}",
+    response_model=StatsByPlayerMatchResponse,
     summary="Récupère les statistiques de boost d'un joueur dans un match",
 )
-def get_player_match_statistics(platform_id: str, match_id: str):
-    """doc."""
+def get_player_match_statistics(
+    platform_id: str, match_id: str
+) -> StatsByPlayerMatchResponse:
+    """
+    Récupère les statistiques de boost d'un joueur pour un match spécifique.
+
+    Returns:
+        StatsByPlayerMatchResponse avec un StatsBoostDTO dans data
+    """
     player = player_service.get_player_by_platform_id(platform_id)
     if player is None:
         raise HTTPException(
@@ -82,14 +114,21 @@ def get_player_match_statistics(platform_id: str, match_id: str):
             status_code=status.HTTP_404_NOT_FOUND, detail="Match introuvable"
         )
 
-    stats = stats_boost_service.get_player_match_boost_stats(player, match)
+    # Service retourne un Business Object (StatsBoost)
+    stats_bo = stats_boost_service.get_player_match_boost_stats(player, match)
 
-    if stats is None:
+    if stats_bo is None:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Aucune statistique trouvée pour ce joueur dans ce match",
         )
 
-    return StatsByPlayerMatchResponse(
-        platform_id=platform_id, match_id=match_id, data=stats.to_dict()
+    # Conversion BO -> DTO
+    stats_dto = StatsBoostDTO.from_business_object(stats_bo)
+
+    return StatsResponseFactory.create_player_match_response(
+        platform_id=platform_id,
+        match_id=match_id,
+        stats_type=StatsType.BOOST,
+        data=stats_dto,
     )

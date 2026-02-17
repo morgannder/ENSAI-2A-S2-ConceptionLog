@@ -1,16 +1,19 @@
-from ..models.matches import Match
-from ..models.players import Player
-from ..models.ranks import Ranks
-from ..models.stats_movement import StatsMovement
-from ..utils.singleton import Singleton
-from .db_connection import DBConnection
+from src.dao.db_connection import DBConnection
+from src.dto.stats_movement_dto import StatsMovementAggregatedDTO
+from src.models.matches import Match
+from src.models.players import Player
+from src.models.ranks import Ranks
+from src.models.stats_movement import StatsMovement
+from src.utils.singleton import Singleton
 
 
 class StatMovementDAO(metaclass=Singleton):
     def __init__(self):
         self.db_connector = DBConnection()
 
-    def get_average_stats_movement_per_rank(self, rank: Ranks) -> dict | None:
+    def get_average_stats_movement_per_rank(
+        self, rank: Ranks
+    ) -> StatsMovementAggregatedDTO | None:
         """
         Récupère les stats globales des joueurs pour un rang donné.
         """
@@ -28,7 +31,6 @@ class StatMovementDAO(metaclass=Singleton):
                         WHEN r.tier = 22 THEN 'Supersonic Legend'
                         ELSE 'Unknown'
                     END AS rank_group,
-                    COUNT(DISTINCT mp.player_id) AS nb_players,
                     AVG(sm.avg_speed) AS avg_avg_speed,
                     AVG(sm.total_distance) AS avg_total_distance,
                     AVG(sm.time_supersonic_speed) AS avg_time_supersonic_speed,
@@ -71,30 +73,26 @@ class StatMovementDAO(metaclass=Singleton):
             if not res:
                 return None
 
-            return {
-                "rank_group": res["rank_group"],
-                "nb_players": res["nb_players"],
-                "avg_avg_speed": res["avg_avg_speed"],
-                "avg_total_distance": res["avg_total_distance"],
-                "avg_time_supersonic_speed": res["avg_time_supersonic_speed"],
-                "avg_time_boost_speed": res["avg_time_boost_speed"],
-                "avg_time_slow_speed": res["avg_time_slow_speed"],
-                "avg_time_ground": res["avg_time_ground"],
-                "avg_time_low_air": res["avg_time_low_air"],
-                "avg_time_high_air": res["avg_time_high_air"],
-                "avg_time_powerslide": res["avg_time_powerslide"],
-                "avg_count_powerslide": res["avg_count_powerslide"],
-                "avg_average_powerslide_duration": res[
-                    "avg_average_powerslide_duration"
-                ],
-                "avg_average_speed_percentage": res["avg_average_speed_percentage"],
-                "avg_percent_slow_speed": res["avg_percent_slow_speed"],
-                "avg_percent_boost_speed": res["avg_percent_boost_speed"],
-                "avg_percent_supersonic_speed": res["avg_percent_supersonic_speed"],
-                "avg_percent_ground": res["avg_percent_ground"],
-                "avg_percent_low_air": res["avg_percent_low_air"],
-                "avg_percent_high_air": res["avg_percent_high_air"],
-            }
+            return StatsMovementAggregatedDTO(
+                avg_speed=res["avg_avg_speed"],
+                total_distance=res["avg_total_distance"],
+                time_supersonic_speed=res["avg_time_supersonic_speed"],
+                time_boost_speed=res["avg_time_boost_speed"],
+                time_slow_speed=res["avg_time_slow_speed"],
+                time_ground=res["avg_time_ground"],
+                time_low_air=res["avg_time_low_air"],
+                time_high_air=res["avg_time_high_air"],
+                time_powerslide=res["avg_time_powerslide"],
+                count_powerslide=res["avg_count_powerslide"],
+                avg_powerslide_duration=res["avg_average_powerslide_duration"],
+                avg_speed_percentage=res["avg_average_speed_percentage"],
+                percent_slow_speed=res["avg_percent_slow_speed"],
+                percent_boost_speed=res["avg_percent_boost_speed"],
+                percent_supersonic_speed=res["avg_percent_supersonic_speed"],
+                percent_ground=res["avg_percent_ground"],
+                percent_low_air=res["avg_percent_low_air"],
+                percent_high_air=res["avg_percent_high_air"],
+            )
 
     def get_player_match_stats_movement(
         self, player: Player, match: Match
@@ -137,7 +135,9 @@ class StatMovementDAO(metaclass=Singleton):
                 percent_high_air=res["percent_high_air"],
             )
 
-    def get_player_average_stats_movement(self, player: Player) -> dict | None:
+    def get_player_average_stats_movement(
+        self, player: Player
+    ) -> StatsMovementAggregatedDTO | None:
         query = """
                 SELECT
                     AVG(sm.avg_speed) AS avg_avg_speed,
@@ -170,25 +170,23 @@ class StatMovementDAO(metaclass=Singleton):
             res = cursor.fetchone()
             if not res:
                 return None
-            return {
-                "avg_avg_speed": res["avg_avg_speed"],
-                "avg_total_distance": res["avg_total_distance"],
-                "avg_time_supersonic_speed": res["avg_time_supersonic_speed"],
-                "avg_time_boost_speed": res["avg_time_boost_speed"],
-                "avg_time_slow_speed": res["avg_time_slow_speed"],
-                "avg_time_ground": res["avg_time_ground"],
-                "avg_time_low_air": res["avg_time_low_air"],
-                "avg_time_high_air": res["avg_time_high_air"],
-                "avg_time_powerslide": res["avg_time_powerslide"],
-                "avg_count_powerslide": res["avg_count_powerslide"],
-                "avg_average_powerslide_duration": res[
-                    "avg_average_powerslide_duration"
-                ],
-                "avg_average_speed_percentage": res["avg_average_speed_percentage"],
-                "avg_percent_slow_speed": res["avg_percent_slow_speed"],
-                "avg_percent_boost_speed": res["avg_percent_boost_speed"],
-                "avg_percent_supersonic_speed": res["avg_percent_supersonic_speed"],
-                "avg_percent_ground": res["avg_percent_ground"],
-                "avg_percent_low_air": res["avg_percent_low_air"],
-                "avg_percent_high_air": res["avg_percent_high_air"],
-            }
+            return StatsMovementAggregatedDTO(
+                avg_speed=res["avg_avg_speed"],
+                total_distance=res["avg_total_distance"],
+                time_supersonic_speed=res["avg_time_supersonic_speed"],
+                time_boost_speed=res["avg_time_boost_speed"],
+                time_slow_speed=res["avg_time_slow_speed"],
+                time_ground=res["avg_time_ground"],
+                time_low_air=res["avg_time_low_air"],
+                time_high_air=res["avg_time_high_air"],
+                time_powerslide=res["avg_time_powerslide"],
+                count_powerslide=res["avg_count_powerslide"],
+                avg_powerslide_duration=res["avg_average_powerslide_duration"],
+                avg_speed_percentage=res["avg_average_speed_percentage"],
+                percent_slow_speed=res["avg_percent_slow_speed"],
+                percent_boost_speed=res["avg_percent_boost_speed"],
+                percent_supersonic_speed=res["avg_percent_supersonic_speed"],
+                percent_ground=res["avg_percent_ground"],
+                percent_low_air=res["avg_percent_low_air"],
+                percent_high_air=res["avg_percent_high_air"],
+            )

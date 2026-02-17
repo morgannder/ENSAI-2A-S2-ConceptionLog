@@ -1,6 +1,18 @@
+# src/api/schemas/stats_response.py
 from enum import Enum
 
 from pydantic import BaseModel
+
+from src.dto.stats_boost_dto import StatsBoostAggregatedDTO, StatsBoostDTO
+from src.dto.stats_core_dto import StatsCoreAggregatedDTO, StatsCoreDTO
+from src.dto.stats_movement_dto import (
+    StatsMovementAggregatedDTO,
+    StatsMovementDTO,
+)
+from src.dto.stats_positioning_dto import (
+    StatsPositioningAggregatedDTO,
+    StatsPositioningDTO,
+)
 
 
 class StatsType(str, Enum):
@@ -10,37 +22,55 @@ class StatsType(str, Enum):
     POSITIONING = "positioning"
 
 
+# Union de tous les DTOs (individuels et agrégés) avec |
+StatsDataDTO = (
+    StatsCoreDTO
+    | StatsCoreAggregatedDTO
+    | StatsBoostDTO
+    | StatsBoostAggregatedDTO
+    | StatsMovementDTO
+    | StatsMovementAggregatedDTO
+    | StatsPositioningDTO
+    | StatsPositioningAggregatedDTO
+)
+
+
 class StatsByRankResponse(BaseModel):
     rank: str
     stats_type: StatsType
-    data: dict = None
+    data: StatsDataDTO | None = None
 
 
 class StatsByPlayerMatchResponse(BaseModel):
     platform_id: str
     match_id: str
     stats_type: StatsType
-    data: dict = None
+    data: StatsDataDTO | None = None
 
 
 class StatsByPlayerResponse(BaseModel):
     platform_id: str
     stats_type: StatsType
-    data: dict = None
+    data: StatsDataDTO | None = None
 
 
 # Factory pour créer les réponses
 class StatsResponseFactory:
     @staticmethod
     def create_rank_response(
-        rank: str, stats_type: StatsType, data: dict
+        rank: str,
+        stats_type: StatsType,
+        data: StatsDataDTO,
     ) -> StatsByRankResponse:
         """Crée une réponse de statistiques par rang."""
         return StatsByRankResponse(rank=rank, stats_type=stats_type, data=data)
 
     @staticmethod
     def create_player_match_response(
-        platform_id: str, match_id: str, stats_type: StatsType, data: dict
+        platform_id: str,
+        match_id: str,
+        stats_type: StatsType,
+        data: StatsDataDTO,
     ) -> StatsByPlayerMatchResponse:
         """Crée une réponse de statistiques par joueur et match."""
         return StatsByPlayerMatchResponse(
@@ -49,32 +79,11 @@ class StatsResponseFactory:
 
     @staticmethod
     def create_player_response(
-        platform_id: str, stats_type: StatsType, data: dict
+        platform_id: str,
+        stats_type: StatsType,
+        data: StatsDataDTO,
     ) -> StatsByPlayerResponse:
         """Crée une réponse de statistiques par joueur."""
         return StatsByPlayerResponse(
             platform_id=platform_id, stats_type=stats_type, data=data
         )
-
-
-"""from pydantic import BaseModel
-
-
-class StatsByRankResponse(BaseModel):
-    rank: str
-    data: dict = None
-
-
-# faire une factory pour match les 4 types avec un type
-
-
-class StatsByPlayerMatchResponse(BaseModel):
-    platform_id: str
-    match_id: str
-    data: dict = None
-
-
-class StatsByPlayerResponse(BaseModel):
-    platform_id: str
-    data: dict = None
-"""

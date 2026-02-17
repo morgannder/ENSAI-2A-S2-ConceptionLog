@@ -1,6 +1,8 @@
 from src.dao.stats_core_dao import StatsCoreDAO
+from src.dto.stats_core_dto import StatsCoreAggregatedDTO
 from src.models.matches import Match
 from src.models.players import Player
+from src.models.ranks import Ranks
 from src.models.stats_core import StatsCore
 
 
@@ -10,7 +12,9 @@ class StatsCoreService:
     def __init__(self):
         self.stats_core_dao = StatsCoreDAO()
 
-    def get_average_stats_core_by_rank(self, rank_name: str) -> float | None:
+    def get_average_stats_core_by_rank(
+        self, rank: Ranks
+    ) -> StatsCoreAggregatedDTO | None:
         """
         Récupère les statistiques core moyennes pour un rang donné (par nom).
 
@@ -30,7 +34,7 @@ class StatsCoreService:
         Cette méthode retourne la moyenne des statistiques core pour tous les joueurs
         du rang spécifié.
         """
-        return self.stats_core_dao.get_average_stats_core_per_rank(rank_name)
+        return self.stats_core_dao.get_average_stats_core_per_rank(rank)
 
     def get_player_match_stats_core(
         self, player: Player, match: Match
@@ -69,7 +73,9 @@ class StatsCoreService:
 
         return self.stats_core_dao.get_player_match_stats_core(player, match)
 
-    def get_player_average_stats_core(self, player: Player) -> dict | None:
+    def get_player_average_stats_core(
+        self, player: Player
+    ) -> StatsCoreAggregatedDTO | None:
         """
         Récupère les statistiques core moyennes d'un joueur sur tous ses matchs.
 
