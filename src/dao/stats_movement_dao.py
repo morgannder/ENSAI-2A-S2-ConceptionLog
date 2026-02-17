@@ -31,24 +31,24 @@ class StatMovementDAO(metaclass=Singleton):
                         WHEN r.tier = 22 THEN 'Supersonic Legend'
                         ELSE 'Unknown'
                     END AS rank_group,
-                    AVG(sm.avg_speed) AS avg_avg_speed,
-                    AVG(sm.total_distance) AS avg_total_distance,
-                    AVG(sm.time_supersonic_speed) AS avg_time_supersonic_speed,
-                    AVG(sm.time_boost_speed) AS avg_time_boost_speed,
-                    AVG(sm.time_slow_speed) AS avg_time_slow_speed,
-                    AVG(sm.time_ground) AS avg_time_ground,
-                    AVG(sm.time_low_air) AS avg_time_low_air,
-                    AVG(sm.time_high_air) AS avg_time_high_air,
-                    AVG(sm.time_powerslide) AS avg_time_powerslide,
-                    AVG(sm.count_powerslide) AS avg_count_powerslide,
-                    AVG(sm.avg_powerslide_duration) AS avg_average_powerslide_duration,
-                    AVG(sm.avg_speed_percentage) AS avg_average_speed_percentage,
-                    AVG(sm.percent_slow_speed) AS avg_percent_slow_speed,
-                    AVG(sm.percent_boost_speed) AS avg_percent_boost_speed,
-                    AVG(sm.percent_supersonic_speed) AS avg_percent_supersonic_speed,
-                    AVG(sm.percent_ground) AS avg_percent_ground,
-                    AVG(sm.percent_low_air) AS avg_percent_low_air,
-                    AVG(sm.percent_high_air) AS avg_percent_high_air
+                    ROUND(AVG(sm.avg_speed), 2) AS avg_avg_speed,
+                    ROUND(AVG(sm.total_distance), 2) AS avg_total_distance,
+                    ROUND(AVG(sm.time_supersonic_speed), 2) AS avg_time_supersonic_speed,
+                    ROUND(AVG(sm.time_boost_speed), 2) AS avg_time_boost_speed,
+                    ROUND(AVG(sm.time_slow_speed), 2) AS avg_time_slow_speed,
+                    ROUND(AVG(sm.time_ground), 2) AS avg_time_ground,
+                    ROUND(AVG(sm.time_low_air), 2) AS avg_time_low_air,
+                    ROUND(AVG(sm.time_high_air), 2) AS avg_time_high_air,
+                    ROUND(AVG(sm.time_powerslide), 2) AS avg_time_powerslide,
+                    ROUND(AVG(sm.count_powerslide), 2) AS avg_count_powerslide,
+                    ROUND(AVG(sm.avg_powerslide_duration), 2) AS avg_average_powerslide_duration,
+                    ROUND(AVG(sm.avg_speed_percentage), 2) AS avg_average_speed_percentage,
+                    ROUND(AVG(sm.percent_slow_speed), 2) AS avg_percent_slow_speed,
+                    ROUND(AVG(sm.percent_boost_speed), 2) AS avg_percent_boost_speed,
+                    ROUND(AVG(sm.percent_supersonic_speed), 2) AS avg_percent_supersonic_speed,
+                    ROUND(AVG(sm.percent_ground), 2) AS avg_percent_ground,
+                    ROUND(AVG(sm.percent_low_air), 2) AS avg_percent_low_air,
+                    ROUND(AVG(sm.percent_high_air), 2) AS avg_percent_high_air
                 FROM stats_movement sm
                 INNER JOIN match_participation mp ON sm.participation_id = mp.id
                 INNER JOIN ranks r ON mp.rank_id = r.id
@@ -140,24 +140,24 @@ class StatMovementDAO(metaclass=Singleton):
     ) -> StatsMovementAggregatedDTO | None:
         query = """
                 SELECT
-                    AVG(sm.avg_speed) AS avg_avg_speed,
-                    AVG(sm.total_distance) AS avg_total_distance,
-                    AVG(sm.time_supersonic_speed) AS avg_time_supersonic_speed,
-                    AVG(sm.time_boost_speed) AS avg_time_boost_speed,
-                    AVG(sm.time_slow_speed) AS avg_time_slow_speed,
-                    AVG(sm.time_ground) AS avg_time_ground,
-                    AVG(sm.time_low_air) AS avg_time_low_air,
-                    AVG(sm.time_high_air) AS avg_time_high_air,
-                    AVG(sm.time_powerslide) AS avg_time_powerslide,
-                    AVG(sm.count_powerslide) AS avg_count_powerslide,
-                    AVG(sm.avg_powerslide_duration) AS avg_average_powerslide_duration,
-                    AVG(sm.avg_speed_percentage) AS avg_average_speed_percentage,
-                    AVG(sm.percent_slow_speed) AS avg_percent_slow_speed,
-                    AVG(sm.percent_boost_speed) AS avg_percent_boost_speed,
-                    AVG(sm.percent_supersonic_speed) AS avg_percent_supersonic_speed,
-                    AVG(sm.percent_ground) AS avg_percent_ground,
-                    AVG(sm.percent_low_air) AS avg_percent_low_air,
-                    AVG(sm.percent_high_air) AS avg_percent_high_air
+                    ROUND(AVG(sm.avg_speed), 2) AS avg_avg_speed,
+                    ROUND(AVG(sm.total_distance), 2) AS avg_total_distance,
+                    ROUND(AVG(sm.time_supersonic_speed), 2) AS avg_time_supersonic_speed,
+                    ROUND(AVG(sm.time_boost_speed), 2) AS avg_time_boost_speed,
+                    ROUND(AVG(sm.time_slow_speed), 2) AS avg_time_slow_speed,
+                    ROUND(AVG(sm.time_ground), 2) AS avg_time_ground,
+                    ROUND(AVG(sm.time_low_air), 2) AS avg_time_low_air,
+                    ROUND(AVG(sm.time_high_air), 2) AS avg_time_high_air,
+                    ROUND(AVG(sm.time_powerslide), 2) AS avg_time_powerslide,
+                    ROUND(AVG(sm.count_powerslide), 2) AS avg_count_powerslide,
+                    ROUND(AVG(sm.avg_powerslide_duration), 2) AS avg_average_powerslide_duration,
+                    ROUND(AVG(sm.avg_speed_percentage), 2) AS avg_average_speed_percentage,
+                    ROUND(AVG(sm.percent_slow_speed), 2) AS avg_percent_slow_speed,
+                    ROUND(AVG(sm.percent_boost_speed), 2) AS avg_percent_boost_speed,
+                    ROUND(AVG(sm.percent_supersonic_speed), 2) AS avg_percent_supersonic_speed,
+                    ROUND(AVG(sm.percent_ground), 2) AS avg_percent_ground,
+                    ROUND(AVG(sm.percent_low_air), 2) AS avg_percent_low_air,
+                    ROUND(AVG(sm.percent_high_air), 2) AS avg_percent_high_air
                 FROM stats_movement sm
                 JOIN match_participation mp ON sm.participation_id = mp.id
                 JOIN players p ON mp.player_id = p.id

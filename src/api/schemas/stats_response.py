@@ -1,4 +1,3 @@
-# src/api/schemas/stats_response.py
 from enum import Enum
 
 from pydantic import BaseModel

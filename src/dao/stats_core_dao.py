@@ -30,15 +30,14 @@ class StatsCoreDAO(metaclass=Singleton):
                     WHEN r.tier BETWEEN 19 AND 21 THEN 'Grand Champion'
                     WHEN r.tier = 22 THEN 'Supersonic Legend'
                     ELSE 'Unknown'
-                END AS rank_group,
-                AVG(shots) AS avg_shots,
-                AVG(goals) AS avg_goals,
-                AVG(saves) AS avg_saves,
-                AVG(assists) AS avg_assists,
-                AVG(demo_inflicted) AS avg_demo_inflicted,
-                AVG(demo_taken) AS avg_demo_taken,
-                AVG(score) AS avg_score,
-                AVG(shooting_percentage) AS avg_shooting_percentage
+                END AS rank_group,ROUND(AVG(shots), 2) AS avg_shots,
+                ROUND(AVG(goals), 2) AS avg_goals,
+                ROUND(AVG(saves), 2) AS avg_saves,
+                ROUND(AVG(assists), 2) AS avg_assists,
+                ROUND(AVG(demo_inflicted), 2) AS avg_demo_inflicted,
+                ROUND(AVG(demo_taken), 2) AS avg_demo_taken,
+                ROUND(AVG(score), 2) AS avg_score,
+                ROUND(AVG(shooting_percentage), 2) AS avg_shooting_percentage
             FROM stats_core sc
             INNER JOIN match_participation mp ON sc.participation_id = mp.id
             INNER JOIN ranks r ON mp.rank_id = r.id
@@ -116,14 +115,13 @@ class StatsCoreDAO(metaclass=Singleton):
     ) -> StatsCoreAggregatedDTO | None:
         query = """
                 SELECT
-                    AVG(sc.shots) AS avg_shots,
-                    AVG(sc.goals) AS avg_goals,
-                    AVG(sc.saves) AS avg_saves,
-                    AVG(sc.assists) AS avg_assists,
-                    AVG(sc.demo_inflicted) AS avg_demo_inflicted,
-                    AVG(sc.demo_taken) AS avg_demo_taken,
-                    AVG(sc.score) AS avg_score,
-                    AVG(sc.shooting_percentage) AS avg_shooting_percentage
+                    ROUND(AVG(goals), 2) AS avg_goals,
+                    ROUND(AVG(saves), 2) AS avg_saves,
+                    ROUND(AVG(assists), 2) AS avg_assists,
+                    ROUND(AVG(demo_inflicted), 2) AS avg_demo_inflicted,
+                    ROUND(AVG(demo_taken), 2) AS avg_demo_taken,
+                    ROUND(AVG(score), 2) AS avg_score,
+                    ROUND(AVG(shooting_percentage), 2) AS avg_shooting_percentage
                 FROM stats_core sc
                 JOIN match_participation mp ON sc.participation_id = mp.id
                 JOIN players p on p.id = ?
