@@ -1,0 +1,7 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: rocket-config
+data:
+  DB_URL: "sqlite:///app/src/database/rocket_league.db"
+  PYTHONUNBUFFERED: "1"
