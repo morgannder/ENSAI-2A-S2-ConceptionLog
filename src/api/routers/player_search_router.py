@@ -9,7 +9,7 @@ router = APIRouter(prefix="/global", tags=["Player research"])
 @router.get(
     "/player-research-update/",
     response_model=None,
-    summary="Update player in DB EH OUI CA MARCHE BIEN EN PLUS",
+    summary="Update player in DB",
     description="Retourne la réussite ou l'échec de l'actualisation des parties d'un "
     "joueur dans la DB. Prend en argument au choix : "
     "\n- Une plateforme et un ID associé"
