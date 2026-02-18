@@ -14,7 +14,8 @@ spec:
     spec:
       containers:
       - name: web
-        image: docker.io/meaumeau/ensai2a-cl-rlstatsanalysis:v1.0
+        image: docker.io/meaumeau/ensai2a-cl-rlstatsanalysis:latest
+        imagePullPolicy: Always
         ports:
         - containerPort: 8000
         # Configuration des variables d'environnement
