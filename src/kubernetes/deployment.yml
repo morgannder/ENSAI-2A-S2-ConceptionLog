@@ -17,7 +17,7 @@ spec:
         image: docker.io/meaumeau/ensai2a-cl-rlstatsanalysis:latest
         ports:
         - containerPort: 8000
-        envFrom: # On injecte tout le contenu des deux fichiers
+        envFrom:
         - configMapRef:
             name: rocket-config
         - secretRef:
