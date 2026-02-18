@@ -288,7 +288,15 @@ def add_single_match(json_path):
                     stats_positioning.insert().values(
                         participation_id=part_id,
                         average_distance_to_ball=po.get("avg_distance_to_ball", 0),
+                        average_distance_to_ball_possession=po.get(
+                            "avg_distance_to_ball_possession", 0
+                        ),
+                        average_distance_to_ball_no_possession=po.get(
+                            "avg_distance_to_ball_no_possession", 0
+                        ),
                         average_distance_to_mates=po.get("avg_distance_to_mates", 0),
+                        time_defensive_half=po.get("time_defensive_half", 0),
+                        time_offensive_half=po.get("time_offensive_half", 0),
                         time_defensive_third=po.get("time_defensive_third", 0),
                         time_neutral_third=po.get("time_neutral_third", 0),
                         time_offensive_third=po.get("time_offensive_third", 0),
@@ -300,7 +308,7 @@ def add_single_match(json_path):
                             "goals_against_while_last_defender", 0
                         ),
                         time_closest_to_ball=po.get("time_closest_to_ball", 0),
-                        time_farthest_to_ball=po.get("time_farthest_to_ball", 0),
+                        time_farthest_to_ball=po.get("time_farthest_from_ball", 0),
                         percent_defensive_third=po.get("percent_defensive_third", 0),
                         percent_neutral_third=po.get("percent_neutral_third", 0),
                         percent_offensive_third=po.get("percent_offensive_third", 0),
