@@ -168,3 +168,4 @@ node_modules
 rocket_league.db
 database/
 src/database/rocket_league.db
+src/kubernetes/secret.yml
