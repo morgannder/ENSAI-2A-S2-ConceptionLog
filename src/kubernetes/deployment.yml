@@ -14,11 +14,21 @@ spec:
     spec:
       containers:
       - name: web
-        image: docker.io/meaumeau/ensai2a-cl-rlstatsanalysis:latest
+        image: docker.io/meaumeau/ensai2a-cl-rlstatsanalysis:v1.0
         ports:
         - containerPort: 8000
+        # Configuration des variables d'environnement
         envFrom:
         - configMapRef:
             name: rocket-config
         - secretRef:
             name: rocket-secrets
+        # Montage du volume dans le conteneur
+        volumeMounts:
+        - name: db-storage
+          mountPath: /app/src/database
+      # Définition du volume persistant au niveau du Pod
+      volumes:
+      - name: db-storage
+        persistentVolumeClaim:
+          claimName: rocket-data-pvc
