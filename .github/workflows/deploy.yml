@@ -22,7 +22,6 @@ jobs:
         with:
           context: .
           push: true
-          # On construit pour Linux/AMD64 pour être compatible avec le SSP Cloud
           platforms: linux/amd64
           tags: meaumeau/ensai2a-cl-rlstatsanalysis:latest
 
@@ -34,4 +33,5 @@ jobs:
 
       - name: Trigger Kubernetes Update
         run: |
+          kubectl apply -f src/kubernetes/ -n user-morgannder
           kubectl rollout restart deployment rocket-app
