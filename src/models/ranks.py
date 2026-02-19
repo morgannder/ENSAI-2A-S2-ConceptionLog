@@ -25,38 +25,32 @@ class Ranks:
     def rank_group(self) -> str:
         """Retourne le groupe de rang (Bronze, Silver, etc.)"""
         rank_groups = {
-            1: "Bronze",
-            2: "Bronze",
-            3: "Bronze",
-            4: "Silver",
-            5: "Silver",
-            6: "Silver",
-            7: "Gold",
-            8: "Gold",
-            9: "Gold",
-            10: "Platinum",
-            11: "Platinum",
-            12: "Platinum",
-            13: "Diamond",
-            14: "Diamond",
-            15: "Diamond",
-            16: "Champion",
-            17: "Champion",
-            18: "Champion",
-            19: "Grand Champion",
-            20: "Grand Champion",
-            21: "Grand Champion",
+            1: "Bronze I",
+            2: "Bronze II",
+            3: "Bronze III",
+            4: "Silver I",
+            5: "Silver II",
+            6: "Silver III",
+            7: "Gold I",
+            8: "Gold II",
+            9: "Gold III",
+            10: "Platinum I",
+            11: "Platinum II",
+            12: "Platinum III",
+            13: "Diamond I",
+            14: "Diamond II",
+            15: "Diamond III",
+            16: "Champion I",
+            17: "Champion II",
+            18: "Champion III",
+            19: "Grand Champion I",
+            20: "Grand Champion II",
+            21: "Grand Champion III",
             22: "Supersonic Legend",
         }
         return rank_groups.get(self.tier, "Unknown")
 
     @property
-    def division_roman(self) -> str:
-        """Retourne la division en chiffres romains"""
-        divisions = {1: "I", 2: "II", 3: "III", 4: "IV"}
-        return divisions.get(self.division, "")
-
-    @property
     def display_name(self) -> str:
         """Retourne le nom formaté (ex: 'Bronze I')"""
-        return f"{self.rank_group} {self.division_roman}"
+        return f"{self.rank_group}"

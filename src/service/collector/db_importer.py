@@ -333,10 +333,3 @@ def add_single_match(json_path):
         print(f"Error while adding match to DB : {e}")
     finally:
         session.close()
-
-
-if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("Usage : python add_match.py <path_to_file.json>")
-    else:
-        add_single_match(sys.argv[1])

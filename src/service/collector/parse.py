@@ -72,10 +72,10 @@ def parse_game_list():
     with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
         json.dump(matches_to_download, f, indent=4)
 
-    print(f"   - Total analysed : {len(replays)}")
-    print(f"   - Already in DB (skipped) : {skipped_count}")
-    print(f"   - New matches downloaded : {len(matches_to_download)}")
-
-
-if __name__ == "__main__":
-    parse_game_list()
+    return {
+        "data": {
+            "total_analysed": len(replays),
+            "already_in_db": skipped_count,
+            "new_matches_downloaded": len(matches_to_download),
+        }
+    }

@@ -78,29 +78,30 @@ class PlayerService:
 
         return self.player_dao.get_player_by_parameter("platform_user_id", platform_id)
 
-    def get_player_by_name(self, name: str) -> Player | None:
+    def search_players(
+        self, name_query: str, platform: str = None, limit: int = 30, offset: int = 0
+    ) -> list[dict]:
         """
-        Récupère un joueur par son nom.
-
-        Parameters
-        ----------
-        name : str
-            Le nom du joueur à rechercher.
-
-        Returns
-        -------
-        Player | None
-            Le joueur correspondant au nom, ou None s'il n'existe pas.
-
-        Raises
-        ------
-        ValueError
-            Si le nom est vide ou None.
+        Recherche des joueurs avec validation de la limite et filtrage par plateforme.
         """
-        if not name or not name.strip():
-            raise ValueError("Le nom ne peut pas être vide")
+        if limit <= 0:
+            raise ValueError("La limite doit être supérieure à 0")
 
-        return self.player_dao.get_player_by_parameter("name", name.strip())
+        rows = self.player_dao.search_players_by_name(
+            name_query, platform, limit, offset
+        )
+
+        if not rows:
+            return []
+
+        return [
+            {
+                "platform_user_id": row["platform_user_id"],
+                "name": row["name"],
+                "platform": row["platform_name"],
+            }
+            for row in rows
+        ]
 
     def delete_player(self, player: Player) -> bool:
         """

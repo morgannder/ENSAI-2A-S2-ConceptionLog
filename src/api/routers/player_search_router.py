@@ -1,9 +1,12 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, status
 
 from src.service.collector.update import run_full_update
+from src.service.players_service import PlayerService
+from src.utils.enumeration import Platform_enum
 
 
 router = APIRouter(prefix="/global", tags=["Player research"])
+player_service = PlayerService()
 
 
 @router.get(
@@ -19,9 +22,9 @@ router = APIRouter(prefix="/global", tags=["Player research"])
     "\n- Une date au format ISO-8601 : YYY-MM-DDTHH:MM:SSZ",
 )
 def update_player(
-    player_platform: str | None = None,
+    player_platform: Platform_enum | None = None,
     player_id: str | None = None,
-    player_exact_name: str | None = None,
+    player_exact_pseudo: str | None = None,
     game_count: int = 1,
     created_after: str = "2024-01-01T00:00:00Z",
 ):
@@ -40,8 +43,11 @@ def update_player(
     player_id: Optional[str] = None
         L'id sur la plateforme de l'utilisateur
 
-    player_exact_name: Optional[str] = None
+    player_exact_pseudo: Optional[str] = None
         Le pseudo exact de l'utilisateur
+
+    game_count: int
+        Number of games requested to ballchasing API
 
     created_after: str = "2024-01-01T00:00:00Z"
         Date de création du replay de la partie sur Ballchasing API.
@@ -68,12 +74,24 @@ def update_player(
 
     """
     player_exact_id = None
-    if player_id is not None:
+    if player_platform is not None or player_id is not None:
+        if not player_platform or not player_id:
+            raise HTTPException(
+                status_code=400,
+                detail="Pour une recherche par ID, vous devez fournir à la fois la plateforme ET l'ID.",
+            )
+
         player_exact_id = f"{player_platform}:{player_id}"
+
+    elif not player_exact_pseudo:
+        raise HTTPException(
+            status_code=400,
+            detail="Veuillez fournir soit le couple (Plateforme + ID), soit un Pseudo exact.",
+        )
 
     try:
         update = run_full_update(
-            player_exact_name, player_exact_id, game_count, created_after
+            player_exact_pseudo, player_exact_id, game_count, created_after
         )
 
         if update is None:
@@ -91,4 +109,28 @@ def update_player(
         raise HTTPException(
             status_code=500,
             detail=f"Erreur serveur lors de la récupération des statistiques: {str(e)}",
+        ) from e
+
+
+@router.get(
+    "/search",
+    summary="Recherche des joueurs par nom et plateforme",
+    status_code=status.HTTP_200_OK,
+)
+def search_players(
+    pseudonym: str, platform: str = None, limit: int = 30, offset: int = 0
+):
+    """
+    longueur de pseudo minimum : 3
+    """
+    try:
+        if len(pseudonym) < 3:
+            raise ValueError("La recherche doit contenir au moins 3 caractères")
+
+        results = player_service.search_players(pseudonym, platform, limit, offset)
+
+        return {"query": pseudonym, "platform_filter": platform, "results": results}
+    except ValueError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=str(e)
         ) from e

@@ -11,3 +11,12 @@ Ranks_enum = Literal[
     "Grand Champion",
     "Supersonic Legend",
 ]
+
+Platform_enum = Literal[
+    "epic",
+    "steam",
+    "ps4",
+    "xbox",
+    "psynet",
+    "unknown",
+]

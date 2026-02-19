@@ -54,7 +54,7 @@ class BallchasingClient:
             "created-after": created_after,
             "count": count,
             "sort-by": "replay-date",
-            "sort-dir": "asc",
+            "sort-dir": "desc",
         }
 
         # Priority : ID
@@ -117,17 +117,3 @@ class BallchasingClient:
         except Exception as e:
             print(f"Error on :  {replay_id}: {e}")
             return False
-
-
-if __name__ == "__main__":
-    try:
-        client = BallchasingClient()
-        user_input = input("Pseudo (laisser vide pour ID) : ")
-        id_input = None
-        num_input = 2
-        if not user_input:
-            id_input = input("ID Joueur (ex: steam:76561198...) : ")
-
-        client.search_games(player_name=user_input, player_id=id_input, count=num_input)
-    except ValueError as e:
-        print(e)

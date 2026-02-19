@@ -70,29 +70,42 @@ class PlayerDAO(metaclass=Singleton):
             )
             return player
 
-    def find_players_by_partial_name(self, partial_name: str) -> list[tuple]:
+    def search_players_by_name(
+        self,
+        name_query: str,
+        platform_filter: str = None,
+        limit: int = 30,
+        offset: int = 0,
+    ) -> list:
         """
-        Retourne une liste de tuples (nom, plateforme, user_id)
-        pour la recherche interactive.
+        Recherche des joueurs par nom avec un filtre optionnel sur la plateforme.
         """
-        query = """
-            SELECT p.name, pl.name as platform_name, p.platform_user_id
+        # Construction dynamique de la clause WHERE pour la plateforme
+        platform_clause = "AND plat.name = ?" if platform_filter else ""
+
+        query = f"""
+            SELECT p.platform_user_id, p.name, plat.name AS platform_name
             FROM players p
-            JOIN platforms pl ON p.platform_id = pl.id
-            WHERE p.name LIKE ?
+            JOIN platforms plat ON p.platform_id = plat.id
+            WHERE p.name LIKE ? {platform_clause}
+            ORDER BY
+                CASE WHEN p.name = ? THEN 0 ELSE 1 END,
+                p.name ASC
+            LIMIT ? OFFSET ?
         """
+
         connection = self.db_connector.connection
         with connection:
             cursor = connection.cursor()
-            # On ajoute les % ici pour le LIKE SQL
-            cursor.execute(query, (f"%{partial_name}%",))
-            results = cursor.fetchall()
 
-            # On convertit les résultats sqlite3.Row en tuples simples ou dicts
-            return [
-                (row["name"], row["platform_name"], row["platform_user_id"])
-                for row in results
-            ]
+            # On prépare les arguments de la requête
+            params = [f"%{name_query}%"]
+            if platform_filter:
+                params.append(platform_filter)
+            params.extend([name_query, limit, offset])
+
+            cursor.execute(query, tuple(params))
+            return cursor.fetchall()
 
     def update_player(self, player: Player):
         pass

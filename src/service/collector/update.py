@@ -1,7 +1,9 @@
+import json
 import os
 from pathlib import Path
 import shutil
 
+from src.dao.players_dao import PlayerDAO
 from src.service.collector.api_client import BallchasingClient
 from src.service.collector.db_importer import add_single_match
 from src.service.collector.get_tmp_file import list_files_to_import
@@ -19,16 +21,38 @@ def run_full_update(
 ):
     """
     Run update based on user playername or user id
+
+    Parameters
+    ----------
+
+    player_id: Optional[str] = None
+        Platform id of the user to update
+
+    user_input: Optional[str] = None
+        Exact name of user to update
+
+    num_input:
+        Number of games requested to ballchasing API
+
+    created_after: str = "2024-01-01T00:00:00Z"
+        Creation date of the replay game on Ballchasing API
+        Format : ISO-8601
+        Date : YYY-MM-DDTHH:MM:SSZ
+        following the "T" in format -> Timezone on UTC base
+        (ex : UTC+1 -> T01:00:00Z)
+
+    Returns
+    -------
+        Bool : Réussite / Echec
+
+        Raises
+        ------
+        ValueError
+
     """
 
     client = BallchasingClient()
-    if user_input is None and player_id is None:
-        num_input = input("How many matches ? (Max 200) : ")
-        user_input = input("Pseudo (let empty for ID) : ").strip()
-        user_input = f'"{user_input}"'
-        player_id = None
-        if not user_input:
-            player_id = input("player ID (ex: steam:76561198...) : ")
+    players_dao = PlayerDAO()
 
     raw_list = client.search_games(
         player_name=user_input,
@@ -40,10 +64,26 @@ def run_full_update(
     if not raw_list:
         return None
 
+    try:
+        with open(raw_list, encoding="utf-8") as f:
+            raw_data = json.load(f)
+    except Exception as e:
+        print(f"Erreur lors de la lecture du fichier JSON: {e}")
+        return None
+
+    display_name = user_input
+    matches = raw_data.get("list", [])
+    latest_date = matches[0].get("date") if matches else None
+
+    if player_id is not None:
+        clean_id = player_id.split(":")[-1] if ":" in player_id else player_id
+        db_player = players_dao.get_player_by_parameter("platform_user_id", clean_id)
+        if db_player:
+            display_name = db_player.name
     print("Parsing match list")
-    parse_game_list()
+    parse_infos = parse_game_list()
     print("Downloading files")
-    download_replays_from_list()
+    dl_infos = download_replays_from_list()
     print("Data import")
     files_to_import = list_files_to_import()
     if not files_to_import:
@@ -60,8 +100,11 @@ def run_full_update(
     Path("src/database/temp/id-date-list-temp.json").write_text("[]")
     Path("src/database/temp/raw_game_list.json").write_text("[]")
     print("Update finished")
-    return True
-
-
-if __name__ == "__main__":
-    run_full_update()
+    stats = parse_infos.get("data", {}) if isinstance(parse_infos, dict) else {}
+    return {
+        "player_name": display_name,
+        "latest_match_date": latest_date,
+        "status": dl_infos.get("status") if isinstance(dl_infos, dict) else "unknown",
+        "message": dl_infos.get("informations") if isinstance(dl_infos, dict) else "",
+        "details": stats,
+    }
