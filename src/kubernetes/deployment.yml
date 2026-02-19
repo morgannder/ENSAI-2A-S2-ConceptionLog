@@ -4,6 +4,8 @@ metadata:
   name: rocket-app
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: rocket-league
