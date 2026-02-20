@@ -64,9 +64,6 @@ class BallchasingClient:
         elif player_name:
             params["player-name"] = player_name
             print(f"Pseudo Search: {player_name}")
-        else:
-            print("Error : Please SAY SOMETHING.")
-            return None
 
         print(f"API call to : {BASE_URL}")
         try:

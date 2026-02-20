@@ -84,10 +84,7 @@ def update_player(
         player_exact_id = f"{player_platform}:{player_id}"
 
     elif not player_exact_pseudo:
-        raise HTTPException(
-            status_code=400,
-            detail="Veuillez fournir soit le couple (Plateforme + ID), soit un Pseudo exact.",
-        )
+        print(f"Loading of the {game_count} most recent matches")
 
     try:
         update = run_full_update(
