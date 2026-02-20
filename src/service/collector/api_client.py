@@ -73,6 +73,8 @@ class BallchasingClient:
             data = response.json()
             count_found = len(data.get("list", []))
             print(f"Success : {count_found} replays found.")
+            if count_found == 0:
+                return 0
 
             with open(RAW_LIST_FILE, "w", encoding="utf-8") as f:
                 json.dump(data, f, indent=4)

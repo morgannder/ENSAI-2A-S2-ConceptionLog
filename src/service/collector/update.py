@@ -61,8 +61,11 @@ def run_full_update(
         created_after=date_max,
     )
 
-    if not raw_list:
-        return None
+    if raw_list == 0:
+        return {
+            "status": "failed",
+            "informations": f"0 replay founds, player does not exist on Ballchasing.com after the following date : {date_max}",
+        }
 
     try:
         with open(raw_list, encoding="utf-8") as f:
