@@ -1,5 +1,24 @@
 class Ranks:
+    """
+    Représente un rang dans le système de classement de Rocket League.
+    """
+
     def __init__(self, id: int = 0, tier: int = 0, division: int = 0, name: str = ""):
+        """
+        Initialise un rang.
+
+        Parameters
+        ----------
+        id : int, optional
+            Identifiant unique du rang en base de données, par défaut 0.
+        tier : int, optional
+            Niveau du rang (ex: 1-3 Bronze, 4-6 Silver, etc.), par défaut 0.
+        division : int, optional
+            Division au sein du tier (I, II, III, IV), par défaut 0.
+        name : str, optional
+            Nom complet du rang (ex: "Gold III"), par défaut "".
+        """
+
         self._id = id
         self._tier = tier
         self._division = division

@@ -28,12 +28,6 @@ class StatPositionningService:
         dict | None
             Dictionnaire contenant les statistiques moyennes de positionnement pour ce rang,
             ou None si aucune statistique n'est disponible.
-
-        Notes
-        -----
-        Les statistiques de positionnement incluent typiquement le temps passé en zone
-        offensive, défensive, neutre, la position moyenne sur le terrain, et autres
-        métriques de placement tactique pour tous les joueurs de ce rang.
         """
         return self.stats_positioning_dao.get_average_stats_positioning_per_rank(rank)
 
@@ -60,12 +54,6 @@ class StatPositionningService:
         ------
         ValueError
             Si le joueur ou le match n'a pas d'ID valide.
-
-        Notes
-        -----
-        Les statistiques incluent le temps passé dans chaque tiers du terrain
-        (offensif, neutre, défensif), la position moyenne, et autres métriques
-        de placement tactique durant le match.
         """
         if not player or not player.id:
             raise ValueError("Le joueur doit avoir un ID valide")

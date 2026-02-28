@@ -28,11 +28,6 @@ class StatsCoreService:
         float | None
             Les statistiques core moyennes pour ce rang,
             ou None si aucune donnée n'est disponible.
-
-        Notes
-        -----
-        Cette méthode retourne la moyenne des statistiques core pour tous les joueurs
-        du rang spécifié.
         """
         return self.stats_core_dao.get_average_stats_core_per_rank(rank)
 
@@ -59,11 +54,6 @@ class StatsCoreService:
         ------
         ValueError
             Si le joueur ou le match n'a pas d'ID valide.
-
-        Notes
-        -----
-        Les statistiques core incluent typiquement les buts, passes décisives,
-        sauvetages, tirs, et autres métriques de base du jeu.
         """
         if not player or not player.id:
             raise ValueError("Le joueur doit avoir un ID valide")

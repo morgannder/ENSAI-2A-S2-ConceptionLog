@@ -1,7 +1,7 @@
-from ..models.matches import Match
-from ..models.players import Player
-from ..utils.singleton import Singleton
-from .db_connection import DBConnection
+from src.dao.db_connection import DBConnection
+from src.models.matches import Match
+from src.models.players import Player
+from src.utils.singleton import Singleton
 
 
 class MatchDAO(metaclass=Singleton):
@@ -18,6 +18,19 @@ class MatchDAO(metaclass=Singleton):
         self.db_connector = DBConnection()
 
     def create_match(self, match: Match) -> bool:
+        """
+        Crée un nouveau match en base de données.
+
+        Parameters
+        ----------
+        match : Match
+            Le match à créer.
+
+        Returns
+        -------
+        bool
+            True si le match a été créé, False s'il existait déjà.
+        """
         connection = self.db_connector.connection
         with connection:
             cursor = connection.cursor()
@@ -54,6 +67,27 @@ class MatchDAO(metaclass=Singleton):
     def get_match_by_parameter(
         self, parameter_name: str, parameter_value
     ) -> list[Match] | None:
+        """
+        Récupère les matchs correspondant à un critère donné.
+
+        Parameters
+        ----------
+        parameter_name : str
+            Le nom de la colonne sur laquelle filtrer. Doit faire partie
+            des colonnes autorisées (allowed_columns).
+        parameter_value :
+            La valeur recherchée pour le paramètre spécifié.
+
+        Returns
+        -------
+        list[Match] | None
+            La liste des matchs correspondants, ou None si aucun n'est trouvé.
+
+        Raises
+        ------
+        ValueError
+            Si parameter_name ne fait pas partie des colonnes autorisées.
+        """
         if parameter_name not in self.allowed_columns:
             raise ValueError("Invalid column name")
 
@@ -84,9 +118,29 @@ class MatchDAO(metaclass=Singleton):
             return list_match
 
     def update_match(self, match: Match):
+        """
+        Met à jour un match existant en base de données.
+
+        Parameters
+        ----------
+        match : Match
+            Le match à mettre à jour.
+
+        Notes
+        -----
+        Non implémenté.
+        """
         pass
 
     def delete_match(self, match: Match):
+        """
+        Supprime un match de la base de données.
+
+        Parameters
+        ----------
+        match : Match
+            Le match à supprimer.
+        """
         connection = self.db_connector.connection
         with connection:
             cursor = connection.cursor()
@@ -99,6 +153,20 @@ class MatchDAO(metaclass=Singleton):
             )
 
     def get_20_recent_matches(self, nb_match=20) -> list[Match] | None:
+        """
+        Récupère les matchs les plus récents, triés par date décroissante.
+
+        Parameters
+        ----------
+        nb_match : int, optional
+            Le nombre maximum de matchs à retourner, par défaut 20.
+
+        Returns
+        -------
+        list[Match] | None
+            La liste des matchs les plus récents, ou None si aucun
+            n'est trouvé.
+        """
         connection = self.db_connector.connection
         with connection:
             cursor = connection.cursor()
@@ -131,6 +199,22 @@ class MatchDAO(metaclass=Singleton):
     def get_player_last_matches(
         self, player: Player, nb_match: int = 20
     ) -> list[Match] | None:
+        """
+        Récupère les derniers matchs d'un joueur, triés par date décroissante.
+
+        Parameters
+        ----------
+        player : Player
+            Le joueur dont on souhaite récupérer les matchs.
+        nb_match : int, optional
+            Le nombre maximum de matchs à retourner, par défaut 20.
+
+        Returns
+        -------
+        list[Match] | None
+            La liste des derniers matchs du joueur, ou None si aucun
+            n'est trouvé.
+        """
         query = """
             SELECT m.*
             FROM matches m

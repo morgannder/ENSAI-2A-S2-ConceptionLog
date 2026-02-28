@@ -1,4 +1,9 @@
 class StatsMovement:
+    """
+    Représente les statistiques de déplacement d'un joueur pour une
+    participation à un match.
+    """
+
     def __init__(
         self,
         participation_id: int = 0,
@@ -21,6 +26,51 @@ class StatsMovement:
         percent_low_air: float = 0.0,
         percent_high_air: float = 0.0,
     ):
+        """
+        Initialise les statistiques de déplacement.
+
+        Parameters
+        ----------
+        participation_id : int, optional
+            Identifiant de la participation au match, par défaut 0.
+        avg_speed : int, optional
+            Vitesse moyenne du joueur en km/h, par défaut 0.
+        total_distance : int, optional
+            Distance totale parcourue en unités de jeu, par défaut 0.
+        time_supersonic_speed : float, optional
+            Temps passé à vitesse supersonique en secondes, par défaut 0.0.
+        time_boost_speed : float, optional
+            Temps passé à vitesse boostée en secondes, par défaut 0.0.
+        time_slow_speed : float, optional
+            Temps passé à faible vitesse en secondes, par défaut 0.0.
+        time_ground : float, optional
+            Temps passé au sol en secondes, par défaut 0.0.
+        time_low_air : float, optional
+            Temps passé en air bas en secondes, par défaut 0.0.
+        time_high_air : float, optional
+            Temps passé en air haut en secondes, par défaut 0.0.
+        time_powerslide : float, optional
+            Temps passé en powerslide en secondes, par défaut 0.0.
+        count_powerslide : int, optional
+            Nombre de powerslides effectués, par défaut 0.
+        average_powerslide_duration : float, optional
+            Durée moyenne d'un powerslide en secondes, par défaut 0.0.
+        average_speed_percentage : float, optional
+            Pourcentage de la vitesse maximale atteinte en moyenne, par défaut 0.0.
+        percent_slow_speed : float, optional
+            Pourcentage du match passé à faible vitesse, par défaut 0.0.
+        percent_boost_speed : float, optional
+            Pourcentage du match passé à vitesse boostée, par défaut 0.0.
+        percent_supersonic_speed : float, optional
+            Pourcentage du match passé à vitesse supersonique, par défaut 0.0.
+        percent_ground : float, optional
+            Pourcentage du match passé au sol, par défaut 0.0.
+        percent_low_air : float, optional
+            Pourcentage du match passé en air bas, par défaut 0.0.
+        percent_high_air : float, optional
+            Pourcentage du match passé en air haut, par défaut 0.0.
+        """
+
         self._participation_id = participation_id
         self.avg_speed = avg_speed
         self.total_distance = total_distance

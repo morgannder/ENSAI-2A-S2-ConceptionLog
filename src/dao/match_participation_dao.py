@@ -1,7 +1,7 @@
-from ..models.match_participation import MatchParticipation
-from ..models.players import Player
-from ..utils.singleton import Singleton
-from .db_connection import DBConnection
+from src.dao.db_connection import DBConnection
+from src.models.match_participation import MatchParticipation
+from src.models.players import Player
+from src.utils.singleton import Singleton
 
 
 class MatchParticipationDAO(metaclass=Singleton):
@@ -21,6 +21,19 @@ class MatchParticipationDAO(metaclass=Singleton):
         self.db_connector = DBConnection()
 
     def create_match_participation(self, match: MatchParticipation):
+        """
+        Crée une nouvelle participation de joueur en base de données.
+
+        Parameters
+        ----------
+        match : MatchParticipation
+            La participation à créer.
+
+        Returns
+        -------
+        bool
+            True si la participation a été créée, False si elle existait déjà.
+        """
         connection = self.db_connector.connection
         with connection:
             cursor = connection.cursor()
@@ -60,6 +73,28 @@ class MatchParticipationDAO(metaclass=Singleton):
     def get_matches_by_parameter(
         self, parameter_name: str, parameter_value
     ) -> list[MatchParticipation] | None:
+        """
+        Récupère les participations correspondant à un critère donné.
+
+        Parameters
+        ----------
+        parameter_name : str
+            Le nom de la colonne sur laquelle filtrer. Doit faire partie
+            des colonnes autorisées (allowed_columns).
+        parameter_value :
+            La valeur recherchée pour le paramètre spécifié.
+
+        Returns
+        -------
+        list[MatchParticipation] | None
+            La liste des participations correspondantes, ou None si aucune
+            n'est trouvée.
+
+        Raises
+        ------
+        ValueError
+            Si parameter_name ne fait pas partie des colonnes autorisées.
+        """
         if parameter_name not in self.allowed_columns:
             raise ValueError("Invalid column name")
         query = f"""
@@ -91,9 +126,24 @@ class MatchParticipationDAO(metaclass=Singleton):
             return list_match
 
     def update_match_participation(self):
+        """
+        Met à jour une participation existante en base de données.
+
+        Notes
+        -----
+        Non implémenté.
+        """
         pass
 
     def delete_match_participation(self, match: MatchParticipation):
+        """
+        Supprime une participation de la base de données.
+
+        Parameters
+        ----------
+        match : MatchParticipation
+            La participation à supprimer.
+        """
         connection = self.db_connector.connection
         with connection:
             cursor = connection.cursor()
@@ -108,6 +158,23 @@ class MatchParticipationDAO(metaclass=Singleton):
     def get_player_last_match_participation(
         self, player: Player, nb_match: int = 20
     ) -> list[MatchParticipation] | None:
+        """
+        Récupère les dernières participations d'un joueur, triées par date
+        décroissante.
+
+        Parameters
+        ----------
+        player : Player
+            Le joueur dont on souhaite récupérer les participations.
+        nb_match : int, optional
+            Le nombre maximum de participations à retourner, par défaut 20.
+
+        Returns
+        -------
+        list[MatchParticipation] | None
+            La liste des dernières participations du joueur, ou None si aucune
+            n'est trouvée.
+        """
         query = """
             SELECT mp.*
             FROM matches m
@@ -148,6 +215,20 @@ class MatchParticipationDAO(metaclass=Singleton):
             return list_match
 
     def get_player_match_mvp(self, player: Player) -> list[MatchParticipation] | None:
+        """
+        Récupère toutes les participations où le joueur a été élu MVP.
+
+        Parameters
+        ----------
+        player : Player
+            Le joueur dont on souhaite récupérer les participations MVP.
+
+        Returns
+        -------
+        list[MatchParticipation] | None
+            La liste des participations où le joueur a été MVP, ou None si
+            aucune n'est trouvée.
+        """
         connection = self.db_connector.connection
         with connection:
             cursor = connection.cursor()
@@ -179,6 +260,20 @@ class MatchParticipationDAO(metaclass=Singleton):
             return list_match
 
     def get_player_nb_mvp(self, player: Player) -> int:
+        """
+        Retourne le nombre de fois qu'un joueur a été élu MVP.
+
+        Parameters
+        ----------
+        player : Player
+            Le joueur dont on souhaite compter les MVP.
+
+        Returns
+        -------
+        int
+            Le nombre de participations MVP du joueur, ou 0 si aucune
+            n'est trouvée.
+        """
         connection = self.db_connector.connection
         with connection:
             cursor = connection.cursor()

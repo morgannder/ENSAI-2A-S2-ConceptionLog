@@ -40,7 +40,19 @@ class StatsPositioningDTO(BaseModel):
 
     @classmethod
     def from_business_object(cls, bo: StatsPositioning) -> "StatsPositioningDTO":
-        """Convertit un Business Object StatsPositioning en DTO"""
+        """
+        Convertit un Business Object StatsPositioning en DTO.
+
+        Parameters
+        ----------
+        bo : StatsPositioning
+            L'objet métier StatsPositioning à convertir.
+
+        Returns
+        -------
+        StatsPositioningDTO
+            Le DTO correspondant à l'objet métier fourni.
+        """
         return cls(
             participation_id=bo._participation_id,
             average_distance_to_ball=bo.average_distance_to_ball,

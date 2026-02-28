@@ -15,8 +15,18 @@ class StatBoostDAO(metaclass=Singleton):
         self, rank: Ranks
     ) -> StatsBoostAggregatedDTO | None:
         """
-        Récupère les stats moyennes boost pour un rang donné.
-        Retourne un DTO car ce sont des données agrégées.
+        Récupère les statistiques de boost moyennes pour un rang donné.
+
+        Parameters
+        ----------
+        rank : Ranks
+            Le rang pour lequel on souhaite obtenir les statistiques moyennes.
+
+        Returns
+        -------
+        StatsBoostAggregatedDTO | None
+            Un DTO contenant les moyennes de toutes les statistiques de boost
+            pour le rang spécifié, ou None si aucune donnée n'est trouvée.
         """
         rank_name = rank.name
         query = """
@@ -108,8 +118,20 @@ class StatBoostDAO(metaclass=Singleton):
         self, player: Player, match: Match
     ) -> StatsBoost | None:
         """
-        Récupère les stats boost d'un match spécifique.
-        Retourne un BO car ce sont des données brutes.
+        Récupère les statistiques de boost d'un joueur pour un match spécifique.
+
+        Parameters
+        ----------
+        player : Player
+            Le joueur dont on souhaite obtenir les statistiques.
+        match : Match
+            Le match concerné.
+
+        Returns
+        -------
+        StatsBoost | None
+            Un objet métier contenant les statistiques de boost brutes du joueur
+            pour ce match, ou None si aucune donnée n'est trouvée.
         """
         query = """
                 SELECT sb.*
@@ -169,8 +191,19 @@ class StatBoostDAO(metaclass=Singleton):
         self, player: Player
     ) -> StatsBoostAggregatedDTO | None:
         """
-        Récupère les stats boost moyennes d'un joueur.
-        Retourne un DTO car ce sont des données agrégées.
+        Récupère les statistiques de boost moyennes d'un joueur sur l'ensemble
+        de ses matchs.
+
+        Parameters
+        ----------
+        player : Player
+            Le joueur dont on souhaite obtenir les statistiques moyennes.
+
+        Returns
+        -------
+        StatsBoostAggregatedDTO | None
+            Un DTO contenant les moyennes de toutes les statistiques de boost
+            du joueur, ou None si aucune donnée n'est trouvée.
         """
         query = """
                 SELECT

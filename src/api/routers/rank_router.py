@@ -16,7 +16,25 @@ player_service = PlayerService()
 )
 def get_player_rank(platform_id: str):
     """
-    Récupère le rang actuel d'un joueur par son platform_id.
+    Récupère le rang actuel d'un joueur par son identifiant de plateforme.
+
+    Parameters
+    ----------
+    platform_id : str
+        L'identifiant unique du joueur sur sa plateforme de jeu.
+
+    Returns
+    -------
+    dict
+        Un dictionnaire contenant le nom du joueur, son platform_id, son rang
+        et son rang complet. Si le joueur n'a pas de rang, retourne "Unranked".
+
+    Raises
+    ------
+    HTTPException
+        400 si les paramètres fournis sont invalides.
+        404 si le joueur est introuvable.
+        500 en cas d'erreur serveur.
     """
     try:
         player = player_service.get_player_by_platform_id(platform_id)

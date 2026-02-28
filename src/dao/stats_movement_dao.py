@@ -15,7 +15,17 @@ class StatMovementDAO(metaclass=Singleton):
         self, rank: Ranks
     ) -> StatsMovementAggregatedDTO | None:
         """
-        Récupère les stats globales des joueurs pour un rang donné.
+        Récupère les statistiques de déplacement moyennes pour un rang donné.
+
+        Parameters
+        ----------
+        rank : Ranks
+            Le rang pour lequel on souhaite obtenir les statistiques moyennes.
+
+        Returns
+        -------
+        StatsMovementAggregatedDTO | None
+            Un DTO contenant les moyennes des statistiques de déplacement
         """
         rank_name = rank.name
         query = """
@@ -97,6 +107,22 @@ class StatMovementDAO(metaclass=Singleton):
     def get_player_match_stats_movement(
         self, player: Player, match: Match
     ) -> StatsMovement | None:
+        """
+        Récupère les statistiques de déplacement d'un joueur pour un match spécifique.
+
+        Parameters
+        ----------
+        player : Player
+            Le joueur dont on souhaite obtenir les statistiques.
+        match : Match
+            Le match concerné.
+
+        Returns
+        -------
+        StatsMovement | None
+            Un objet métier contenant les statistiques de déplacement brutes
+            du joueur pour ce match, ou None si aucune donnée n'est trouvée.
+        """
         query = """
                 SELECT sm.*
                 FROM stats_movement sm
@@ -138,6 +164,21 @@ class StatMovementDAO(metaclass=Singleton):
     def get_player_average_stats_movement(
         self, player: Player
     ) -> StatsMovementAggregatedDTO | None:
+        """
+        Récupère les statistiques de déplacement moyennes d'un joueur sur
+        l'ensemble de ses matchs.
+
+        Parameters
+        ----------
+        player : Player
+            Le joueur dont on souhaite obtenir les statistiques moyennes.
+
+        Returns
+        -------
+        StatsMovementAggregatedDTO | None
+            Un DTO contenant les moyennes des statistiques de déplacement
+            du joueur, ou None si aucune donnée n'est trouvée.
+        """
         query = """
                 SELECT
                     ROUND(AVG(sm.avg_speed), 2) AS avg_avg_speed,

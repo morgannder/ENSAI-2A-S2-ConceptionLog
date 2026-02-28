@@ -32,8 +32,20 @@ def get_rank_statistics(rank_name: Ranks_enum) -> StatsByRankResponse:
     """
     Récupère les statistiques de boost moyennes pour un rang donné.
 
-    Returns:
-        StatsByRankResponse avec un StatsBoostAggregatedDTO dans data
+    Parameters
+    ----------
+    rank_name : Ranks_enum
+        Le nom du rang pour lequel on souhaite obtenir les statistiques.
+
+    Returns
+    -------
+    StatsByRankResponse
+        La réponse contenant un StatsBoostAggregatedDTO dans le champ data.
+
+    Raises
+    ------
+    HTTPException
+        404 si aucune donnée n'est trouvée pour le rang spécifié.
     """
     rank = Ranks(name=rank_name)
 
@@ -63,8 +75,20 @@ def get_player_average_statistics(platform_id: str) -> StatsByPlayerResponse:
     """
     Récupère les statistiques de boost moyennes d'un joueur sur tous ses matchs.
 
-    Returns:
-        StatsByPlayerResponse avec un StatsBoostAggregatedDTO dans data
+    Parameters
+    ----------
+    platform_id : str
+        L'identifiant unique du joueur sur sa plateforme de jeu.
+
+    Returns
+    -------
+    StatsByPlayerResponse
+        La réponse contenant un StatsBoostAggregatedDTO dans le champ data.
+
+    Raises
+    ------
+    HTTPException
+        404 si le joueur est introuvable ou si aucune statistique n'est trouvée.
     """
     player = player_service.get_player_by_platform_id(platform_id)
 
@@ -99,8 +123,22 @@ def get_player_match_statistics(
     """
     Récupère les statistiques de boost d'un joueur pour un match spécifique.
 
-    Returns:
-        StatsByPlayerMatchResponse avec un StatsBoostDTO dans data
+    Parameters
+    ----------
+    platform_id : str
+        L'identifiant unique du joueur sur sa plateforme de jeu.
+    match_id : str
+        L'identifiant unique du match.
+
+    Returns
+    -------
+    StatsByPlayerMatchResponse
+        La réponse contenant un StatsBoostDTO dans le champ data.
+
+    Raises
+    ------
+    HTTPException
+        404 si le joueur, le match ou les statistiques sont introuvables.
     """
     player = player_service.get_player_by_platform_id(platform_id)
     if player is None:

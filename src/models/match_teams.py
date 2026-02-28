@@ -1,4 +1,8 @@
 class MatchTeam:
+    """
+    Représente une équipe dans un match.
+    """
+
     def __init__(
         self,
         id: int,
@@ -8,6 +12,25 @@ class MatchTeam:
         possession_time: float,
         time_in_side: float,
     ):
+        """
+        Initialise une équipe dans un match.
+
+        Parameters
+        ----------
+        id : int
+            Identifiant unique de l'équipe dans le match.
+        match_id : str
+            Identifiant du match auquel appartient l'équipe.
+        color : bool
+            Couleur de l'équipe (True pour bleu, False pour orange).
+        score : int
+            Score final de l'équipe dans le match.
+        possession_time : float
+            Temps de possession du ballon en secondes.
+        time_in_side : float
+            Temps passé dans son propre camp en secondes.
+        """
+
         self._id = id
         self._match_id = match_id
         self._color = color

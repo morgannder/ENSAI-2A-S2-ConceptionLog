@@ -28,12 +28,6 @@ class StatBoostService:
         StatsBoostAggregatedDTO | None
             DTO contenant les statistiques moyennes de boost pour ce rang,
             ou None si aucune statistique n'est disponible.
-
-        Notes
-        -----
-        Les statistiques incluent typiquement les moyennes de boost collecté,
-        boost utilisé, et autres métriques liées au boost pour tous les joueurs
-        de ce rang.
         """
         return self.stats_boost_dao.get_average_stats_boost_per_rank(rank)
 

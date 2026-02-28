@@ -225,7 +225,10 @@ class PlayerService:
 
     def validate_player_name(self, name: str) -> tuple[bool, str]:
         """
-        Valide un nom de joueur selon les règles métier.
+        Valide un nom de joueur selon les règles :
+            - Le nom ne peut pas être vide
+            - Le nom doit contenir au moins 3 caractères
+            - Le nom ne peut pas dépasser 50 caractères
 
         Parameters
         ----------
@@ -238,13 +241,6 @@ class PlayerService:
             Un tuple contenant :
             - bool : True si le nom est valide, False sinon
             - str : Un message d'erreur si invalide, chaîne vide si valide
-
-        Notes
-        -----
-        Règles de validation :
-        - Le nom ne peut pas être vide
-        - Le nom doit contenir au moins 3 caractères
-        - Le nom ne peut pas dépasser 50 caractères
         """
         if not name or not name.strip():
             return False, "Le nom ne peut pas être vide"

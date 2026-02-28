@@ -41,7 +41,19 @@ class StatsBoostDTO(BaseModel):
 
     @classmethod
     def from_business_object(cls, bo: StatsBoost) -> "StatsBoostDTO":
-        """Convertit un Business Object StatsBoost en DTO"""
+        """
+        Convertit un Business Object StatsBoost en DTO.
+
+        Parameters
+        ----------
+        bo : StatsBoost
+            L'objet métier StatsBoost à convertir.
+
+        Returns
+        -------
+        StatsBoostDTO
+            Le DTO correspondant à l'objet métier fourni.
+        """
         return cls(
             participation_id=bo._participation_id,
             boost_per_minute=bo.boost_per_minute,

@@ -21,7 +21,7 @@ class StatsType(str, Enum):
     POSITIONING = "positioning"
 
 
-# Union de tous les DTOs (individuels et agrégés) avec |
+# Union de tous les DTOs (individuels et agrégés) avec "|"
 StatsDataDTO = (
     StatsCoreDTO
     | StatsCoreAggregatedDTO

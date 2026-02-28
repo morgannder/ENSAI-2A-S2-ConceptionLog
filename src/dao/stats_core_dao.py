@@ -15,7 +15,18 @@ class StatsCoreDAO(metaclass=Singleton):
         self, rank: Ranks
     ) -> StatsCoreAggregatedDTO | None:
         """
-        Récupère les stats globales des joueurs pour un rang donné.
+        Récupère les statistiques de jeu (Core) moyennes pour un rang donné.
+
+        Parameters
+        ----------
+        rank : Ranks
+            Le rang pour lequel on souhaite obtenir les statistiques moyennes.
+
+        Returns
+        -------
+        StatsCoreAggregatedDTO | None
+            Un DTO contenant les moyennes des statistiques de jeu pour le rang
+            spécifié, ou None si aucune donnée n'est trouvée.
         """
         rank_name = rank.name
         query = """
@@ -76,6 +87,22 @@ class StatsCoreDAO(metaclass=Singleton):
     def get_player_match_stats_core(
         self, player: Player, match: Match
     ) -> StatsCore | None:
+        """
+        Récupère les statistiques de jeu (Core) d'un joueur pour un match spécifique.
+
+        Parameters
+        ----------
+        player : Player
+            Le joueur dont on souhaite obtenir les statistiques.
+        match : Match
+            Le match concerné.
+
+        Returns
+        -------
+        StatsCore | None
+            Un objet métier contenant les statistiques de jeu brutes du joueur
+            pour ce match, ou None si aucune donnée n'est trouvée.
+        """
         query = """
                 SELECT sc.*
                 FROM stats_core sc
@@ -113,6 +140,21 @@ class StatsCoreDAO(metaclass=Singleton):
     def get_player_average_stats_core(
         self, player: Player
     ) -> StatsCoreAggregatedDTO | None:
+        """
+        Récupère les statistiques de jeu (Core) moyennes d'un joueur sur l'ensemble
+        de ses matchs.
+
+        Parameters
+        ----------
+        player : Player
+            Le joueur dont on souhaite obtenir les statistiques moyennes.
+
+        Returns
+        -------
+        StatsCoreAggregatedDTO | None
+            Un DTO contenant les moyennes des statistiques de jeu du joueur,
+            ou None si aucune donnée n'est trouvée.
+        """
         query = """
                 SELECT
                     ROUND(AVG(goals), 2) AS avg_goals,

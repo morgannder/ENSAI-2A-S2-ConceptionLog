@@ -28,12 +28,6 @@ class StatMovementService:
         dict | None
             Dictionnaire contenant les statistiques moyennes de mouvement pour ce rang,
             ou None si aucune statistique n'est disponible.
-
-        Notes
-        -----
-        Les statistiques de mouvement incluent typiquement la distance parcourue,
-        le temps passé à différentes vitesses, les sauts, rotations, et autres
-        métriques de mobilité pour tous les joueurs de ce rang.
         """
         return self.stats_movement_dao.get_average_stats_movement_per_rank(rank)
 
@@ -60,11 +54,6 @@ class StatMovementService:
         ------
         ValueError
             Si le joueur ou le match n'a pas d'ID valide.
-
-        Notes
-        -----
-        Les statistiques incluent la distance parcourue, le temps passé à vitesse
-        supersonique, le temps passé au sol/en l'air, et autres métriques de mobilité.
         """
         if not player or not player.id:
             raise ValueError("Le joueur doit avoir un ID valide")

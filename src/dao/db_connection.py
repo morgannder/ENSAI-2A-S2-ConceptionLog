@@ -13,8 +13,8 @@ class DBConnection(metaclass=Singleton):
 
         self.__connection = sqlite3.connect(
             db_path,
-            check_same_thread=False,  # ✅ Permet multi-threading
-            timeout=10.0,  # ✅ Timeout de 10 secondes
+            check_same_thread=False,  # Permet multi-threading
+            timeout=10.0,  # Timeout de 10 secondes
         )
         self.__connection.row_factory = sqlite3.Row
 

@@ -50,10 +50,6 @@ class PlatformService:
         ------
         ValueError
             Si le nom est vide ou None.
-
-        Notes
-        -----
-        Le nom est automatiquement normalisé en majuscules pour la recherche.
         """
         if not name or not name.strip():
             raise ValueError("Le nom de la plateforme ne peut pas être vide")
@@ -156,15 +152,6 @@ class PlatformService:
         str
             Le nom normalisé en majuscules et sans espaces superflus,
             ou une chaîne vide si le nom est vide ou None.
-
-        Examples
-        --------
-        >>> service.normalize_platform_name("steam")
-        "STEAM"
-        >>> service.normalize_platform_name("  Epic Games  ")
-        "EPIC GAMES"
-        >>> service.normalize_platform_name("")
-        ""
         """
         if not name:
             return ""

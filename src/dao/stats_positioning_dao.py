@@ -15,11 +15,19 @@ class StatPositioningDAO(metaclass=Singleton):
         self, rank: Ranks
     ) -> StatsPositioningAggregatedDTO | None:
         """
-        Récupère les stats globales des joueurs pour un rang donné.
+        Récupère les statistiques de positionnement moyennes pour un rang donné.
+
+        Parameters
+        ----------
+        rank : Ranks
+            Le rang pour lequel on souhaite obtenir les statistiques moyennes.
+
+        Returns
+        -------
+        StatsPositioningAggregatedDTO | None
+            Un DTO contenant les moyennes des statistiques de positionnement
         """
-
         rank_name = rank.name
-
         query = query = """
                     SELECT
                         CASE
@@ -119,6 +127,23 @@ class StatPositioningDAO(metaclass=Singleton):
     def get_player_match_stats_positioning(
         self, player: Player, match: Match
     ) -> StatsPositioning | None:
+        """
+        Récupère les statistiques de positionnement d'un joueur pour un match
+        spécifique.
+
+        Parameters
+        ----------
+        player : Player
+            Le joueur dont on souhaite obtenir les statistiques.
+        match : Match
+            Le match concerné.
+
+        Returns
+        -------
+        StatsPositioning | None
+            Un objet métier contenant les statistiques de positionnement brutes
+            du joueur pour ce match, ou None si aucune donnée n'est trouvée.
+        """
         query = """
                 SELECT sp.*
                 FROM stats_positioning sp
@@ -175,6 +200,21 @@ class StatPositioningDAO(metaclass=Singleton):
     def get_player_average_stats_positioning(
         self, player: Player
     ) -> StatsPositioningAggregatedDTO | None:
+        """
+        Récupère les statistiques de positionnement moyennes d'un joueur sur
+        l'ensemble de ses matchs.
+
+        Parameters
+        ----------
+        player : Player
+            Le joueur dont on souhaite obtenir les statistiques moyennes.
+
+        Returns
+        -------
+        StatsPositioningAggregatedDTO | None
+            Un DTO contenant les moyennes des statistiques de positionnement
+            du joueur, ou None si aucune donnée n'est trouvée.
+        """
         query = """
                 SELECT
                     AVG(sp.average_distance_to_ball) AS avg_average_distance_to_ball,

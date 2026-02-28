@@ -32,21 +32,23 @@ def get_average_stats_core_by_rank(
     rank_name: Ranks_enum,
 ) -> StatsByRankResponse:
     """
-    Endpoint pour récupérer la moyenne des statistiques Core d'un rang.
+    Récupère les statistiques de jeu moyennes pour un rang donné.
 
     Parameters
     ----------
-    rank: Ranks
-        Le nom du rang (tier).
+    rank_name : Ranks_enum
+        Le nom du rang pour lequel on souhaite obtenir les statistiques.
 
     Returns
     -------
-        JSON contenant les statistiques core.
+    StatsByRankResponse
+        La réponse contenant un StatsCoreAggregatedDTO dans le champ data.
 
     Raises
     ------
-        HTTPException 404: Si aucune donnée n'existe pour ce rang
-        HTTPException 500: Erreur serveur
+    HTTPException
+        404 si aucune donnée n'est trouvée pour le rang spécifié.
+        500 en cas d'erreur serveur.
     """
     rank = Ranks(name=rank_name)
 
@@ -81,7 +83,22 @@ def get_average_stats_core_by_rank(
 )
 def get_player_average_statistics(platform_id: str) -> StatsByPlayerResponse:
     """
-    Doc.
+    Récupère les statistiques de jeu moyennes d'un joueur sur tous ses matchs.
+
+    Parameters
+    ----------
+    platform_id : str
+        L'identifiant unique du joueur sur sa plateforme de jeu.
+
+    Returns
+    -------
+    StatsByPlayerResponse
+        La réponse contenant un StatsCoreAggregatedDTO dans le champ data.
+
+    Raises
+    ------
+    HTTPException
+        404 si le joueur est introuvable ou si aucune statistique n'est trouvée.
     """
     player = player_service.get_player_by_platform_id(platform_id)
 
@@ -113,7 +130,26 @@ def get_player_average_statistics(platform_id: str) -> StatsByPlayerResponse:
 def get_player_match_statistics(
     platform_id: str, match_id: str
 ) -> StatsByPlayerMatchResponse:
-    """doc."""
+    """
+    Récupère les statistiques de jeu d'un joueur pour un match spécifique.
+
+    Parameters
+    ----------
+    platform_id : str
+        L'identifiant unique du joueur sur sa plateforme de jeu.
+    match_id : str
+        L'identifiant unique du match.
+
+    Returns
+    -------
+    StatsByPlayerMatchResponse
+        La réponse contenant un StatsCoreDTO dans le champ data.
+
+    Raises
+    ------
+    HTTPException
+        404 si le joueur, le match ou les statistiques sont introuvables.
+    """
     player = player_service.get_player_by_platform_id(platform_id)
     if player is None:
         raise HTTPException(

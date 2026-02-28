@@ -1,9 +1,9 @@
-from ..models.match_teams import MatchTeam
-from ..models.matches import Match
-from ..models.players import Player
-from ..models.ranks import Ranks
-from ..utils.singleton import Singleton
-from .db_connection import DBConnection
+from src.dao.db_connection import DBConnection
+from src.models.match_teams import MatchTeam
+from src.models.matches import Match
+from src.models.players import Player
+from src.models.ranks import Ranks
+from src.utils.singleton import Singleton
 
 
 class PlayerDAO(metaclass=Singleton):
@@ -13,6 +13,19 @@ class PlayerDAO(metaclass=Singleton):
         self.db_connector = DBConnection()
 
     def create_player(self, player: Player) -> bool:
+        """
+        Crée un nouveau joueur en base de données.
+
+        Parameters
+        ----------
+        player : Player
+            Le joueur à créer.
+
+        Returns
+        -------
+        bool
+            True si le joueur a été créé, False s'il existait déjà.
+        """
         connection = self.db_connector.connection
         with connection:
             cursor = connection.cursor()
@@ -47,6 +60,27 @@ class PlayerDAO(metaclass=Singleton):
     def get_player_by_parameter(
         self, parameter_name: str, parameter_value
     ) -> Player | None:
+        """
+        Récupère un joueur correspondant à un critère donné.
+
+        Parameters
+        ----------
+        parameter_name : str
+            Le nom de la colonne sur laquelle filtrer. Doit faire partie
+            des colonnes autorisées (allowed_columns).
+        parameter_value :
+            La valeur recherchée pour le paramètre spécifié.
+
+        Returns
+        -------
+        Player | None
+            Le joueur correspondant, ou None s'il n'existe pas.
+
+        Raises
+        ------
+        ValueError
+            Si parameter_name ne fait pas partie des colonnes autorisées.
+        """
         if parameter_name not in self.allowed_columns:
             raise ValueError("Invalid column name")
 
@@ -79,8 +113,24 @@ class PlayerDAO(metaclass=Singleton):
     ) -> list:
         """
         Recherche des joueurs par nom avec un filtre optionnel sur la plateforme.
+
+        Parameters
+        ----------
+        name_query : str
+            Le nom ou fragment de nom à rechercher.
+        platform_filter : str, optional
+            Le nom de la plateforme sur laquelle filtrer, par défaut None.
+        limit : int, optional
+            Le nombre maximum de résultats à retourner, par défaut 30.
+        offset : int, optional
+            Le décalage pour la pagination des résultats, par défaut 0.
+
+        Returns
+        -------
+        list
+            La liste des joueurs correspondants sous forme de lignes brutes,
+            chacune contenant le platform_user_id, le nom et la plateforme.
         """
-        # Construction dynamique de la clause WHERE pour la plateforme
         platform_clause = "AND plat.name = ?" if platform_filter else ""
 
         query = f"""
@@ -98,7 +148,6 @@ class PlayerDAO(metaclass=Singleton):
         with connection:
             cursor = connection.cursor()
 
-            # On prépare les arguments de la requête
             params = [f"%{name_query}%"]
             if platform_filter:
                 params.append(platform_filter)
@@ -108,9 +157,29 @@ class PlayerDAO(metaclass=Singleton):
             return cursor.fetchall()
 
     def update_player(self, player: Player):
+        """
+        Met à jour un joueur existant en base de données.
+
+        Parameters
+        ----------
+        player : Player
+            Le joueur à mettre à jour.
+
+        Notes
+        -----
+        Non implémenté.
+        """
         pass
 
     def delete_player(self, player: Player) -> None:
+        """
+        Supprime un joueur de la base de données.
+
+        Parameters
+        ----------
+        player : Player
+            Le joueur à supprimer.
+        """
         connection = self.db_connector.connection
         with connection:
             cursor = connection.cursor()
@@ -123,6 +192,19 @@ class PlayerDAO(metaclass=Singleton):
             )
 
     def get_matches_count(self, player: Player) -> int:
+        """
+        Retourne le nombre de matchs joués par un joueur.
+
+        Parameters
+        ----------
+        player : Player
+            Le joueur dont on souhaite compter les matchs.
+
+        Returns
+        -------
+        int
+            Le nombre de matchs joués, ou 0 si aucun n'est trouvé.
+        """
         connection = self.db_connector.connection
         with connection:
             cursor = connection.cursor()
@@ -141,6 +223,19 @@ class PlayerDAO(metaclass=Singleton):
             return res
 
     def get_players_in_rank(self, rank: Ranks) -> list[Player] | None:
+        """
+        Récupère tous les joueurs ayant joué dans un rang donné.
+
+        Parameters
+        ----------
+        rank : Ranks
+            Le rang pour lequel on souhaite récupérer les joueurs.
+
+        Returns
+        -------
+        list[Player] | None
+            La liste des joueurs correspondants, ou None si aucun n'est trouvé.
+        """
         connection = self.db_connector.connection
         with connection:
             cursor = connection.cursor()
@@ -170,6 +265,19 @@ class PlayerDAO(metaclass=Singleton):
             return list_play
 
     def get_players_in_team(self, match_team: MatchTeam) -> list[Player] | None:
+        """
+        Récupère tous les joueurs d'une équipe dans un match.
+
+        Parameters
+        ----------
+        match_team : MatchTeam
+            L'équipe dont on souhaite récupérer les joueurs.
+
+        Returns
+        -------
+        list[Player] | None
+            La liste des joueurs de l'équipe, ou None si aucun n'est trouvé.
+        """
         connection = self.db_connector.connection
         with connection:
             cursor = connection.cursor()
@@ -199,6 +307,19 @@ class PlayerDAO(metaclass=Singleton):
         return list_player
 
     def get_players_in_match(self, match: Match) -> list[Player] | None:
+        """
+        Récupère tous les joueurs ayant participé à un match.
+
+        Parameters
+        ----------
+        match : Match
+            Le match dont on souhaite récupérer les joueurs.
+
+        Returns
+        -------
+        list[Player] | None
+            La liste des joueurs du match, ou None si aucun n'est trouvé.
+        """
         connection = self.db_connector.connection
         with connection:
             cursor = connection.cursor()
