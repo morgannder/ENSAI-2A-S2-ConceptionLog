@@ -18,15 +18,19 @@ def download_replays_from_list():
     """
 
     if not INPUT_LIST.exists():
-        print(f"Error : file {INPUT_LIST} is missing.")
-        return
+        return {
+            "status": "failed",
+            "informations": f"Error : file {INPUT_LIST} is missing.",
+        }
 
     with open(INPUT_LIST, encoding="utf-8") as f:
         matches_to_download = json.load(f)
 
     if not matches_to_download:
-        print("Match list is empty.")
-        return
+        return {
+            "status": "failed",
+            "informations": "No Match to download, database is already up to date.",
+        }
 
     client = BallchasingClient()
     print(f"Starting download {len(matches_to_download)} replays")
@@ -43,9 +47,7 @@ def download_replays_from_list():
 
         time.sleep(0.55)
 
-    print(f"Task finished ! Downloaded {count_success} files.")
-    return DUMP_DIR
-
-
-if __name__ == "__main__":
-    download_replays_from_list()
+    return {
+        "status": "success",
+        "informations": f"Task finished ! Downloaded {count_success} files.",
+    }

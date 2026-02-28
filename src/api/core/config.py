@@ -6,7 +6,7 @@ class Settings(BaseSettings):
     DB_URL: str
     DB_PASSWORD: str
     APP_VERSION: str = "0.1.0"
-    SECRET_KEY: str
+    BALLCHASING_API_KEY: str
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
     POSTGRES_SCHEMA: str = "public"

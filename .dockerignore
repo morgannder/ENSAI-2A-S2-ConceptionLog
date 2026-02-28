@@ -1,0 +1,7 @@
+.git
+__pycache__
+.venv
+.env
+.ruff_cache
+.uv
+src/database/rocket_league.db

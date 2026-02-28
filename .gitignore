@@ -162,8 +162,9 @@ cython_debug/
 .env
 logs/*
 .ruff_cache/
-uv.lock
 node_modules
 *.csv
 rocket_league.db
 database/
+src/database/rocket_league.db
+src/kubernetes/secret.yml

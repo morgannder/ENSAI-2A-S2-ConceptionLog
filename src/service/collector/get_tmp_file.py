@@ -17,8 +17,3 @@ def list_files_to_import():
 
     files = list(DUMP_DIR.glob("*.json"))
     return [str(f) for f in files]
-
-
-if __name__ == "__main__":
-    found_files = list_files_to_import()
-    print(f"📂 {len(found_files)} fichiers trouvés dans le dump.")

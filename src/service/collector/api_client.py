@@ -10,7 +10,7 @@ import requests
 # CONFIG
 BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
 
-env_path = BASE_DIR / ".env.local"
+env_path = BASE_DIR / ".env"
 load_dotenv(dotenv_path=env_path)
 
 API_KEY = os.getenv("BALLCHASING_API_KEY")
@@ -54,7 +54,7 @@ class BallchasingClient:
             "created-after": created_after,
             "count": count,
             "sort-by": "replay-date",
-            "sort-dir": "asc",
+            "sort-dir": "desc",
         }
 
         # Priority : ID
@@ -64,9 +64,6 @@ class BallchasingClient:
         elif player_name:
             params["player-name"] = player_name
             print(f"Pseudo Search: {player_name}")
-        else:
-            print("Error : Please SAY SOMETHING.")
-            return None
 
         print(f"API call to : {BASE_URL}")
         try:
@@ -76,6 +73,8 @@ class BallchasingClient:
             data = response.json()
             count_found = len(data.get("list", []))
             print(f"Success : {count_found} replays found.")
+            if count_found == 0:
+                return 0
 
             with open(RAW_LIST_FILE, "w", encoding="utf-8") as f:
                 json.dump(data, f, indent=4)
@@ -117,17 +116,3 @@ class BallchasingClient:
         except Exception as e:
             print(f"Error on :  {replay_id}: {e}")
             return False
-
-
-if __name__ == "__main__":
-    try:
-        client = BallchasingClient()
-        user_input = input("Pseudo (laisser vide pour ID) : ")
-        id_input = None
-        num_input = 2
-        if not user_input:
-            id_input = input("ID Joueur (ex: steam:76561198...) : ")
-
-        client.search_games(player_name=user_input, player_id=id_input, count=num_input)
-    except ValueError as e:
-        print(e)

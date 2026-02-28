@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: rocket-service
+spec:
+  selector:
+    app: rocket-league # Doit correspondre au label du Deployment
+  ports:
+    - protocol: TCP
+      port: 80 # Port exposé par le service
+      targetPort: 8000 # Port de ton application (Uvicorn)

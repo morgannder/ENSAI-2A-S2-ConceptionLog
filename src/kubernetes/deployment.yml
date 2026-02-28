@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rocket-app
+spec:
+  replicas: 1
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: rocket-league
+  template:
+    metadata:
+      labels:
+        app: rocket-league
+    spec:
+      containers:
+      - name: web
+        image: docker.io/meaumeau/ensai2a-cl-rlstatsanalysis:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 8000
+        # Configuration des variables d'environnement
+        envFrom:
+        - configMapRef:
+            name: rocket-config
+        - secretRef:
+            name: rocket-secrets
+        # Montage du volume dans le conteneur
+        volumeMounts:
+        - name: db-storage
+          mountPath: /app/src/database
+      # Définition du volume persistant au niveau du Pod
+      volumes:
+      - name: db-storage
+        persistentVolumeClaim:
+          claimName: rocket-data-pvc
