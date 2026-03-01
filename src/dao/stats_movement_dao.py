@@ -12,7 +12,7 @@ class StatMovementDAO(metaclass=Singleton):
         self.db_connector = DBConnection()
 
     def get_average_stats_movement_per_rank(
-        self, rank: Ranks
+        self, rank: Ranks, game_mode: str | None = None
     ) -> StatsMovementAggregatedDTO | None:
         """
         Récupère les statistiques de déplacement moyennes pour un rang donné.
@@ -21,26 +21,20 @@ class StatMovementDAO(metaclass=Singleton):
         ----------
         rank : Ranks
             Le rang pour lequel on souhaite obtenir les statistiques moyennes.
+        game_mode : str | None, optional
+            Le mode de jeu sur lequel filtrer, par défaut None (tous les modes).
 
         Returns
         -------
         StatsMovementAggregatedDTO | None
             Un DTO contenant les moyennes des statistiques de déplacement
+            du joueur, ou None si aucune donnée n'est trouvée.
         """
         rank_name = rank.name
-        query = """
+        game_mode_filter = "AND m.playlist_id = ?" if game_mode else ""
+
+        query = f"""
                 SELECT
-                    CASE
-                        WHEN r.tier BETWEEN 1 AND 3 THEN 'Bronze'
-                        WHEN r.tier BETWEEN 4 AND 6 THEN 'Silver'
-                        WHEN r.tier BETWEEN 7 AND 9 THEN 'Gold'
-                        WHEN r.tier BETWEEN 10 AND 12 THEN 'Platinum'
-                        WHEN r.tier BETWEEN 13 AND 15 THEN 'Diamond'
-                        WHEN r.tier BETWEEN 16 AND 18 THEN 'Champion'
-                        WHEN r.tier BETWEEN 19 AND 21 THEN 'Grand Champion'
-                        WHEN r.tier = 22 THEN 'Supersonic Legend'
-                        ELSE 'Unknown'
-                    END AS rank_group,
                     ROUND(AVG(sm.avg_speed), 2) AS avg_avg_speed,
                     ROUND(AVG(sm.total_distance), 2) AS avg_total_distance,
                     ROUND(AVG(sm.time_supersonic_speed), 2) AS avg_time_supersonic_speed,
@@ -62,6 +56,8 @@ class StatMovementDAO(metaclass=Singleton):
                 FROM stats_movement sm
                 INNER JOIN match_participation mp ON sm.participation_id = mp.id
                 INNER JOIN ranks r ON mp.rank_id = r.id
+                INNER JOIN match_teams mt ON mt.id = mp.match_team_id
+                INNER JOIN matches m ON m.id = mt.match_id
                 WHERE CASE
                     WHEN r.tier BETWEEN 1 AND 3 THEN 'Bronze'
                     WHEN r.tier BETWEEN 4 AND 6 THEN 'Silver'
@@ -73,14 +69,17 @@ class StatMovementDAO(metaclass=Singleton):
                     WHEN r.tier = 22 THEN 'Supersonic Legend'
                     ELSE 'Unknown'
                 END = ?
-                GROUP BY rank_group
+                {game_mode_filter}
             """
+
+        params = (rank_name, game_mode) if game_mode else (rank_name,)
+
         connection = self.db_connector.connection
         with connection:
             cursor = connection.cursor()
-            cursor.execute(query, (rank_name,))
+            cursor.execute(query, params)
             res = cursor.fetchone()
-            if not res:
+            if not res or res["avg_avg_speed"] is None:
                 return None
 
             return StatsMovementAggregatedDTO(
@@ -105,7 +104,7 @@ class StatMovementDAO(metaclass=Singleton):
             )
 
     def get_player_match_stats_movement(
-        self, player: Player, match: Match
+        self, player: Player, match: Match, game_mode: str | None = None
     ) -> StatsMovement | None:
         """
         Récupère les statistiques de déplacement d'un joueur pour un match spécifique.
@@ -116,6 +115,8 @@ class StatMovementDAO(metaclass=Singleton):
             Le joueur dont on souhaite obtenir les statistiques.
         match : Match
             Le match concerné.
+        game_mode : str | None, optional
+            Le mode de jeu sur lequel filtrer, par défaut None (tous les modes).
 
         Returns
         -------
@@ -123,7 +124,9 @@ class StatMovementDAO(metaclass=Singleton):
             Un objet métier contenant les statistiques de déplacement brutes
             du joueur pour ce match, ou None si aucune donnée n'est trouvée.
         """
-        query = """
+        game_mode_filter = "AND m.playlist_id = ?" if game_mode else ""
+
+        query = f"""
                 SELECT sm.*
                 FROM stats_movement sm
                 JOIN match_participation mp ON mp.id = sm.participation_id
@@ -131,11 +134,17 @@ class StatMovementDAO(metaclass=Singleton):
                 JOIN matches m ON m.id = mt.match_id
                 JOIN players p ON p.id = mp.player_id
                 WHERE m.id = ? AND p.id = ?
+                {game_mode_filter}
                 """
+
+        params = (
+            (match.id, player.id, game_mode) if game_mode else (match.id, player.id)
+        )
+
         connection = self.db_connector.connection
         with connection:
             cursor = connection.cursor()
-            cursor.execute(query, (match.id, player.id))
+            cursor.execute(query, params)
             res = cursor.fetchone()
             if not res:
                 return None
@@ -162,7 +171,7 @@ class StatMovementDAO(metaclass=Singleton):
             )
 
     def get_player_average_stats_movement(
-        self, player: Player
+        self, player: Player, game_mode: str | None = None
     ) -> StatsMovementAggregatedDTO | None:
         """
         Récupère les statistiques de déplacement moyennes d'un joueur sur
@@ -172,6 +181,8 @@ class StatMovementDAO(metaclass=Singleton):
         ----------
         player : Player
             Le joueur dont on souhaite obtenir les statistiques moyennes.
+        game_mode : str | None, optional
+            Le mode de jeu sur lequel filtrer, par défaut None (tous les modes).
 
         Returns
         -------
@@ -179,7 +190,9 @@ class StatMovementDAO(metaclass=Singleton):
             Un DTO contenant les moyennes des statistiques de déplacement
             du joueur, ou None si aucune donnée n'est trouvée.
         """
-        query = """
+        game_mode_filter = "AND m.playlist_id = ?" if game_mode else ""
+
+        query = f"""
                 SELECT
                     ROUND(AVG(sm.avg_speed), 2) AS avg_avg_speed,
                     ROUND(AVG(sm.total_distance), 2) AS avg_total_distance,
@@ -202,14 +215,20 @@ class StatMovementDAO(metaclass=Singleton):
                 FROM stats_movement sm
                 JOIN match_participation mp ON sm.participation_id = mp.id
                 JOIN players p ON mp.player_id = p.id
+                JOIN match_teams mt ON mt.id = mp.match_team_id
+                JOIN matches m ON m.id = mt.match_id
                 WHERE p.id = ?
+                {game_mode_filter}
                 """
+
+        params = (player.id, game_mode) if game_mode else (player.id,)
+
         connection = self.db_connector.connection
         with connection:
             cursor = connection.cursor()
-            cursor.execute(query, (player.id,))
+            cursor.execute(query, params)
             res = cursor.fetchone()
-            if not res:
+            if not res or res["avg_avg_speed"] is None:
                 return None
             return StatsMovementAggregatedDTO(
                 avg_speed=res["avg_avg_speed"],

@@ -12,7 +12,7 @@ class StatPositioningDAO(metaclass=Singleton):
         self.db_connector = DBConnection()
 
     def get_average_stats_positioning_per_rank(
-        self, rank: Ranks
+        self, rank: Ranks, game_mode: str | None = None
     ) -> StatsPositioningAggregatedDTO | None:
         """
         Récupère les statistiques de positionnement moyennes pour un rang donné.
@@ -21,26 +21,20 @@ class StatPositioningDAO(metaclass=Singleton):
         ----------
         rank : Ranks
             Le rang pour lequel on souhaite obtenir les statistiques moyennes.
+        game_mode : str | None, optional
+            Le mode de jeu sur lequel filtrer, par défaut None (tous les modes).
 
         Returns
         -------
         StatsPositioningAggregatedDTO | None
-            Un DTO contenant les moyennes des statistiques de positionnement
+            Un DTO contenant les moyennes des statistiques de positionnement pour le rank
+            spécifié, ou None si aucune donnée n'est trouvée.
         """
         rank_name = rank.name
-        query = query = """
+        game_mode_filter = "AND m.playlist_id = ?" if game_mode else ""
+
+        query = query = f"""
                     SELECT
-                        CASE
-                            WHEN r.tier BETWEEN 1 AND 3 THEN 'Bronze'
-                            WHEN r.tier BETWEEN 4 AND 6 THEN 'Silver'
-                            WHEN r.tier BETWEEN 7 AND 9 THEN 'Gold'
-                            WHEN r.tier BETWEEN 10 AND 12 THEN 'Platinum'
-                            WHEN r.tier BETWEEN 13 AND 15 THEN 'Diamond'
-                            WHEN r.tier BETWEEN 16 AND 18 THEN 'Champion'
-                            WHEN r.tier BETWEEN 19 AND 21 THEN 'Grand Champion'
-                            WHEN r.tier = 22 THEN 'Supersonic Legend'
-                            ELSE 'Unknown'
-                        END AS rank_group,
                         ROUND(AVG(sp.average_distance_to_ball), 2) AS avg_average_distance_to_ball,
                         ROUND(AVG(sp.average_distance_to_mates), 2) AS avg_average_distance_to_mates,
                         ROUND(AVG(sp.time_defensive_third), 2) AS avg_time_defensive_third,
@@ -78,18 +72,21 @@ class StatPositioningDAO(metaclass=Singleton):
                         WHEN r.tier = 22 THEN 'Supersonic Legend'
                         ELSE 'Unknown'
                     END = ?
-                    GROUP BY rank_group
+                    {game_mode_filter}
+
                 """
         # ROUND(AVG(sp.average_distance_to_ball_possession), 2) AS avg_distance_to_ball_possession,
         # ROUND(AVG(sp.average_distance_to_ball_no_possession), 2) AS avg_distance_to_ball_no_possession,
         # ROUND(AVG(sp.time_defensive_half), 2) AS avg_time_defensive_half,
         # ROUNG(AVG(sp.time_offensive_half),2) AS avg_time_offensive_half,
+        params = (rank_name, game_mode) if game_mode else (rank_name,)
+
         connection = self.db_connector.connection
         with connection:
             cursor = connection.cursor()
-            cursor.execute(query, (rank_name,))
+            cursor.execute(query, params)
             res = cursor.fetchone()
-            if not res:
+            if not res or res["avg_average_distance_to_ball"] is None:
                 return None
 
             return StatsPositioningAggregatedDTO(
@@ -125,7 +122,7 @@ class StatPositioningDAO(metaclass=Singleton):
             )
 
     def get_player_match_stats_positioning(
-        self, player: Player, match: Match
+        self, player: Player, match: Match, game_mode: str | None = None
     ) -> StatsPositioning | None:
         """
         Récupère les statistiques de positionnement d'un joueur pour un match
@@ -137,6 +134,8 @@ class StatPositioningDAO(metaclass=Singleton):
             Le joueur dont on souhaite obtenir les statistiques.
         match : Match
             Le match concerné.
+        game_mode : str | None, optional
+            Le mode de jeu sur lequel filtrer, par défaut None (tous les modes).
 
         Returns
         -------
@@ -144,7 +143,9 @@ class StatPositioningDAO(metaclass=Singleton):
             Un objet métier contenant les statistiques de positionnement brutes
             du joueur pour ce match, ou None si aucune donnée n'est trouvée.
         """
-        query = """
+        game_mode_filter = "AND m.playlist_id = ?" if game_mode else ""
+
+        query = f"""
                 SELECT sp.*
                 FROM stats_positioning sp
                 JOIN match_participation mp ON mp.id = sp.participation_id
@@ -152,11 +153,15 @@ class StatPositioningDAO(metaclass=Singleton):
                 JOIN matches m ON m.id = mt.match_id
                 JOIN players p ON p.id = mp.player_id
                 WHERE m.id = ? AND p.id = ?
+                {game_mode_filter}
                 """
+        params = (
+            (match.id, player.id, game_mode) if game_mode else (match.id, player.id)
+        )
         connection = self.db_connector.connection
         with connection:
             cursor = connection.cursor()
-            cursor.execute(query, (match.id, player.id))
+            cursor.execute(query, params)
             res = cursor.fetchone()
             if not res:
                 return None
@@ -198,7 +203,7 @@ class StatPositioningDAO(metaclass=Singleton):
             )
 
     def get_player_average_stats_positioning(
-        self, player: Player
+        self, player: Player, game_mode: str | None = None
     ) -> StatsPositioningAggregatedDTO | None:
         """
         Récupère les statistiques de positionnement moyennes d'un joueur sur
@@ -208,6 +213,8 @@ class StatPositioningDAO(metaclass=Singleton):
         ----------
         player : Player
             Le joueur dont on souhaite obtenir les statistiques moyennes.
+        game_mode : str | None, optional
+            Le mode de jeu sur lequel filtrer, par défaut None (tous les modes).
 
         Returns
         -------
@@ -215,7 +222,9 @@ class StatPositioningDAO(metaclass=Singleton):
             Un DTO contenant les moyennes des statistiques de positionnement
             du joueur, ou None si aucune donnée n'est trouvée.
         """
-        query = """
+        game_mode_filter = "AND m.playlist_id = ?" if game_mode else ""
+
+        query = f"""
                 SELECT
                     AVG(sp.average_distance_to_ball) AS avg_average_distance_to_ball,
                     AVG(sp.average_distance_to_mates) AS avg_average_distance_to_mates,
@@ -243,8 +252,13 @@ class StatPositioningDAO(metaclass=Singleton):
                 FROM stats_positioning sp
                 JOIN match_participation mp ON sp.participation_id = mp.id
                 JOIN players p ON mp.player_id = p.id
+                JOIN match_teams mt ON mt.id = mp.match_team_id
+                JOIN matches m ON m.id = mt.match_id
                 WHERE p.id = ?
+                {game_mode_filter}
                 """
+        params = (player.id, game_mode) if game_mode else (player.id,)
+
         # ROUND(AVG(sp.average_distance_to_ball_possession), 2) AS avg_distance_to_ball_possession,
         # ROUND(AVG(sp.average_distance_to_ball_no_possession), 2) AS avg_distance_to_ball_no_possession,
         # ROUND(AVG(sp.time_defensive_half), 2) AS avg_time_defensive_half,
@@ -252,9 +266,9 @@ class StatPositioningDAO(metaclass=Singleton):
         connection = self.db_connector.connection
         with connection:
             cursor = connection.cursor()
-            cursor.execute(query, (player.id,))
+            cursor.execute(query, params)
             res = cursor.fetchone()
-            if not res:
+            if not res or res["avg_average_distance_to_ball"] is None:
                 return None
             return StatsPositioningAggregatedDTO(
                 average_distance_to_ball=res["avg_average_distance_to_ball"],

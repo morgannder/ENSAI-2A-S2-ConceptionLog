@@ -35,12 +35,14 @@ StatsDataDTO = (
 
 
 class StatsByRankResponse(BaseModel):
+    game_mode: str | None = None
     rank: str
     stats_type: StatsType
     data: StatsDataDTO | None = None
 
 
 class StatsByPlayerMatchResponse(BaseModel):
+    game_mode: str | None = None
     platform_id: str
     match_id: str
     stats_type: StatsType
@@ -48,6 +50,7 @@ class StatsByPlayerMatchResponse(BaseModel):
 
 
 class StatsByPlayerResponse(BaseModel):
+    game_mode: str | None = None
     platform_id: str
     stats_type: StatsType
     data: StatsDataDTO | None = None
@@ -57,15 +60,19 @@ class StatsByPlayerResponse(BaseModel):
 class StatsResponseFactory:
     @staticmethod
     def create_rank_response(
+        game_mode: str,
         rank: str,
         stats_type: StatsType,
         data: StatsDataDTO,
     ) -> StatsByRankResponse:
         """Crée une réponse de statistiques par rang."""
-        return StatsByRankResponse(rank=rank, stats_type=stats_type, data=data)
+        return StatsByRankResponse(
+            game_mode=game_mode, rank=rank, stats_type=stats_type, data=data
+        )
 
     @staticmethod
     def create_player_match_response(
+        game_mode: str,
         platform_id: str,
         match_id: str,
         stats_type: StatsType,
@@ -73,16 +80,24 @@ class StatsResponseFactory:
     ) -> StatsByPlayerMatchResponse:
         """Crée une réponse de statistiques par joueur et match."""
         return StatsByPlayerMatchResponse(
-            platform_id=platform_id, match_id=match_id, stats_type=stats_type, data=data
+            game_mode=game_mode,
+            platform_id=platform_id,
+            match_id=match_id,
+            stats_type=stats_type,
+            data=data,
         )
 
     @staticmethod
     def create_player_response(
+        game_mode: str,
         platform_id: str,
         stats_type: StatsType,
         data: StatsDataDTO,
     ) -> StatsByPlayerResponse:
         """Crée une réponse de statistiques par joueur."""
         return StatsByPlayerResponse(
-            platform_id=platform_id, stats_type=stats_type, data=data
+            game_mode=game_mode,
+            platform_id=platform_id,
+            stats_type=stats_type,
+            data=data,
         )

@@ -13,7 +13,7 @@ class StatPositionningService:
         self.stats_positioning_dao = StatPositioningDAO()
 
     def get_average_stats_positioning_by_rank(
-        self, rank: Ranks
+        self, rank: Ranks, game_mode: str | None = None
     ) -> StatsPositioningAggregatedDTO | None:
         """
         Récupère les statistiques moyennes de positionnement pour un rang donné.
@@ -22,6 +22,8 @@ class StatPositionningService:
         ----------
         rank : Ranks
             Le rang pour lequel on veut obtenir les statistiques de positionnement.
+        game_mode : str | None, optional
+            Le mode de jeu sur lequel filtrer, par défaut None (tous les modes).
 
         Returns
         -------
@@ -29,10 +31,12 @@ class StatPositionningService:
             Dictionnaire contenant les statistiques moyennes de positionnement pour ce rang,
             ou None si aucune statistique n'est disponible.
         """
-        return self.stats_positioning_dao.get_average_stats_positioning_per_rank(rank)
+        return self.stats_positioning_dao.get_average_stats_positioning_per_rank(
+            rank, game_mode
+        )
 
     def get_player_match_positioning_stats(
-        self, player: Player, match: Match
+        self, player: Player, match: Match, game_mode: str | None = None
     ) -> StatsPositioning | None:
         """
         Récupère les statistiques de positionnement d'un joueur pour un match spécifique.
@@ -43,6 +47,8 @@ class StatPositionningService:
             Le joueur dont on veut récupérer les statistiques de positionnement.
         match : Match
             Le match pour lequel on veut obtenir les statistiques.
+        game_mode : str | None, optional
+            Le mode de jeu sur lequel filtrer, par défaut None (tous les modes).
 
         Returns
         -------
@@ -62,11 +68,11 @@ class StatPositionningService:
             raise ValueError("Le match doit avoir un ID valide")
 
         return self.stats_positioning_dao.get_player_match_stats_positioning(
-            player, match
+            player, match, game_mode
         )
 
     def get_player_average_positioning_stats(
-        self, player: Player
+        self, player: Player, game_mode: str | None = None
     ) -> StatsPositioningAggregatedDTO | None:
         """
         Récupère les statistiques moyennes de positionnement d'un joueur sur tous ses matchs.
@@ -90,4 +96,6 @@ class StatPositionningService:
         if not player or not player.id:
             raise ValueError("Le joueur doit avoir un ID valide")
 
-        return self.stats_positioning_dao.get_player_average_stats_positioning(player)
+        return self.stats_positioning_dao.get_player_average_stats_positioning(
+            player, game_mode
+        )

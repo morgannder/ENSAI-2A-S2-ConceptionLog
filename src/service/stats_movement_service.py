@@ -13,7 +13,7 @@ class StatMovementService:
         self.stats_movement_dao = StatMovementDAO()
 
     def get_average_stats_movement_by_rank(
-        self, rank: Ranks
+        self, rank: Ranks, game_mode: str | None = None
     ) -> StatsMovementAggregatedDTO | None:
         """
         Récupère les statistiques moyennes de mouvement pour un rang donné.
@@ -22,17 +22,21 @@ class StatMovementService:
         ----------
         rank : Ranks
             Le rang pour lequel on veut obtenir les statistiques de mouvement.
+        game_mode : str | None, optional
+            Le mode de jeu sur lequel filtrer, par défaut None (tous les modes).
 
         Returns
         -------
-        dict | None
-            Dictionnaire contenant les statistiques moyennes de mouvement pour ce rang,
+        StatsMovementAggregatedDTO | None
+            Les statistiques moyennes de mouvement pour ce rang,
             ou None si aucune statistique n'est disponible.
         """
-        return self.stats_movement_dao.get_average_stats_movement_per_rank(rank)
+        return self.stats_movement_dao.get_average_stats_movement_per_rank(
+            rank, game_mode
+        )
 
     def get_player_match_movement_stats(
-        self, player: Player, match: Match
+        self, player: Player, match: Match, game_mode: str | None = None
     ) -> StatsMovement | None:
         """
         Récupère les statistiques de mouvement d'un joueur pour un match spécifique.
@@ -43,6 +47,8 @@ class StatMovementService:
             Le joueur dont on veut récupérer les statistiques de mouvement.
         match : Match
             Le match pour lequel on veut obtenir les statistiques.
+        game_mode : str | None, optional
+            Le mode de jeu sur lequel filtrer, par défaut None (tous les modes).
 
         Returns
         -------
@@ -61,10 +67,12 @@ class StatMovementService:
         if not match or not match.id:
             raise ValueError("Le match doit avoir un ID valide")
 
-        return self.stats_movement_dao.get_player_match_stats_movement(player, match)
+        return self.stats_movement_dao.get_player_match_stats_movement(
+            player, match, game_mode
+        )
 
     def get_player_average_movement_stats(
-        self, player: Player
+        self, player: Player, game_mode: str | None = None
     ) -> StatsMovementAggregatedDTO | None:
         """
         Récupère les statistiques moyennes de mouvement d'un joueur sur tous ses matchs.
@@ -73,11 +81,13 @@ class StatMovementService:
         ----------
         player : Player
             Le joueur dont on veut récupérer les statistiques moyennes de mouvement.
+        game_mode : str | None, optional
+            Le mode de jeu sur lequel filtrer, par défaut None (tous les modes).
 
         Returns
         -------
-        dict | None
-            Dictionnaire contenant les statistiques moyennes de mouvement du joueur,
+        StatsMovementAggregatedDTO | None
+            Les statistiques moyennes de mouvement du joueur,
             ou None si le joueur n'a aucune statistique disponible.
 
         Raises
@@ -88,4 +98,6 @@ class StatMovementService:
         if not player or not player.id:
             raise ValueError("Le joueur doit avoir un ID valide")
 
-        return self.stats_movement_dao.get_player_average_stats_movement(player)
+        return self.stats_movement_dao.get_player_average_stats_movement(
+            player, game_mode
+        )

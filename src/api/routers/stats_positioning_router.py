@@ -12,7 +12,7 @@ from src.models.ranks import Ranks
 from src.service.matches_service import MatchService
 from src.service.players_service import PlayerService
 from src.service.stats_positioning_service import StatPositionningService
-from src.utils.enumeration import Ranks_enum
+from src.utils.enumeration import GameMode_enum, Ranks_enum
 
 
 router = APIRouter(prefix="/statspositioning", tags=["Positionning Statistics"])
@@ -26,7 +26,10 @@ match_service = MatchService()
     "/rank/{rank}",
     summary="Récupère les statistiques de positioning moyennes par rang",
 )
-def get_rank_statistics(rank_name: Ranks_enum) -> StatsByRankResponse:
+def get_rank_statistics(
+    rank_name: Ranks_enum,
+    game_mode: GameMode_enum | None = None,
+) -> StatsByRankResponse:
     """
     Récupère les statistiques de positionnement moyennes pour un rang donné.
 
@@ -34,6 +37,8 @@ def get_rank_statistics(rank_name: Ranks_enum) -> StatsByRankResponse:
     ----------
     rank_name : Ranks_enum
         Le nom du rang pour lequel on souhaite obtenir les statistiques.
+    game_mode : GameMode_enum | None, optional
+        Le mode de jeu sur lequel filtrer, par défaut None (tous les modes).
 
     Returns
     -------
@@ -44,10 +49,14 @@ def get_rank_statistics(rank_name: Ranks_enum) -> StatsByRankResponse:
     ------
     HTTPException
         404 si aucune donnée n'est trouvée pour le rang spécifié.
+        500 en cas d'erreur serveur.
     """
     rank = Ranks(name=rank_name)
+
     # Service retourne directement StatsBoostAggregatedDTO
-    stats_dto = stats_positioning_service.get_average_stats_positioning_by_rank(rank)
+    stats_dto = stats_positioning_service.get_average_stats_positioning_by_rank(
+        rank, game_mode
+    )
 
     if stats_dto is None:
         raise HTTPException(
@@ -57,6 +66,7 @@ def get_rank_statistics(rank_name: Ranks_enum) -> StatsByRankResponse:
 
     # Pas besoin de conversion, c'est déjà un DTO
     return StatsResponseFactory.create_rank_response(
+        game_mode=game_mode,
         rank=rank_name,
         stats_type=StatsType.POSITIONING,
         data=stats_dto,
@@ -67,7 +77,10 @@ def get_rank_statistics(rank_name: Ranks_enum) -> StatsByRankResponse:
     "/player/{player_id}/averagepositioning",
     summary="Récupère les statistiques de positioning moyennes d'un joueur",
 )
-def get_player_average_statistics(platform_id: str) -> StatsByPlayerResponse:
+def get_player_average_statistics(
+    platform_id: str,
+    game_mode: GameMode_enum | None = None,
+) -> StatsByPlayerResponse:
     """
     Récupère les statistiques de positionnement moyennes d'un joueur sur tous
     ses matchs.
@@ -76,6 +89,8 @@ def get_player_average_statistics(platform_id: str) -> StatsByPlayerResponse:
     ----------
     platform_id : str
         L'identifiant unique du joueur sur sa plateforme de jeu.
+    game_mode : GameMode_enum | None, optional
+        Le mode de jeu sur lequel filtrer, par défaut None (tous les modes).
 
     Returns
     -------
@@ -95,7 +110,9 @@ def get_player_average_statistics(platform_id: str) -> StatsByPlayerResponse:
         )
 
     # Service retourne directement StatsBoostAggregatedDTO
-    stats_dto = stats_positioning_service.get_player_average_positioning_stats(player)
+    stats_dto = stats_positioning_service.get_player_average_positioning_stats(
+        player, game_mode
+    )
 
     if stats_dto is None:
         raise HTTPException(
@@ -105,6 +122,7 @@ def get_player_average_statistics(platform_id: str) -> StatsByPlayerResponse:
 
     # Pas besoin de conversion, c'est déjà un DTO
     return StatsResponseFactory.create_player_response(
+        game_mode=game_mode,
         platform_id=platform_id,
         stats_type=StatsType.POSITIONING,
         data=stats_dto,
@@ -116,7 +134,9 @@ def get_player_average_statistics(platform_id: str) -> StatsByPlayerResponse:
     summary="Récupère les statistiques de positioning d'un joueur dans un match",
 )
 def get_player_match_statistics(
-    platform_id: str, match_id: str
+    platform_id: str,
+    match_id: str,
+    game_mode: GameMode_enum | None = None,
 ) -> StatsByPlayerMatchResponse:
     """
     Récupère les statistiques de positionnement d'un joueur pour un match
@@ -128,6 +148,8 @@ def get_player_match_statistics(
         L'identifiant unique du joueur sur sa plateforme de jeu.
     match_id : str
         L'identifiant unique du match.
+    game_mode : GameMode_enum | None, optional
+        Le mode de jeu sur lequel filtrer, par défaut None (tous les modes).
 
     Returns
     -------
@@ -153,7 +175,7 @@ def get_player_match_statistics(
 
     # Service retourne un Business Object (StatsPositioning)
     stats_bo = stats_positioning_service.get_player_match_positioning_stats(
-        player, match
+        player, match, game_mode
     )
 
     if stats_bo is None:
@@ -166,6 +188,7 @@ def get_player_match_statistics(
     stats_dto = StatsPositioningDTO.from_business_object(stats_bo)
 
     return StatsResponseFactory.create_player_match_response(
+        game_mode=game_mode,
         platform_id=platform_id,
         match_id=match_id,
         stats_type=StatsType.POSITIONING,
