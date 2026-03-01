@@ -39,7 +39,7 @@
 
 - [ ] in Git Bash : uv sync
 - [ ] Create .env file (.env.template is here to help you) and fill it
-- [ ] Download DB at https://www.dropbox.com/scl/fi/y0mtlg6s5iotbmn8599jg/rocket_league_updated.db?rlkey=mkw8ipfubu55kp84x7ot87ioz&st=s9vkfrc2&dl=0
+- [ ] Download DB at https://www.dropbox.com/scl/fi/nquvnhja079u5v6gfs1lp/rocket_league.db?rlkey=faf14s3qzon59k5utb2d1xdqs&st=dr943fdl&dl=0
 - [ ] Name it "rocket_league.db" and put it in [database] directory
 - [ ] run main.py to start API process
 
