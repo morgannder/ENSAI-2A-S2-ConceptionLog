@@ -1,6 +1,5 @@
 from src.dao.db_connection import DBConnection
 from src.models.match_teams import MatchTeam
-from src.models.matches import Match
 from src.models.players import Player
 from src.models.ranks import Ranks
 from src.utils.singleton import Singleton
@@ -306,45 +305,42 @@ class PlayerDAO(metaclass=Singleton):
             )
         return list_player
 
-    def get_players_in_match(self, match: Match) -> list[Player] | None:
+    def get_players_in_match(self, match_id: str) -> list[dict] | None:
         """
-        Récupère tous les joueurs ayant participé à un match.
-
-        Parameters
-        ----------
-        match : Match
-            Le match dont on souhaite récupérer les joueurs.
-
-        Returns
-        -------
-        list[Player] | None
-            La liste des joueurs du match, ou None si aucun n'est trouvé.
+        Récupère tous les joueurs ayant participé à un match, associés à leur couleur d'équipe.
         """
         connection = self.db_connector.connection
         with connection:
             cursor = connection.cursor()
             cursor.execute(
                 """
-                    SELECT *
-                    FROM players p
-                    JOIN match_participation mp ON mp.player_id = p.id
-                    JOIN match_teams mt ON mt.id = mp.match_team_id
-                    JOIN matches m ON m.id = mt.match_id
-                    WHERE m.id = ?
-                    """,
-                (match.id,),
+                SELECT p.*, mt.color
+                FROM players p
+                JOIN match_participation mp ON mp.player_id = p.id
+                JOIN match_teams mt ON mt.id = mp.match_team_id
+                WHERE mt.match_id = ?
+                """,
+                (match_id,),
             )
-        res = cursor.fetchall()
+            res = cursor.fetchall()
+
         if not res:
             return None
-        list_player = []
-        for player in res:
-            list_player.append(
-                Player(
-                    player["id"],
-                    player["platform_id"],
-                    player["platform_user_id"],
-                    player["name"],
-                )
+
+        list_player_data = []
+        for row in res:
+            player_obj = Player(
+                row["id"],
+                row["platform_id"],
+                row["platform_user_id"],
+                row["name"],
             )
-        return list_player
+
+            list_player_data.append(
+                {
+                    "player": player_obj,
+                    "color": row["color"].lower() if row["color"] else "",
+                }
+            )
+
+        return list_player_data

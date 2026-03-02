@@ -1,4 +1,6 @@
 from src.dao.matches_dao import MatchDAO
+from src.dao.players_dao import PlayerDAO
+from src.dto.match_players_dto import MatchPlayersDTO, PlayerInfoDTO
 from src.models.matches import Match
 from src.models.players import Player
 
@@ -8,6 +10,7 @@ class MatchService:
 
     def __init__(self):
         self.match_dao = MatchDAO()
+        self.players_dao = PlayerDAO()
 
     def create_match(self, match: Match) -> bool:
         """
@@ -200,3 +203,33 @@ class MatchService:
             "overtime": match.overtime,
             "date_upload": match.date_upload,
         }
+
+    def get_match_players(self, match_id: str) -> MatchPlayersDTO | None:
+        players_data = self.players_dao.get_players_in_match(match_id)
+
+        if not players_data:
+            return None
+
+        dto_data = {}
+        orange_count = 1
+        blue_count = 1
+
+        for data in players_data:
+            color = data["color"]
+            player = data["player"]
+
+            player_info = PlayerInfoDTO(
+                id=player.id,
+                name=player.name,
+                platform_id=player.platform_id,
+                platform_user_id=player.platform_user_id,
+            )
+
+            if color == "orange" and orange_count <= 4:
+                dto_data[f"orange{orange_count}"] = player_info
+                orange_count += 1
+            elif color == "blue" and blue_count <= 4:
+                dto_data[f"blue{blue_count}"] = player_info
+                blue_count += 1
+
+        return MatchPlayersDTO(**dto_data)
