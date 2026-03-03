@@ -37,34 +37,3 @@ class PlatformDAO(metaclass=Singleton):
                 return None
             platf = Platform(id, res["namebigint"])
             return platf
-
-    def get_platform_by_name(self, platform_name: str):
-        """
-        Récupère une plateforme par son nom.
-
-        Parameters
-        ----------
-        platform_name : str
-            Le nom de la plateforme recherchée.
-
-        Returns
-        -------
-        Platform | None
-            La plateforme correspondante, ou None si elle n'existe pas.
-        """
-        connection = self.db_connector.connection
-        with connection:
-            cursor = connection.cursor()
-            cursor.execute(
-                """
-                    SELECT *
-                    FROM platforms
-                    WHERE namebigint = ?
-                    """,
-                (platform_name,),
-            )
-            res = cursor.fetchone()
-            if not res:
-                return None
-            platf = Platform(res["id"], platform_name)
-            return platf

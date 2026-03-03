@@ -31,27 +31,3 @@ class PlatformService:
             raise ValueError("L'ID de la plateforme doit être un entier positif")
 
         return self.platform_dao.get_platform_by_id(platform_id)
-
-    def get_platform_by_name(self, name: str) -> Platform | None:
-        """
-        Récupère une plateforme par son nom.
-
-        Parameters
-        ----------
-        name : str
-            Le nom de la plateforme à rechercher.
-
-        Returns
-        -------
-        Platform | None
-            La plateforme correspondante, ou None si elle n'existe pas.
-
-        Raises
-        ------
-        ValueError
-            Si le nom est vide ou None.
-        """
-        if not name or not name.strip():
-            raise ValueError("Le nom de la plateforme ne peut pas être vide")
-
-        return self.platform_dao.get_platform_by_name(name.strip().upper())

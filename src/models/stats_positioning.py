@@ -138,3 +138,7 @@ class StatsPositioning:
         self.percent_most_forward = percent_most_forward
         self.percent_closest_to_ball = percent_closest_to_ball
         self.percent_farthest_from_ball = percent_farthest_from_ball
+
+    @property
+    def participation_id(self):
+        return self._participation_id

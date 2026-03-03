@@ -1,6 +1,5 @@
 from src.dao.players_dao import PlayerDAO
 from src.dao.ranks_dao import RanksDAO
-from src.models.ranks import Ranks
 from src.utils.singleton import Singleton
 
 
@@ -10,38 +9,6 @@ class RanksService(metaclass=Singleton):
     def __init__(self):
         self.ranks_dao = RanksDAO()
         self.player_dao = PlayerDAO()
-
-    def get_rank_by_id(self, rank_id: int) -> Ranks | None:
-        """
-        Récupère un rang par son ID.
-
-        Parameters
-        ----------
-        rank_id : int
-            L'identifiant unique du rang.
-
-        Returns
-        -------
-        Ranks | None
-            Le rang correspondant à l'ID, ou None s'il n'existe pas.
-        """
-        return self.ranks_dao.get_rank_by_parameter("id", rank_id)
-
-    def get_rank_by_name(self, name: str) -> Ranks | None:
-        """
-        Récupère un rang par son nom.
-
-        Parameters
-        ----------
-        name : str
-            Le nom complet du rang (ex: "Bronze I Division 1").
-
-        Returns
-        -------
-        Ranks | None
-            Le rang correspondant au nom, ou None s'il n'existe pas.
-        """
-        return self.ranks_dao.get_rank_by_parameter("name", name)
 
     def get_player_rank_by_platform_id(self, platform_id: str) -> dict | None:
         """

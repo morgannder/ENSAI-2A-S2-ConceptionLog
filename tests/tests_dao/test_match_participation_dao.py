@@ -458,15 +458,6 @@ class TestGetPlayerNbMVP:
         assert result == (0,)
 
 
-class TestUpdate:
-    """Tests pour la méthode update"""
-
-    def test_update_not_implemented(self, match_participation_dao):
-        """Test que update_match_participation ne fait rien (pass)"""
-        result = match_participation_dao.update_match_participation()
-        assert result is None
-
-
 class TestMatchParticipationDAOSingleton:
     """Tests pour vérifier le pattern Singleton"""
 
