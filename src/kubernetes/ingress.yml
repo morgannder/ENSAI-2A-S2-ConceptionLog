@@ -2,9 +2,9 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: rocket-ingress
-  annotations:
-    kubernetes.io/ingress.class: nginx
+  namespace: user-morgannder
 spec:
+  ingressClassName: nginx
   rules:
   - host: rocketcl.api.kub.sspcloud.fr
     http:
@@ -13,6 +13,16 @@ spec:
         pathType: Prefix
         backend:
           service:
-            name: rocket-service
+            name: rocket-app-service
+            port:
+              number: 8000
+  - host: rocketclstats.api.kub.sspcloud.fr
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: rocket-frontend-service
             port:
               number: 80

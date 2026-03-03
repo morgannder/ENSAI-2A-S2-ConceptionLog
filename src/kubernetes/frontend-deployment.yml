@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rocket-frontend
+  namespace: user-morgannder
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rocket-frontend
+  template:
+    metadata:
+      labels:
+        app: rocket-frontend
+    spec:
+      containers:
+      - name: frontend
+        image: docker.io/meaumeau/ensai2a-frontend:latest
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 80
