@@ -2,7 +2,10 @@
  * Client API pour communiquer avec le backend Rocket League Stats
  */
 
-const API_BASE = "/api"; // Utilise le proxy Vite
+// ── Configuration Dynamique de l'URL ──────────────────────────────────────────
+// En production, Vite lira l'URL "http://rocketcl..." depuis ton fichier .env.production
+// En local, s'il ne trouve pas la variable, il utilisera "/api" (ton proxy local)
+const API_BASE = import.meta.env.VITE_API_URL || "/api";
 
 // ── Données statiques des Rangs avec icônes, couleurs et images ────────────
 export const RANKS = [
