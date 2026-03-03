@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { RANKS } from "../api/apiClient";
 
 const API_BASE = "/api";
 
@@ -33,6 +34,23 @@ const CAR_COLORS = {
   Merc:     "#ff4e50",
 };
 
+// ── Rank badge inline ─────────────────────────────────────────────────────────
+function RankBadge({ rankStr }) {
+  if (!rankStr || rankStr === "Unranked") return null;
+  const rankInfo = RANKS.find((r) => r.fullName === rankStr || r.name === rankStr);
+  if (!rankInfo) return null;
+  return rankInfo.image ? (
+    <img
+      src={rankInfo.image}
+      alt={rankStr}
+      title={rankStr}
+      style={{ width: 18, height: 18, objectFit: "contain", flexShrink: 0 }}
+    />
+  ) : (
+    <span style={{ fontSize: "0.75rem" }} title={rankStr}>{rankInfo.icon}</span>
+  );
+}
+
 // ── Team column ───────────────────────────────────────────────────────────────
 function TeamColumn({ label, players, accentColor, currentPlayerId, onPlayerClick, onClose }) {
   return (
@@ -42,19 +60,35 @@ function TeamColumn({ label, players, accentColor, currentPlayerId, onPlayerClic
         <div style={{ fontSize: "0.78rem", color: "var(--muted)", padding: "8px 0" }}>—</div>
       ) : (
         players.map((p) => {
-          const isCurrent  = p.platform_user_id === currentPlayerId;
+          const isCurrent   = p.platform_user_id === currentPlayerId;
           const isClickable = !isCurrent && !!p.platform_user_id;
+          const rankStr     = p.rank ?? p.full_rank ?? null;
           return (
             <div
               key={p.id ?? p.platform_user_id}
               className={`team-player ${isClickable ? "clickable" : ""} ${isCurrent ? "is-current" : ""}`}
               onClick={isClickable ? () => { onPlayerClick(p); onClose(); } : undefined}
-              title={isClickable ? `Voir le profil de ${p.name}` : undefined}
+              title={isClickable ? `View ${p.name}'s profile` : undefined}
             >
+              <RankBadge rankStr={rankStr} />
               <span className="team-player-name" style={{ color: isCurrent ? "var(--cyan)" : "var(--text)" }}>
                 {p.name}
               </span>
-              {isCurrent  && <span className="team-player-you">Vous</span>}
+              {p.score != null && (
+                <span style={{
+                  fontFamily: "'Share Tech Mono', monospace",
+                  fontSize: "0.7rem",
+                  color: "#ffd700",
+                  marginLeft: "auto",
+                  flexShrink: 0,
+                }}>
+                  {Math.round(p.score)}pts
+                </span>
+              )}
+              {p._mvp === 1 || p._mvp === true ? (
+                <span style={{ fontSize: "0.75rem", flexShrink: 0 }} title="MVP">⭐</span>
+              ) : null}
+              {isCurrent  && <span className="team-player-you">You</span>}
               {isClickable && <span className="team-player-arrow">→</span>}
             </div>
           );
@@ -75,6 +109,7 @@ function MatchDetailModal({ match, onClose, onPlayerClick, currentPlayerId }) {
   const duration = formatDuration(match._start_time, match._end_time);
   const carName  = match._car_name ?? "Unknown";
   const carColor = CAR_COLORS[carName] ?? "var(--muted)";
+  const score    = match._score ?? match.score ?? null;
 
   useEffect(() => {
     if (!matchId) return;
@@ -92,13 +127,21 @@ function MatchDetailModal({ match, onClose, onPlayerClick, currentPlayerId }) {
     ? ["blue1","blue2","blue3","blue4"].map((k) => players[k]).filter(Boolean)
     : [];
 
+  // Compute team scores from players if available
+  const orangeScore = orangePlayers.reduce((acc, p) => acc + (p._team_score ?? p.team_score ?? 0), 0) || null;
+  const blueScore   = bluePlayers.reduce((acc, p) => acc + (p._team_score ?? p.team_score ?? 0), 0) || null;
+
+  // Try direct match fields for team goals
+  const matchOrangeGoals = match._orange_goals ?? match.orange_goals ?? null;
+  const matchBlueGoals   = match._blue_goals   ?? match.blue_goals   ?? null;
+
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="match-detail-modal fade-in" onClick={(e) => e.stopPropagation()}>
         <button className="modal-close" onClick={onClose} style={{ position: "absolute", top: 16, right: 16 }}>✕</button>
 
         {/* Header */}
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8, marginBottom: 16, paddingRight: 32 }}>
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: 8, marginBottom: 12, paddingRight: 32 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
             <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "0.8rem", color: "var(--muted)" }}>
               #{String(matchId ?? "").slice(-6)}
@@ -111,17 +154,59 @@ function MatchDetailModal({ match, onClose, onPlayerClick, currentPlayerId }) {
           <div style={{ fontSize: "0.9rem", color: carColor, fontWeight: 700 }}>🚗 {carName}</div>
         </div>
 
-        <div style={{ height: 1, background: "var(--border)", marginBottom: 20 }} />
+        {/* Score + personal stats row */}
+        <div style={{
+          display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap",
+          marginBottom: 14, padding: "10px 14px",
+          background: "rgba(255,255,255,0.03)", borderRadius: 10,
+          border: "1px solid var(--border)",
+        }}>
+          {/* Team goals if available */}
+          {(matchOrangeGoals != null && matchBlueGoals != null) && (
+            <div style={{ display: "flex", alignItems: "center", gap: 8, fontFamily: "'Share Tech Mono', monospace" }}>
+              <span style={{ color: "#ff6b1a", fontWeight: 800, fontSize: "1.1rem" }}>{matchOrangeGoals}</span>
+              <span style={{ color: "var(--muted)", fontSize: "0.75rem" }}>–</span>
+              <span style={{ color: "var(--cyan)", fontWeight: 800, fontSize: "1.1rem" }}>{matchBlueGoals}</span>
+            </div>
+          )}
+          {/* Personal score */}
+          {score != null && (
+            <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+              <span style={{ fontSize: "0.65rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.08em" }}>Score</span>
+              <span style={{ fontFamily: "'Share Tech Mono', monospace", color: "#ffd700", fontWeight: 800, fontSize: "0.95rem" }}>
+                {Math.round(score)}
+              </span>
+            </div>
+          )}
+          {/* Goals / Assists / Saves / Shots */}
+          {[
+            { key: "_goals",   label: "G",  color: "var(--orange)" },
+            { key: "_assists", label: "A",  color: "var(--purple)" },
+            { key: "_saves",   label: "Sv", color: "#00ff88"       },
+            { key: "_shots",   label: "Sh", color: "#ff4e50"       },
+          ].map(({ key, label, color }) =>
+            match[key] != null ? (
+              <div key={key} style={{ display: "flex", alignItems: "center", gap: 4 }}>
+                <span style={{ fontSize: "0.65rem", color: "var(--muted)", textTransform: "uppercase", letterSpacing: "0.06em" }}>{label}</span>
+                <span style={{ fontFamily: "'Share Tech Mono', monospace", color, fontWeight: 700, fontSize: "0.9rem" }}>
+                  {match[key]}
+                </span>
+              </div>
+            ) : null
+          )}
+        </div>
+
+        <div style={{ height: 1, background: "var(--border)", marginBottom: 18 }} />
 
         {/* Teams */}
         {loading ? (
           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12, padding: "2rem" }}>
             <div className="spinner" style={{ width: 36, height: 36, borderWidth: 2 }} />
-            <span style={{ color: "var(--muted)", fontSize: "0.85rem" }}>Chargement des joueurs...</span>
+            <span style={{ color: "var(--muted)", fontSize: "0.85rem" }}>Loading players...</span>
           </div>
         ) : error ? (
           <div style={{ padding: "1.5rem", color: "#ff6b6b", textAlign: "center", fontSize: "0.85rem" }}>
-            Impossible de charger les joueurs du match.
+            Unable to load match players.
           </div>
         ) : (
           <div className="match-teams-grid">
@@ -156,7 +241,7 @@ function MatchDetailModal({ match, onClose, onPlayerClick, currentPlayerId }) {
           border: 1px solid var(--border);
           border-radius: 16px;
           padding: 28px;
-          max-width: 580px;
+          max-width: 600px;
           width: 92%;
           position: relative;
           box-shadow: 0 0 80px rgba(0,0,0,0.7), 0 0 40px rgba(0,229,255,0.05);
@@ -208,7 +293,7 @@ function MatchDetailModal({ match, onClose, onPlayerClick, currentPlayerId }) {
         .team-player {
           display: flex;
           align-items: center;
-          gap: 8px;
+          gap: 7px;
           padding: 10px 12px;
           background: var(--card);
           border: 1px solid var(--border);
@@ -233,7 +318,7 @@ function MatchDetailModal({ match, onClose, onPlayerClick, currentPlayerId }) {
         }
 
         .team-player-name {
-          font-size: 0.88rem;
+          font-size: 0.85rem;
           font-weight: 700;
           flex: 1;
           white-space: nowrap;
@@ -276,6 +361,7 @@ function MatchCard({ match, index, onClick }) {
   const carName  = match._car_name ?? "Unknown";
   const carColor = CAR_COLORS[carName] ?? "var(--muted)";
   const matchId  = String(match._id ?? match._match_team_id ?? index).slice(-6);
+  const score    = match._score ?? match.score ?? null;
 
   return (
     <div
@@ -294,8 +380,18 @@ function MatchCard({ match, index, onClick }) {
           <span className="match-id">#{matchId}</span>
           {isMvp && <span className="match-mvp-badge">⭐ MVP</span>}
           <span className="match-duration">⏱ {duration}</span>
+          {score != null && (
+            <span style={{
+              fontFamily: "'Share Tech Mono', monospace",
+              fontSize: "0.72rem",
+              color: "#ffd700",
+              fontWeight: 700,
+            }}>
+              {Math.round(score)}pts
+            </span>
+          )}
           <span style={{ marginLeft: "auto", fontSize: "0.7rem", color: "var(--muted)", paddingLeft: 8, flexShrink: 0 }}>
-            Voir détails →
+            Details →
           </span>
         </div>
         <div className="match-car" style={{ color: carColor }}>

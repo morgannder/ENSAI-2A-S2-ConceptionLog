@@ -1,18 +1,10 @@
 import { useState, useEffect } from "react";
-import { searchPlayers, getPlayerRank, getPlayerCoreStats, RANKS, PLATFORMS } from "./api/apiClient";
+import { searchPlayers, getPlayerRank, getPlayerCoreStats, PLATFORMS, findRankInfo } from "./api/apiClient";
 import SearchBar   from "./components/SearchBar";
 import PlayerPage  from "./components/PlayerPage";
 import GlobalStats from "./components/GlobalStats";
 
 const MAX_HISTORY = 10;
-
-// Logos plateforme depuis /images/platform/
-const PLATFORM_LOGOS = {
-  epic:   "/images/platforms/epic.png",
-  steam:  "/images/platforms/steam.png",
-  psn:    "/images/platforms/psn.png",
-  xbox:   "/images/platforms/xbox.png",
-};
 
 export default function App() {
   const [page,           setPage]           = useState("home");
@@ -30,16 +22,33 @@ export default function App() {
   });
 
   useEffect(() => {
-    if (searchQuery.length >= 3) {
-      setLoading(true);
-      searchPlayers(searchQuery, null)
-        .then((results) => setSuggestions(results || []))
-        .catch(() => setSuggestions([]))
-        .finally(() => setLoading(false));
-    } else {
-      setSuggestions([]);
-    }
-  }, [searchQuery]);
+  if (searchQuery.length >= 3) {
+    setLoading(true);
+    searchPlayers(searchQuery, null)
+      .then((results) => {
+        if (!results || results.length === 0) { setSuggestions([]); return; }
+        // Affiche immédiatement sans rang, puis enrichit chaque joueur dès que son rang arrive
+        setSuggestions(results);
+        results.forEach(async (p) => {
+          const id = p.platform_user_id ?? p.id;
+          if (!id) return;
+          const rankData = await getPlayerRank(id).catch(() => null);
+          if (!rankData) return;
+          setSuggestions((prev) =>
+            prev.map((s) =>
+              (s.platform_user_id ?? s.id) === id
+                ? { ...s, rank: rankData.full_rank ?? s.rank, mmr: rankData.mmr ?? s.mmr }
+                : s
+            )
+          );
+        });
+      })
+      .catch(() => setSuggestions([]))
+      .finally(() => setLoading(false));
+  } else {
+    setSuggestions([]);
+  }
+}, [searchQuery]);
 
   const handleSearch = () => {
     if (!searchQuery.trim() || suggestions.length === 0) return;
@@ -126,7 +135,7 @@ export default function App() {
                   <span className="line1">STATS</span>
                 </h1>
                 <p className="hero-sub">
-                  Search any player across all platforms — PC, PlayStation, Xbox
+                  Search any player across all platforms — PC, PlayStation, Xbox and Switch
                 </p>
                 <SearchBar
                   query={searchQuery}
@@ -163,9 +172,9 @@ export default function App() {
 
                   <div className="history-grid">
                     {history.map((p) => {
-                      const rankInfo = RANKS.find(r => r.fullName === p.rank || r.name === p.rank);
-                      const platLogo = PLATFORM_LOGOS[p.platform];
+                      const rankInfo = findRankInfo(p.rank);
                       const platInfo = PLATFORMS.find(pl => pl.id === p.platform);
+                      const platLogo = platInfo?.logo ?? null;
 
                       return (
                         <div
@@ -175,12 +184,12 @@ export default function App() {
                         >
                           <div className="history-card-glow" />
 
-                          {/* Rank image avatar */}
                           <div className="history-avatar">
-                            {rankInfo?.image
-                              ? <img src={rankInfo.image} alt={p.rank} style={{ width: "100%", height: "100%", objectFit: "contain", padding: 4 }} />
-                              : <span style={{ fontSize: "1.4rem" }}>{rankInfo?.icon || "❓"}</span>
-                            }
+                            <img
+                              src={rankInfo?.image ?? "/images/ranks/unranked.png"}
+                              alt={rankInfo?.fullName ?? "Unranked"}
+                              style={{ width: "100%", height: "100%", objectFit: "contain", padding: 4 }}
+                            />
                           </div>
 
                           <div className="history-info">

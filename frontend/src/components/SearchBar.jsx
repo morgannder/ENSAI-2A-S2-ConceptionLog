@@ -1,12 +1,5 @@
 import { useRef, useState } from "react";
-import { PLATFORMS, RANKS, requestPlayerUpdate, searchPlayers } from "../api/apiClient";
-
-const PLATFORM_LOGOS = {
-  epic:   "/images/platforms/epic.png",
-  steam:  "/images/platforms/steam.png",
-  psn:    "/images/platforms/psn.png",
-  xbox:   "/images/platforms/xbox.png",
-};
+import { PLATFORMS, findRankInfo, requestPlayerUpdate, searchPlayers } from "../api/apiClient";
 
 // ── Modal "Add your games" ────────────────────────────────────────────────────
 function AddGamesModal({ onClose, onPlayerClick }) {
@@ -21,8 +14,9 @@ function AddGamesModal({ onClose, onPlayerClick }) {
   const MODAL_PLATFORMS = [
     { id: "epic",    label: "Epic"        },
     { id: "steam",   label: "Steam"       },
-    { id: "ps4",     label: "PlayStation" },
+    { id: "psn",     label: "PlayStation" },
     { id: "xbox",    label: "Xbox"        },
+    { id: "switch",  label: "Switch"      },
     { id: "psynet",  label: "PsyNet"      },
     { id: "unknown", label: "Unknown"     },
   ];
@@ -68,7 +62,7 @@ function AddGamesModal({ onClose, onPlayerClick }) {
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-box add-games-modal fade-in" onClick={(e) => e.stopPropagation()}>
         <div className="modal-header" style={{ marginBottom: "20px" }}>
-          <div style={{ fontSize: "1.6rem" }}>🚀</div>
+          <div style={{ fontSize: "1.6rem" }}>&#x1F680;</div>
           <div>
             <div className="modal-title" style={{ color: "var(--cyan)", fontSize: "1.2rem" }}>
               Add your games
@@ -77,7 +71,7 @@ function AddGamesModal({ onClose, onPlayerClick }) {
               Register your account to populate our database
             </div>
           </div>
-          <button className="modal-close" onClick={onClose}>✕</button>
+          <button className="modal-close" onClick={onClose}>&#x2715;</button>
         </div>
 
         <div className="add-games-form">
@@ -119,7 +113,7 @@ function AddGamesModal({ onClose, onPlayerClick }) {
               background: result.success ? "rgba(0,255,136,0.08)" : "rgba(255,78,80,0.08)",
               border:     `1px solid ${result.success ? "rgba(0,255,136,0.25)" : "rgba(255,78,80,0.25)"}`,
             }}>
-              {result.success ? "✓" : "✕"} {result.message}
+              {result.success ? "\u2713" : "\u2715"} {result.message}
             </div>
           )}
 
@@ -181,47 +175,61 @@ export default function SearchBar({ query, setQuery, onSearch, suggestions, onSu
       {suggestions.length > 0 && (
         <div className="search-suggestions">
           {suggestions.slice(0, 5).map((p) => {
-            const rankInfo = RANKS.find(r => r.name === p.rank || r.fullName === p.rank);
-            const platInfo = PLATFORMS.find(pl => pl.id === p.platform);
-            const platLogo = PLATFORM_LOGOS[p.platform];
+            const rankInfo = findRankInfo(p.rank);
+            const platInfo = PLATFORMS.find((pl) => pl.id === p.platform);
             return (
               <div
                 key={p.platform_user_id || p.name}
                 className="suggestion-item"
                 onClick={() => onSuggestionClick(p)}
               >
-                {/* Rank image ou icon */}
-                {rankInfo?.image
-                  ? <img src={rankInfo.image} alt={p.rank} style={{ width: 22, height: 22, objectFit: "contain" }} />
-                  : <span>{rankInfo?.icon || "❓"}</span>
-                }
-                <span style={{ fontWeight: 700 }}>{p.name}</span>
-                <span className="suggestion-platform">
-                  {/* Platform logo ou icon */}
-                  {platLogo
-                    ? <img src={platLogo} alt={platInfo?.label || p.platform} style={{ width: 12, height: 12, objectFit: "contain", verticalAlign: "middle" }} />
+                {/* Rank image — unranked.png as fallback */}
+                <img
+                  src={rankInfo?.image ?? "/images/ranks/unranked.png"}
+                  alt={rankInfo?.fullName ?? "Unranked"}
+                  style={{ width: 28, height: 28, objectFit: "contain", flexShrink: 0 }}
+                />
+
+                {/* Player name */}
+                <span style={{ fontWeight: 700, flex: 1, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {p.name}
+                </span>
+
+                {/* Rank label in color */}
+                {rankInfo && (
+                  <span style={{ fontSize: "0.7rem", fontWeight: 700, color: rankInfo.color, whiteSpace: "nowrap", flexShrink: 0 }}>
+                    {rankInfo.fullName}
+                  </span>
+                )}
+
+                {/* Platform */}
+                <span className="suggestion-platform" style={{ display: "flex", alignItems: "center", gap: 4, flexShrink: 0 }}>
+                  {platInfo?.logo
+                    ? <img src={platInfo.logo} alt={platInfo.label} style={{ width: 12, height: 12, objectFit: "contain", verticalAlign: "middle" }} />
                     : platInfo?.icon
                   }
                   {" "}{platInfo?.label || p.platform || "Unknown"}
                 </span>
-                {p.mmr && <span className="suggestion-mmr">{p.mmr} MMR</span>}
+
+                {p.mmr && <span className="suggestion-mmr" style={{ flexShrink: 0 }}>{p.mmr} MMR</span>}
               </div>
             );
           })}
         </div>
       )}
 
+      {/* Only the link text is clickable */}
       <div style={{ textAlign: "center", marginTop: "12px" }}>
+        <span style={{ fontSize: "0.8rem", color: "var(--muted)", cursor: "default", userSelect: "none" }}>
+          Can't find your account?{" "}
+        </span>
         <span
           onClick={() => setShowModal(true)}
-          style={{ fontSize: "0.8rem", color: "var(--muted)", cursor: "pointer", transition: "color 0.2s" }}
-          onMouseEnter={(e) => e.target.style.color = "var(--cyan)"}
-          onMouseLeave={(e) => e.target.style.color = "var(--muted)"}
+          style={{ fontSize: "0.8rem", color: "var(--cyan)", fontWeight: 700, textDecoration: "underline", cursor: "pointer", transition: "color 0.2s" }}
+          onMouseEnter={(e) => e.target.style.color = "#00ffff"}
+          onMouseLeave={(e) => e.target.style.color = "var(--cyan)"}
         >
-          Can't find your account?{" "}
-          <span style={{ color: "var(--cyan)", fontWeight: 700, textDecoration: "underline" }}>
-            Add your games to our database
-          </span>
+          Add your games to our database
         </span>
       </div>
 
