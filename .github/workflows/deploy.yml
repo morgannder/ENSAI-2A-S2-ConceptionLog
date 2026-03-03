@@ -2,7 +2,7 @@ name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ "develop" ] # Se déclenche quand tu pushes sur la branche develop
+    branches: [ "develop" ] # Se déclenche sur les pushs vers develop
 
 jobs:
   build-and-deploy:
@@ -17,7 +17,7 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and Push Docker image
+      - name: Build and Push Backend image
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -25,13 +25,25 @@ jobs:
           platforms: linux/amd64
           tags: meaumeau/ensai2a-cl-rlstatsanalysis:latest
 
+      - name: Build and Push Frontend image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./frontend
+          push: true
+          platforms: linux/amd64
+          tags: meaumeau/ensai2a-frontend:latest
+
       - name: Set up Kubectl
         uses: azure/k8s-set-context@v3
         with:
           method: kubeconfig
           kubeconfig: ${{ secrets.KUBECONFIG }}
 
-      - name: Trigger Kubernetes Update
+      - name: Deploy to Kubernetes
         run: |
-          kubectl apply -f src/kubernetes/ -n user-morgannder
-          kubectl rollout restart deployment rocket-app
+          # On applique les fichiers YAML (Deployment, Service, Ingress)
+          kubectl apply -f src/kubernetes/ -n user-morgannder # Dans ton namespace
+
+          # On force le redémarrage pour utiliser les nouvelles images
+          kubectl rollout restart deployment rocket-app -n user-morgannder
+          kubectl rollout restart deployment rocket-frontend -n user-morgannder

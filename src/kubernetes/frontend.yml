@@ -1,0 +1,52 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: rocket-frontend
+  namespace: user-morgannder
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: rocket-frontend
+  template:
+    metadata:
+      labels:
+        app: rocket-frontend
+    spec:
+      containers:
+      - name: frontend
+        image: meaumeau/ensai2a-frontend:latest
+        ports:
+        - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: rocket-frontend-service
+  namespace: user-morgannder
+spec:
+  selector:
+    app: rocket-frontend
+  ports:
+  - port: 80
+    targetPort: 80
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: rocket-frontend-ingress
+  namespace: user-morgannder
+  annotations:
+    kubernetes.io/ingress.class: nginx
+spec:
+  rules:
+  - host: rocketclstats.api.kub.sspcloud.fr
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: rocket-frontend-service
+            port:
+              number: 80
