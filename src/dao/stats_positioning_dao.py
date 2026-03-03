@@ -32,8 +32,7 @@ class StatPositioningDAO(metaclass=Singleton):
         """
         rank_name = rank.name
         game_mode_filter = "AND m.playlist_id = ?" if game_mode else ""
-
-        query = query = f"""
+        query = f"""
                     SELECT
                         ROUND(AVG(sp.average_distance_to_ball), 2) AS avg_average_distance_to_ball,
                         ROUND(AVG(sp.average_distance_to_mates), 2) AS avg_average_distance_to_mates,
@@ -61,6 +60,8 @@ class StatPositioningDAO(metaclass=Singleton):
                     FROM stats_positioning sp
                     INNER JOIN match_participation mp ON sp.participation_id = mp.id
                     INNER JOIN ranks r ON mp.rank_id = r.id
+                    INNER JOIN match_teams mt on mt.id = mp.match_team_id
+                    INNER JOIN matches m on m.id = mt.match_id
                     WHERE CASE
                         WHEN r.tier BETWEEN 1 AND 3 THEN 'Bronze'
                         WHEN r.tier BETWEEN 4 AND 6 THEN 'Silver'

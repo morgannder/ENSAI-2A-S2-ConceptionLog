@@ -16,7 +16,7 @@ match_service = MatchService()
     description="Renvoie l'ensemble des joueurs participant à un match en utilisant"
     "l'id de ce match. Contient les infos complètes des joueurs triés par équipe.",
 )
-def match_players(match_id: str | None = None):
+def match_players(match_id: int | None = None):
     if not match_id:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,

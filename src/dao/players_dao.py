@@ -305,7 +305,7 @@ class PlayerDAO(metaclass=Singleton):
             )
         return list_player
 
-    def get_players_in_match(self, match_id: str) -> list[dict] | None:
+    def get_players_in_match(self, match_id: int) -> list[dict] | None:
         """
         Récupère tous les joueurs ayant participé à un match, associés à leur couleur d'équipe.
         """
@@ -314,21 +314,34 @@ class PlayerDAO(metaclass=Singleton):
             cursor = connection.cursor()
             cursor.execute(
                 """
+                SELECT *
+                FROM matches m
+                JOIN match_teams mt on mt.match_id = m.id
+                WHERE mt.id = ?
+                """,
+                (match_id,),
+            )
+
+            res1 = cursor.fetchone()
+            id = res1["id"]
+            cursor.execute(
+                """
                 SELECT p.*, mt.color
                 FROM players p
                 JOIN match_participation mp ON mp.player_id = p.id
                 JOIN match_teams mt ON mt.id = mp.match_team_id
-                WHERE mt.match_id = ?
+                JOIN matches m on m.id = mt.match_id
+                WHERE m.id = ?
                 """,
-                (match_id,),
+                (id,),
             )
-            res = cursor.fetchall()
+            res2 = cursor.fetchall()
 
-        if not res:
+        if not res2:
             return None
 
         list_player_data = []
-        for row in res:
+        for row in res2:
             player_obj = Player(
                 row["id"],
                 row["platform_id"],
