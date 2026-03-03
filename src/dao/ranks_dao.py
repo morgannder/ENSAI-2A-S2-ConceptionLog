@@ -10,46 +10,6 @@ class RanksDAO(metaclass=Singleton):
     def __init__(self):
         self.db_connector = DBConnection()
 
-    def create_rank(self, rank: Ranks) -> bool:
-        """
-        Crée un nouveau rang en base de données.
-
-        Parameters
-        ----------
-        rank : Ranks
-            Le rang à créer.
-
-        Returns
-        -------
-        bool
-            True si le rang a été créé, False s'il existait déjà.
-        """
-        connection = self.db_connector.connection
-        with connection:
-            cursor = connection.cursor()
-            cursor.execute(
-                """
-                    SELECT 1
-                    FROM ranks
-                    WHERE name = ?
-                    """,
-                (rank.name,),
-            )
-
-            res = cursor.fetchone()
-            if res:
-                return False
-
-            cursor.execute(
-                """
-                    INSERT INTO ranks (id, tier, division, name)
-                    VALUES (?, ?, ?, ?)
-                    """,
-                (rank.id, rank.tier, rank.division, rank.name),
-            )
-
-            return True
-
     def get_rank_by_parameter(
         self, parameter_name: str, parameter_value
     ) -> list[Ranks] | None:
@@ -99,41 +59,6 @@ class RanksDAO(metaclass=Singleton):
                 )
             return list_rank
 
-    def update_rank(self, rank: Ranks):
-        """
-        Met à jour un rang existant en base de données.
-
-        Parameters
-        ----------
-        rank : Ranks
-            Le rang à mettre à jour.
-
-        Notes
-        -----
-        Non implémenté.
-        """
-        pass
-
-    def delete_rank(self, rank: Ranks) -> None:
-        """
-        Supprime un rang de la base de données.
-
-        Parameters
-        ----------
-        rank : Ranks
-            Le rang à supprimer.
-        """
-        connection = self.db_connector.connection
-        with connection:
-            cursor = connection.cursor()
-            cursor.execute(
-                """
-                    DELETE FROM ranks
-                    WHERE name = ?
-                    """,
-                (rank.name,),
-            )
-
     def get_player_rank(self, player: Player) -> Ranks | None:
         """
         Récupère le rang le plus récent d'un joueur.
@@ -172,42 +97,3 @@ class RanksDAO(metaclass=Singleton):
                 return None
 
             return Ranks(res["id"], res["tier"], res["division"], res["name"])
-
-    def get_by_tier_division(self, rank: Ranks) -> Ranks | None:
-        """
-        Récupère un rang par son tier et sa division.
-
-        Parameters
-        ----------
-        rank : Ranks
-            Un objet Ranks contenant le tier et la division recherchés.
-
-        Returns
-        -------
-        Ranks | None
-            Le rang correspondant au tier et à la division spécifiés,
-            ou None s'il n'existe pas.
-        """
-        connection = self.db_connector.connection
-        with connection:
-            cursor = connection.cursor()
-            cursor.execute(
-                """
-                    SELECT *
-                    FROM ranks
-                    WHERE tier = ? And division =?
-                    """,
-                (
-                    rank.tier,
-                    rank.division,
-                ),
-            )
-            res = cursor.fetchone()
-            if not res:
-                return None
-            return Ranks(
-                res["id"],
-                res["tier"],
-                res["division"],
-                res["name"],
-            )

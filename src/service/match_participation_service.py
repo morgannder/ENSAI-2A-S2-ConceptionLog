@@ -9,45 +9,6 @@ class MatchParticipationService:
     def __init__(self):
         self.match_participation_dao = MatchParticipationDAO()
 
-    def create_match_participation(self, participation: MatchParticipation) -> bool:
-        """
-        Crée une nouvelle participation de match dans la base de données.
-
-        Parameters
-        ----------
-        participation : MatchParticipation
-            L'objet participation à créer.
-
-        Returns
-        -------
-        bool
-            True si la participation a été créée, False si elle existait déjà.
-
-        Raises
-        ------
-        ValueError
-            Si l'ID de la participation est manquant, si le match_team_id est manquant,
-            si le player_id est manquant, ou si les temps de début et de fin sont invalides
-            (négatifs ou start_time > end_time).
-        """
-        if not participation.id:
-            raise ValueError("L'ID de la participation est requis")
-
-        if not participation.match_team_id:
-            raise ValueError("Le match_team_id est requis")
-
-        if not participation.player_id:
-            raise ValueError("Le player_id est requis")
-
-        if (
-            participation.start_time < 0
-            or participation.end_time < 0
-            or participation.start_time > participation.end_time
-        ):
-            raise ValueError("Les temps de début et de fin ne conviennent pas")
-
-        return self.match_participation_dao.create_match_participation(participation)
-
     def get_participation_by_id(
         self, participation_id: str
     ) -> MatchParticipation | None:
@@ -68,26 +29,6 @@ class MatchParticipationService:
             "id", participation_id
         )
         return participations[0] if participations else None
-
-    def get_participations_by_team(
-        self, match_team_id: str
-    ) -> list[MatchParticipation] | None:
-        """
-        Récupère toutes les participations d'une équipe donnée.
-
-        Parameters
-        ----------
-        match_team_id : str
-            L'identifiant de l'équipe de match.
-
-        Returns
-        -------
-        list[MatchParticipation] | None
-            Liste des participations de l'équipe, ou None si aucune participation trouvée.
-        """
-        return self.match_participation_dao.get_matches_by_parameter(
-            "match_team_id", match_team_id
-        )
 
     def get_participations_by_player(
         self, player_id: str
@@ -227,25 +168,6 @@ class MatchParticipationService:
             raise ValueError("Le joueur doit avoir un ID valide")
 
         return self.match_participation_dao.get_player_nb_mvp(player)
-
-    def delete_participation(self, participation: MatchParticipation) -> None:
-        """
-        Supprime une participation de la base de données.
-
-        Parameters
-        ----------
-        participation : MatchParticipation
-            La participation à supprimer.
-
-        Raises
-        ------
-        ValueError
-            Si la participation n'a pas d'ID valide.
-        """
-        if not participation or not participation.id:
-            raise ValueError("La participation doit avoir un ID valide")
-
-        self.match_participation_dao.delete_match_participation(participation)
 
     def get_player_mvp_rate(self, player: Player) -> float | None:
         """

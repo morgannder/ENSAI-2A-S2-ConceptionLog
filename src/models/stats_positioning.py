@@ -8,14 +8,14 @@ class StatsPositioning:
         self,
         participation_id: int = 0,
         average_distance_to_ball: int = 0,
-        # average_distance_to_ball_possession: int = 0,
-        # average_distance_to_ball_no_possession: int = 0,
-        average_distance_to_mates: int = 0,
+        average_distance_to_ball_possession: int = 0,
+        average_distance_to_ball_no_possession: int = 0,
+        average_distance_to_mates: float = 0,
         time_defensive_third: float = 0.0,
         time_neutral_third: float = 0.0,
         time_offensive_third: float = 0.0,
-        # time_defensive_half: float = 0.0,
-        # time_offensive_half: float = 0.0,
+        time_defensive_half: float = 0.0,
+        time_offensive_half: float = 0.0,
         time_behind_ball: float = 0.0,
         time_infront_ball: float = 0.0,
         time_most_back: float = 0.0,
@@ -110,14 +110,16 @@ class StatsPositioning:
 
         self._participation_id = participation_id
         self.average_distance_to_ball = average_distance_to_ball
-        # self.average_distance_to_ball_possession = average_distance_to_ball_possession,
-        # self.average_distance_to_ball_no_possession = average_distance_to_ball_no_possession,
+        self.average_distance_to_ball_possession = average_distance_to_ball_possession
+        self.average_distance_to_ball_no_possession = (
+            average_distance_to_ball_no_possession
+        )
         self.average_distance_to_mates = average_distance_to_mates
         self.time_defensive_third = time_defensive_third
         self.time_neutral_third = time_neutral_third
         self.time_offensive_third = time_offensive_third
-        # self.time_defensive_half = time_defensive_half
-        # self.time_offensive_half = time_offensive_half
+        self.time_defensive_half = time_defensive_half
+        self.time_offensive_half = time_offensive_half
         self.time_behind_ball = time_behind_ball
         self.time_infront_ball = time_infront_ball
         self.time_most_back = time_most_back

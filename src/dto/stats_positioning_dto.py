@@ -8,14 +8,14 @@ class StatsPositioningDTO(BaseModel):
 
     participation_id: int
     average_distance_to_ball: int
-    # average_distance_to_ball_possession: int
-    # average_distance_to_ball_no_possession: int
+    average_distance_to_ball_possession: int
+    average_distance_to_ball_no_possession: int
     average_distance_to_mates: int
     time_defensive_third: float
     time_neutral_third: float
     time_offensive_third: float
-    # time_defensive_half: float
-    # time_offensive_half: float
+    time_defensive_half: float
+    time_offensive_half: float
     time_behind_ball: float
     time_infront_ball: float
     time_most_back: float
@@ -56,14 +56,14 @@ class StatsPositioningDTO(BaseModel):
         return cls(
             participation_id=bo._participation_id,
             average_distance_to_ball=bo.average_distance_to_ball,
-            # average_distance_to_ball_possession= bo.average_distance_to_ball_possession,
-            # average_distance_to_ball_no_possession= bo.average_distance_to_ball_no_possession,
+            average_distance_to_ball_possession=bo.average_distance_to_ball_possession,
+            average_distance_to_ball_no_possession=bo.average_distance_to_ball_no_possession,
             average_distance_to_mates=bo.average_distance_to_mates,
             time_defensive_third=bo.time_defensive_third,
             time_neutral_third=bo.time_neutral_third,
             time_offensive_third=bo.time_offensive_third,
-            # time_defensive_half=bo.time_defensive_half,
-            # time_offensive_half=bo.time_offensive_half,
+            time_defensive_half=bo.time_defensive_half,
+            time_offensive_half=bo.time_offensive_half,
             time_behind_ball=bo.time_behind_ball,
             time_infront_ball=bo.time_infront_ball,
             time_most_back=bo.time_most_back,
@@ -89,14 +89,14 @@ class StatsPositioningAggregatedDTO(BaseModel):
     """DTO pour les statistiques de positionnement agrégées (moyennes par rang ou joueur)"""
 
     average_distance_to_ball: float
-    # average_distance_to_ball_possession: float
-    # average_distance_to_ball_no_possession: float
+    average_distance_to_ball_possession: float
+    average_distance_to_ball_no_possession: float
     average_distance_to_mates: float
     time_defensive_third: float
     time_neutral_third: float
     time_offensive_third: float
-    # time_defensive_half: float
-    # time_offensive_half: float
+    time_defensive_half: float
+    time_offensive_half: float
     time_behind_ball: float
     time_infront_ball: float
     time_most_back: float

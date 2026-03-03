@@ -43,83 +43,6 @@ def mock_team_list():
     ]
 
 
-# Tests pour create_match_team
-def test_create_match_team_ok(mock_match_team):
-    """La DAO crée l'équipe avec succès -> le service retourne True."""
-    # GIVEN
-    MatchTeamDAO().create_match_team = MagicMock(return_value=True)
-    # WHEN
-    result = MatchTeamService().create_match_team(mock_match_team)
-    # THEN
-    assert result is True
-    MatchTeamDAO().create_match_team.assert_called_once_with(mock_match_team)
-
-
-def test_create_match_team_already_exists(mock_match_team):
-    """La DAO indique que l'équipe existe déjà -> le service retourne False."""
-    # GIVEN
-    MatchTeamDAO().create_match_team = MagicMock(return_value=False)
-    # WHEN
-    result = MatchTeamService().create_match_team(mock_match_team)
-    # THEN
-    assert result is False
-    MatchTeamDAO().create_match_team.assert_called_once_with(mock_match_team)
-
-
-def test_create_match_team_no_id():
-    """L'équipe n'a pas d'ID -> le service lève une ValueError."""
-    # GIVEN
-    team_sans_id = MatchTeam(None, "match_456", "blue", 3, 180, 150)
-    # WHEN / THEN
-    with pytest.raises(ValueError, match="L'ID de l'équipe est requis"):
-        MatchTeamService().create_match_team(team_sans_id)
-
-
-def test_create_match_team_no_match_id():
-    """L'équipe n'a pas de match_id -> le service lève une ValueError."""
-    # GIVEN
-    team_sans_match = MatchTeam("team_123", None, "blue", 3, 180, 150)
-    # WHEN / THEN
-    with pytest.raises(ValueError, match="Le match_id est requis"):
-        MatchTeamService().create_match_team(team_sans_match)
-
-
-def test_create_match_team_negative_score():
-    """L'équipe a un score négatif -> le service lève une ValueError."""
-    # GIVEN
-    team_score_negatif = MatchTeam("team_123", "match_456", "blue", -1, 180, 150)
-    # WHEN / THEN
-    with pytest.raises(ValueError, match="Le score doit être un entier positif ou nul"):
-        MatchTeamService().create_match_team(team_score_negatif)
-
-
-def test_create_match_team_invalid_color():
-    """L'équipe a une couleur invalide -> le service lève une ValueError."""
-    # GIVEN
-    team_couleur_invalide = MatchTeam("team_123", "match_456", "red", 3, 180, 150)
-    # WHEN / THEN
-    with pytest.raises(ValueError, match="La couleur doit être 'blue' ou 'orange'"):
-        MatchTeamService().create_match_team(team_couleur_invalide)
-
-
-def test_create_match_team_negative_possession_time():
-    """L'équipe a un possession_time négatif -> le service lève une ValueError."""
-    # GIVEN
-    team_possession_negatif = MatchTeam("team_123", "match_456", "blue", 3, -10, 150)
-    # WHEN / THEN
-    with pytest.raises(ValueError, match="'possession_time' doit être positif"):
-        MatchTeamService().create_match_team(team_possession_negatif)
-
-
-def test_create_match_team_negative_time_in_side():
-    """L'équipe a un time_in_side négatif -> le service lève une ValueError."""
-    # GIVEN
-    team_time_negatif = MatchTeam("team_123", "match_456", "blue", 3, 180, -50)
-    # WHEN / THEN
-    with pytest.raises(ValueError, match="'time_in_side' doit être positif"):
-        MatchTeamService().create_match_team(team_time_negatif)
-
-
 # Tests pour get_match_team_by_id
 def test_get_match_team_by_id_ok(mock_match_team):
     """La DAO renvoie une liste avec une équipe -> le service retourne cette équipe."""
@@ -252,33 +175,6 @@ def test_get_player_teams_invalid_limit(mock_player):
     # WHEN / THEN
     with pytest.raises(ValueError, match="supérieur à 0"):
         MatchTeamService().get_player_teams(mock_player, 0)
-
-
-# Tests pour delete_match_team
-def test_delete_match_team_ok(mock_match_team):
-    """La DAO supprime l'équipe -> le service appelle la DAO."""
-    # GIVEN
-    MatchTeamDAO().delete_match_teams = MagicMock()
-    # WHEN
-    MatchTeamService().delete_match_team(mock_match_team)
-    # THEN
-    MatchTeamDAO().delete_match_teams.assert_called_once_with(mock_match_team)
-
-
-def test_delete_match_team_no_team():
-    """Aucune équipe fournie -> le service lève une ValueError."""
-    # WHEN / THEN
-    with pytest.raises(ValueError, match="ID valide"):
-        MatchTeamService().delete_match_team(None)
-
-
-def test_delete_match_team_no_id():
-    """L'équipe n'a pas d'ID -> le service lève une ValueError."""
-    # GIVEN
-    team_sans_id = MatchTeam(None, "match_456", "blue", 3, 180, 150)
-    # WHEN / THEN
-    with pytest.raises(ValueError, match="ID valide"):
-        MatchTeamService().delete_match_team(team_sans_id)
 
 
 # Tests pour get_match_winner

@@ -20,56 +20,6 @@ class MatchParticipationDAO(metaclass=Singleton):
     def __init__(self):
         self.db_connector = DBConnection()
 
-    def create_match_participation(self, match: MatchParticipation):
-        """
-        Crée une nouvelle participation de joueur en base de données.
-
-        Parameters
-        ----------
-        match : MatchParticipation
-            La participation à créer.
-
-        Returns
-        -------
-        bool
-            True si la participation a été créée, False si elle existait déjà.
-        """
-        connection = self.db_connector.connection
-        with connection:
-            cursor = connection.cursor()
-            cursor.execute(
-                """
-                    SELECT 1
-                    FROM match_participation
-                    WHERE id = ?
-                    """,
-                (match.id,),
-            )
-
-            res = cursor.fetchone()
-            if res:
-                return False
-
-            cursor.execute(
-                """
-                    INSERT INTO match_participation (id, match_team_id, player_id, rank_id, car_id, car_name, mvp, start_time, end_time)
-                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    """,
-                (
-                    match.id,
-                    match.match_team_id,
-                    match.player_id,
-                    match.rank_id,
-                    match.car_id,
-                    match.car_name,
-                    match.mvp,
-                    match.start_time,
-                    match.end_time,
-                ),
-            )
-
-            return True
-
     def get_matches_by_parameter(
         self, parameter_name: str, parameter_value
     ) -> list[MatchParticipation] | None:
@@ -124,36 +74,6 @@ class MatchParticipationDAO(metaclass=Singleton):
                 )
                 list_match.append(match_part)
             return list_match
-
-    def update_match_participation(self):
-        """
-        Met à jour une participation existante en base de données.
-
-        Notes
-        -----
-        Non implémenté.
-        """
-        pass
-
-    def delete_match_participation(self, match: MatchParticipation):
-        """
-        Supprime une participation de la base de données.
-
-        Parameters
-        ----------
-        match : MatchParticipation
-            La participation à supprimer.
-        """
-        connection = self.db_connector.connection
-        with connection:
-            cursor = connection.cursor()
-            cursor.execute(
-                """
-                    DELETE FROM match_participation
-                    WHERE id = ?
-                    """,
-                (match.id,),
-            )
 
     def get_player_last_match_participation(
         self, player: Player, nb_match: int = 20

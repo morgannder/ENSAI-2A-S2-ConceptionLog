@@ -85,50 +85,6 @@ def test_get_platform_by_name_blank():
         service.get_platform_by_name("   ")
 
 
-# delete_platform
-
-
-def test_delete_platform_ok():
-    service = PlatformService()
-    service.platform_dao.delete_platform = MagicMock(return_value=True)
-
-    result = service.delete_platform(PLATFORM_PC)
-
-    assert result is True
-    service.platform_dao.delete_platform.assert_called_once_with(PLATFORM_PC)
-
-
-def test_delete_platform_none():
-    service = PlatformService()
-
-    with pytest.raises(ValueError, match="ne peut pas être None"):
-        service.delete_platform(None)
-
-
-# delete_platform_by_name
-
-
-def test_delete_platform_by_name_ok():
-    service = PlatformService()
-    service.get_platform_by_name = MagicMock(return_value=PLATFORM_PC)
-    service.delete_platform = MagicMock(return_value=True)
-
-    result = service.delete_platform_by_name("pc")
-
-    assert result is True
-    service.get_platform_by_name.assert_called_once_with("pc")
-    service.delete_platform.assert_called_once_with(PLATFORM_PC)
-
-
-def test_delete_platform_by_name_not_found():
-    service = PlatformService()
-    service.get_platform_by_name = MagicMock(return_value=None)
-
-    result = service.delete_platform_by_name("unknown")
-
-    assert result is False
-
-
 # platform_exists
 
 

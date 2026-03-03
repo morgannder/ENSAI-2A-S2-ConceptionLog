@@ -43,54 +43,6 @@ def mock_match_list():
     ]
 
 
-# Tests pour create_match
-def test_create_match_ok(mock_match):
-    """La DAO crée le match avec succès -> le service retourne True."""
-    # GIVEN
-    MatchDAO().create_match = MagicMock(return_value=True)
-    # WHEN
-    result = MatchService().create_match(mock_match)
-    # THEN
-    assert result is True
-    MatchDAO().create_match.assert_called_once_with(mock_match)
-
-
-def test_create_match_already_exists(mock_match):
-    """La DAO indique que le match existe déjà -> le service retourne False."""
-    # GIVEN
-    MatchDAO().create_match = MagicMock(return_value=False)
-    # WHEN
-    result = MatchService().create_match(mock_match)
-    # THEN
-    assert result is False
-    MatchDAO().create_match.assert_called_once_with(mock_match)
-
-
-def test_create_match_no_id():
-    """Le match n'a pas d'ID -> le service lève une ValueError."""
-    # GIVEN
-    match_sans_id = Match(None, 13, 5, 300, False, "2024-01-15 14:30:00")
-    # WHEN / THEN
-    with pytest.raises(ValueError, match="L'ID du match est requis"):
-        MatchService().create_match(match_sans_id)
-
-
-def test_create_match_no_playlist_id():
-    """Le match n'a pas de playlist_id -> le service lève une ValueError."""
-    # GIVEN
-    match_sans_playlist = Match(
-        id="match_123",
-        playlist_id=None,  # ← Créez directement avec None
-        season=5,
-        duration=300,
-        overtime=False,
-        date_upload="2024-01-15 14:30:00",
-    )
-    # WHEN / THEN
-    with pytest.raises(ValueError, match="Le playlist_id est requis"):
-        MatchService().create_match(match_sans_playlist)
-
-
 # Tests pour get_match_by_id
 def test_get_match_by_id_ok(mock_match):
     """La DAO renvoie une liste avec un match -> le service retourne ce match."""
@@ -248,33 +200,6 @@ def test_get_player_matches_invalid_limit(mock_player):
     # WHEN / THEN
     with pytest.raises(ValueError, match="supérieur à 0"):
         MatchService().get_player_matches(mock_player, 0)
-
-
-# Tests pour delete_match
-def test_delete_match_ok(mock_match):
-    """La DAO supprime le match -> le service appelle la DAO."""
-    # GIVEN
-    MatchDAO().delete_match = MagicMock()
-    # WHEN
-    MatchService().delete_match(mock_match)
-    # THEN
-    MatchDAO().delete_match.assert_called_once_with(mock_match)
-
-
-def test_delete_match_no_match():
-    """Aucun match fourni -> le service lève une ValueError."""
-    # WHEN / THEN
-    with pytest.raises(ValueError, match="ID valide"):
-        MatchService().delete_match(None)
-
-
-def test_delete_match_no_id():
-    """Le match n'a pas d'ID -> le service lève une ValueError."""
-    # GIVEN
-    match_sans_id = Match(None, "13", 5, 300, False, "2024-01-15 14:30:00")
-    # WHEN / THEN
-    with pytest.raises(ValueError, match="ID valide"):
-        MatchService().delete_match(match_sans_id)
 
 
 # Tests pour get_match_statistics

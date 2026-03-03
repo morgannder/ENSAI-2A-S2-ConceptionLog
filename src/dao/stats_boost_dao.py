@@ -219,6 +219,17 @@ class StatBoostDAO(metaclass=Singleton):
         game_mode_filter = "AND m.playlist_id = ?" if game_mode else ""
         query = f"""
                 SELECT
+                    CASE
+                        WHEN r.tier BETWEEN 1 AND 3 THEN 'Bronze'
+                        WHEN r.tier BETWEEN 4 AND 6 THEN 'Silver'
+                        WHEN r.tier BETWEEN 7 AND 9 THEN 'Gold'
+                        WHEN r.tier BETWEEN 10 AND 12 THEN 'Platinum'
+                        WHEN r.tier BETWEEN 13 AND 15 THEN 'Diamond'
+                        WHEN r.tier BETWEEN 16 AND 18 THEN 'Champion'
+                        WHEN r.tier BETWEEN 19 AND 21 THEN 'Grand Champion'
+                        WHEN r.tier = 22 THEN 'Supersonic Legend'
+                        ELSE 'Unknown'
+                    END AS rank_group,
                     ROUND(AVG(sb.boost_per_minute), 2) AS avg_boost_per_minute,
                     ROUND(AVG(sb.boost_consumed_per_minute), 2) AS avg_boost_consumed_per_minute,
                     ROUND(AVG(sb.average_amount), 2) AS avg_average_amount,

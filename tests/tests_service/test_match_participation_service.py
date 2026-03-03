@@ -42,123 +42,6 @@ PLAYER = Player(
 )
 
 
-# Tests de création de participation
-
-
-def test_create_ok():
-    """La DAO crée la participation -> le service relaie True."""
-    # GIVEN
-    service = MatchParticipationService()
-    service.match_participation_dao.create_match_participation = MagicMock(
-        return_value=True
-    )
-    # WHEN
-    result = service.create_match_participation(PARTICIPATION_1)
-    # THEN
-    assert result is True
-    service.match_participation_dao.create_match_participation.assert_called_once_with(
-        PARTICIPATION_1
-    )
-
-
-def test_create_already_exists():
-    """La DAO indique que la participation existe déjà -> le service relaie False."""
-    # GIVEN
-    service = MatchParticipationService()
-    service.match_participation_dao.create_match_participation = MagicMock(
-        return_value=False
-    )
-    # WHEN
-    result = service.create_match_participation(PARTICIPATION_1)
-    # THEN
-    assert result is False
-    service.match_participation_dao.create_match_participation.assert_called_once_with(
-        PARTICIPATION_1
-    )
-
-
-def test_create_no_id():
-    """Participation sans ID -> ValueError."""
-    # GIVEN
-    participation = MatchParticipation(
-        id=None,
-        match_team_id=1,
-        player_id=1,
-        rank_id=1,
-        car_id=10,
-        car_name="Octane",
-        mvp=True,
-        start_time=0,
-        end_time=300,
-    )
-    service = MatchParticipationService()
-    # WHEN / THEN
-    with pytest.raises(ValueError, match="L'ID de la participation est requis"):
-        service.create_match_participation(participation)
-
-
-def test_create_no_match_team_id():
-    """Participation sans match_team_id -> ValueError."""
-    # GIVEN
-    participation = MatchParticipation(
-        id=1,
-        match_team_id=None,
-        player_id=1,
-        rank_id=1,
-        car_id=10,
-        car_name="Octane",
-        mvp=True,
-        start_time=0,
-        end_time=300,
-    )
-    service = MatchParticipationService()
-    # WHEN / THEN
-    with pytest.raises(ValueError, match="Le match_team_id est requis"):
-        service.create_match_participation(participation)
-
-
-def test_create_no_player_id():
-    """Participation sans player_id -> ValueError."""
-    # GIVEN
-    participation = participation = MatchParticipation(
-        id=1,
-        match_team_id=1,
-        player_id=None,
-        rank_id=1,
-        car_id=10,
-        car_name="Octane",
-        mvp=True,
-        start_time=0,
-        end_time=300,
-    )
-    service = MatchParticipationService()
-    # WHEN / THEN
-    with pytest.raises(ValueError, match="Le player_id est requis"):
-        service.create_match_participation(participation)
-
-
-def test_create_invalid_times():
-    """Temps de début après temps de fin -> ValueError."""
-    # GIVEN
-    participation = participation = MatchParticipation(
-        id=1,
-        match_team_id=1,
-        player_id=1,
-        rank_id=1,
-        car_id=10,
-        car_name="Octane",
-        mvp=True,
-        start_time=300,
-        end_time=-2,
-    )
-    service = MatchParticipationService()
-    # WHEN / THEN
-    with pytest.raises(
-        ValueError, match="Les temps de début et de fin ne conviennent pas"
-    ):
-        service.create_match_participation(participation)
-
-
 # Tests de récupération par ID
 
 
@@ -191,25 +74,6 @@ def test_get_by_id_not_found():
     assert result is None
     service.match_participation_dao.get_matches_by_parameter.assert_called_once_with(
         "id", "part999"
-    )
-
-
-# Tests de récupération par équipe
-
-
-def test_get_by_team_ok():
-    """La DAO renvoie une liste de participations -> le service la relaie."""
-    # GIVEN
-    service = MatchParticipationService()
-    service.match_participation_dao.get_matches_by_parameter = MagicMock(
-        return_value=PARTICIPATION_LIST
-    )
-    # WHEN
-    result = service.get_participations_by_team("team1")
-    # THEN
-    assert result == PARTICIPATION_LIST
-    service.match_participation_dao.get_matches_by_parameter.assert_called_once_with(
-        "match_team_id", "team1"
     )
 
 
@@ -391,42 +255,6 @@ def test_get_mvp_count_no_player_id():
     # WHEN / THEN
     with pytest.raises(ValueError, match="Le joueur doit avoir un ID valide"):
         service.get_player_mvp_count(player)
-
-
-# Tests de suppression
-
-
-def test_delete_ok():
-    """La DAO supprime la participation -> le service relaie."""
-    # GIVEN
-    service = MatchParticipationService()
-    service.match_participation_dao.delete_match_participation = MagicMock()
-    # WHEN
-    service.delete_participation(PARTICIPATION_1)
-    # THEN
-    service.match_participation_dao.delete_match_participation.assert_called_once_with(
-        PARTICIPATION_1
-    )
-
-
-def test_delete_no_id():
-    """Participation sans ID -> ValueError."""
-    # GIVEN
-    participation = MatchParticipation(
-        id=None,
-        match_team_id=1,
-        player_id=1,
-        rank_id=1,
-        car_id=10,
-        car_name="Octane",
-        mvp=True,
-        start_time=0,
-        end_time=300,
-    )
-    service = MatchParticipationService()
-    # WHEN / THEN
-    with pytest.raises(ValueError, match="La participation doit avoir un ID valide"):
-        service.delete_participation(participation)
 
 
 # Tests du taux de MVP

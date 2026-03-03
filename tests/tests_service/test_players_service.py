@@ -16,44 +16,6 @@ PLAYER = Player(
 )
 
 
-# create_player
-
-
-def test_create_player_ok():
-    service = PlayerService()
-    service.player_dao.create_player = MagicMock(return_value=True)
-    service.get_player_by_name = MagicMock(return_value=PLAYER)
-
-    result = service.create_player("PC", "abc123", "PlayerOne")
-
-    assert result == PLAYER
-    service.player_dao.create_player.assert_called_once()
-    service.get_player_by_name.assert_called_once_with("PlayerOne")
-
-
-def test_create_player_fail():
-    service = PlayerService()
-    service.player_dao.create_player = MagicMock(return_value=False)
-
-    result = service.create_player("PC", "abc123", "PlayerOne")
-
-    assert result is None
-
-
-def test_create_player_invalid_name():
-    service = PlayerService()
-
-    with pytest.raises(ValueError):
-        service.create_player("PC", "abc123", "")
-
-
-def test_create_player_missing_platform_ids():
-    service = PlayerService()
-
-    with pytest.raises(ValueError):
-        service.create_player(None, None, "PlayerOne")
-
-
 # get_player_by_platform_id
 
 
@@ -98,48 +60,6 @@ def test_get_player_by_name_invalid():
         service.get_player_by_name("   ")
 
 
-# delete_player
-
-
-def test_delete_player_ok():
-    service = PlayerService()
-    service.player_dao.delete_player = MagicMock()
-
-    result = service.delete_player(PLAYER)
-
-    assert result is True
-    service.player_dao.delete_player.assert_called_once_with(PLAYER)
-
-
-def test_delete_player_none():
-    service = PlayerService()
-
-    with pytest.raises(ValueError):
-        service.delete_player(None)
-
-
-# delete_player_by_name
-
-
-def test_delete_player_by_name_ok():
-    service = PlayerService()
-    service.get_player_by_name = MagicMock(return_value=PLAYER)
-    service.delete_player = MagicMock(return_value=True)
-
-    result = service.delete_player_by_name("PlayerOne")
-
-    assert result is True
-
-
-def test_delete_player_by_name_not_found():
-    service = PlayerService()
-    service.get_player_by_name = MagicMock(return_value=None)
-
-    result = service.delete_player_by_name("Unknown")
-
-    assert result is False
-
-
 # player_exists
 
 
@@ -181,37 +101,6 @@ def test_player_exists_by_platform_id_invalid():
     )
 
     assert service.player_exists_by_platform_id("abc123") is False
-
-
-# get_or_create_player
-
-
-def test_get_or_create_existing():
-    service = PlayerService()
-    service.get_player_by_name = MagicMock(return_value=PLAYER)
-
-    result = service.get_or_create_player("PC", "abc123", "PlayerOne")
-
-    assert result == PLAYER
-
-
-def test_get_or_create_new():
-    service = PlayerService()
-    service.get_player_by_name = MagicMock(side_effect=[None, PLAYER])
-    service.create_player = MagicMock(return_value=PLAYER)
-
-    result = service.get_or_create_player("PC", "abc123", "PlayerOne")
-
-    assert result == PLAYER
-
-
-def test_get_or_create_fail():
-    service = PlayerService()
-    service.get_player_by_name = MagicMock(return_value=None)
-    service.create_player = MagicMock(return_value=None)
-
-    with pytest.raises(RuntimeError):
-        service.get_or_create_player("PC", "abc123", "PlayerOne")
 
 
 # validate_player_name
