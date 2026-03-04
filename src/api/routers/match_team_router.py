@@ -1,11 +1,13 @@
 from fastapi import APIRouter, HTTPException, status
 
-from src.service.match_teams_service import MatchTeamService
 from src.api.schemas.stats_response import MatchTeamResponse
+from src.service.match_teams_service import MatchTeamService
+
 
 router = APIRouter(prefix="/match_team", tags=["Match Teams"])
 
 match_team_service = MatchTeamService()
+
 
 @router.get(
     "/by-match-team/{match_team_id}",
