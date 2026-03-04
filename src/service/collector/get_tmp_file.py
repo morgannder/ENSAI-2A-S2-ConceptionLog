@@ -8,7 +8,7 @@ DUMP_DIR = BASE_DIR / "src" / "database" / "temp" / "file-dump-tmp"
 
 def list_files_to_import():
     """
-    List files in file-dump-tmp for the importer
+    établi la liste des fichiers dans file-dump-tmp pour l'importation en DB
     """
 
     if not DUMP_DIR.exists():

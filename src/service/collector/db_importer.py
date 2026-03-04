@@ -1,4 +1,3 @@
-import hashlib
 import json
 from pathlib import Path
 import sys
@@ -9,6 +8,8 @@ from sqlalchemy import (
     text,
 )
 from sqlalchemy.orm import sessionmaker
+
+from src.service.collector.parse import generate_hash_from_list_item
 
 
 # CONFIG
@@ -40,29 +41,6 @@ except KeyError as e:
 # FUNCTIONS
 
 
-def generate_match_hash(data):
-    """
-    Generate an unique ID based on players, match duration and score.
-    """
-
-    p_ids = []
-    for side in ["blue", "orange"]:
-        for p in data.get(side, {}).get("players", []):
-            uid = p.get("id", {}).get("id")
-            if uid:
-                p_ids.append(str(uid))
-    p_ids.sort()
-
-    blue_score = data.get("blue", {}).get("stats", {}).get("core", {}).get("goals", 0)
-    orange_score = (
-        data.get("orange", {}).get("stats", {}).get("core", {}).get("goals", 0)
-    )
-    duration = data.get("duration", 0)
-
-    raw_str = f"{''.join(p_ids)}_{duration}_{blue_score}_{orange_score}"
-    return hashlib.sha256(raw_str.encode()).hexdigest()
-
-
 def get_rank_id(session, r_data):
     """
     Retrieve or create a rank
@@ -88,7 +66,8 @@ def get_rank_id(session, r_data):
 
 def get_player_id(session, p_data):
     """
-    Retrieve or create a player in DB.
+    Extrait l'id d'un joueur et le créer dans la base s'il n'y était pas
+
     """
 
     plat_info = p_data.get("id", {})
@@ -130,6 +109,18 @@ def get_player_id(session, p_data):
 
 
 def add_single_match(json_path):
+    """
+    Prend un match sous format .json et l'ajoute dans la DB
+
+    Parameters
+    ------------
+    json_path : str
+        Chemin d'accès au match à ajouter en DB
+
+    Returns
+    ----------
+    None
+    """
     path = Path(json_path)
     if not path.exists():
         print(f"Error : file {json_path} is missing.")
@@ -142,7 +133,7 @@ def add_single_match(json_path):
             data = json.load(f)
 
         # Hash génération and verification
-        m_id = generate_match_hash(data)
+        m_id = generate_hash_from_list_item(data)
 
         exists = session.execute(
             text("SELECT 1 FROM matches WHERE id = :id"), {"id": m_id}

@@ -211,7 +211,7 @@ def get_player_match_statistics(
             status_code=status.HTTP_404_NOT_FOUND, detail="Match introuvable"
         )
 
-    # Service retourne un Business Object (StatsPositioning)
+    # Service retourne un BO (StatsPositioning)
     stats_bo = stats_positioning_service.get_player_match_positioning_stats(
         player, match, game_mode
     )
