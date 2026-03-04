@@ -184,7 +184,7 @@ export default function App() {
         <nav>
           <div className="nav-logo" onClick={goHome}>
             <span className="nav-logo-icon">🚀</span>
-            RCLStast
+            RLCLStats
           </div>
           <div className="nav-links">
             <div className={`nav-link ${page === "home"   ? "active" : ""}`} onClick={goHome}>Home</div>
