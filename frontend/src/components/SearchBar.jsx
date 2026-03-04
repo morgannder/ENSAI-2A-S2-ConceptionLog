@@ -1,5 +1,5 @@
 import { useRef, useState } from "react";
-import { PLATFORMS, RANKS, requestPlayerUpdate, searchPlayers } from "../api/apiClient";
+import { PLATFORMS, RANKS, requestPlayerUpdate } from "../api/apiClient";
 
 const PLATFORM_LOGOS = {
   epic:   "/images/platforms/epic.png",
@@ -178,32 +178,59 @@ export default function SearchBar({ query, setQuery, onSearch, suggestions, onSu
       </div>
 
       {suggestions.length > 0 && (
-        <div className="search-suggestions">
-          {suggestions.slice(0, 5).map((p) => {
-            const rankMatch = p.rank?.match(/^([A-Za-z\s]+\s[IVX]+)/)?.[1] || p.rank || "Unranked";
+        <div
+          className="search-suggestions"
+          style={{
+            maxHeight: "240px", /* Forcer l'apparition de la barre de défilement */
+            overflowY: "auto",  /* Active le défilement vertical */
+            overflowX: "hidden" /* Empêche le scroll horizontal indésirable */
+          }}
+        >
+          {suggestions.map((p) => {
+            const playerId = p.platform_user_id || p.id;
+            const currentRank = p.rank || "Unranked";
+
+            const rankMatch = currentRank.match(/^([A-Za-z\s]+\s[IVX]+)/)?.[1] || currentRank;
             const rankInfo = RANKS.find(r => r.fullName === rankMatch || r.name === rankMatch);
             const platInfo = PLATFORMS.find(pl => pl.id === p.platform);
             const platLogo = PLATFORM_LOGOS[p.platform];
+
             return (
               <div
-                key={p.platform_user_id || p.name}
+                key={playerId || p.name}
                 className="suggestion-item"
                 onClick={() => onSuggestionClick(p)}
+                style={{ display: "flex", alignItems: "center", gap: "10px" }}
               >
                 {/* Rank image ou icon */}
                 {rankInfo?.image
-                  ? <img src={rankInfo.image} alt={p.rank} style={{ width: 22, height: 22, objectFit: "contain" }} />
+                  ? <img src={rankInfo.image} alt={currentRank} style={{ width: 22, height: 22, objectFit: "contain" }} />
                   : <span>{rankInfo?.icon || "❓"}</span>
                 }
+
+                {/* Pseudo du joueur */}
                 <span style={{ fontWeight: 700 }}>{p.name}</span>
+
+                {/* Plateforme */}
                 <span className="suggestion-platform">
-                  {/* Platform logo ou icon */}
                   {platLogo
                     ? <img src={platLogo} alt={platInfo?.label || p.platform} style={{ width: 12, height: 12, objectFit: "contain", verticalAlign: "middle" }} />
                     : platInfo?.icon
                   }
                   {" "}{platInfo?.label || p.platform || "Unknown"}
                 </span>
+
+                {/* ID du joueur aligné tout à droite */}
+                <span style={{
+                  marginLeft: "auto",
+                  fontSize: "0.75rem",
+                  color: "var(--muted)",
+                  fontFamily: "monospace"
+                }}>
+                  {playerId}
+                </span>
+
+                {/* MMR (s'il existe) */}
                 {p.mmr && <span className="suggestion-mmr">{p.mmr} MMR</span>}
               </div>
             );

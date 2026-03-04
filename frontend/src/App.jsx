@@ -29,15 +29,15 @@ async function fetchRanksSequentially(players, delay = 10) {
 }
 
 export default function App() {
-  const [page,           setPage]           = useState("home");
-  const [selectedPlayer, setSelectedPlayer] = useState(null);
-  const [searchQuery,    setSearchQuery]    = useState("");
-  const [suggestions,    setSuggestions]    = useState([]);
-  const [loading,        setLoading]        = useState(false);
-  const [loadingPlayer,  setLoadingPlayer]  = useState(false);
-  const [refreshing,     setRefreshing]     = useState(false);
-  const [refreshResult,  setRefreshResult]  = useState(null);
-  const [history,        setHistory]        = useState(() => {
+  const [page,              setPage]             = useState("home");
+  const [selectedPlayer,    setSelectedPlayer]   = useState(null);
+  const [searchQuery,       setSearchQuery]      = useState("");
+  const [suggestions,       setSuggestions]      = useState([]);
+  const [loading,           setLoading]          = useState(false);
+  const [loadingPlayer,     setLoadingPlayer]    = useState(false);
+  const [refreshing,        setRefreshing]       = useState(false);
+  const [refreshResult,     setRefreshResult]    = useState(null);
+  const [history,           setHistory]          = useState(() => {
     try {
       return JSON.parse(sessionStorage.getItem("rl_history") || "[]");
     } catch {
@@ -45,7 +45,6 @@ export default function App() {
     }
   });
 
-  // Keep a ref to cancel in-flight rank fetches when query changes
   const [rankFetchId, setRankFetchId] = useState(0);
 
   useEffect(() => {
@@ -67,14 +66,14 @@ export default function App() {
           return;
         }
 
-        // Only keep what's actually displayed
-        const displayed = results.slice(0, 5);
-        setSuggestions(displayed);
+        // 1. On affiche directement toute la liste complète
+        setSuggestions(results);
 
-        // Then fetch ranks one by one with a small delay — only for displayed players
-        const rankMap = await fetchRanksSequentially(displayed, 60);
+        // 2. On fetch les rangs un par un sur cette liste complète (results)
+        const rankMap = await fetchRanksSequentially(results, 60);
         if (cancelled) return;
 
+        // 3. On met à jour l'affichage au fur et à mesure
         setSuggestions(prev =>
           prev.map(p => {
             const id = p.platform_user_id ?? p.id;
@@ -88,7 +87,10 @@ export default function App() {
           })
         );
       })
-      .catch(() => { if (!cancelled) setSuggestions([]); })
+      .catch((err) => {
+        console.error("Erreur recherche:", err);
+        if (!cancelled) setSuggestions([]);
+      })
       .finally(() => { if (!cancelled) setLoading(false); });
 
     return () => { cancelled = true; };
@@ -100,7 +102,6 @@ export default function App() {
   };
 
   const addToHistory = (player) => {
-    // Strip _openedAt before saving — it must always be fresh on open
     const { _openedAt, ...playerToSave } = player;
     setHistory((prev) => {
       const filtered = prev.filter(p => p.platform_user_id !== playerToSave.platform_user_id);
@@ -128,7 +129,6 @@ export default function App() {
     try {
       const platform_user_id = basicPlayer.platform_user_id ?? basicPlayer.id;
 
-      // Fetch rank & stats in parallel — both are optional (fallback gracefully)
       const [rankData, statsData] = await Promise.allSettled([
         getPlayerRank(platform_user_id),
         getPlayerCoreStats(platform_user_id),
@@ -143,17 +143,16 @@ export default function App() {
         platform:  basicPlayer.platform ?? "epic",
         rank:      rank?.full_rank ?? basicPlayer.rank ?? "Unranked",
         mmr:       rank?.mmr       ?? basicPlayer.mmr  ?? 0,
-        // Store a stable key so PlayerPage knows when to re-fetch
         _openedAt: Date.now(),
         coreStats: stats?.data ? {
-          shots:              stats.data.shots               ?? 0,
-          goals:              stats.data.goals               ?? 0,
-          saves:              stats.data.saves               ?? 0,
-          assists:            stats.data.assists             ?? 0,
-          score:              stats.data.score               ?? 0,
+          shots:              stats.data.shots              ?? 0,
+          goals:              stats.data.goals              ?? 0,
+          saves:              stats.data.saves              ?? 0,
+          assists:            stats.data.assists            ?? 0,
+          score:              stats.data.score              ?? 0,
           shootingPercentage: stats.data.shooting_percentage ?? 0,
-          demoInflicted:      stats.data.demo_inflicted      ?? 0,
-          demoTaken:          stats.data.demo_taken          ?? 0,
+          demoInflicted:      stats.data.demo_inflicted     ?? 0,
+          demoTaken:          stats.data.demo_taken         ?? 0,
         } : null,
       };
 
@@ -187,7 +186,7 @@ export default function App() {
         <nav>
           <div className="nav-logo" onClick={() => setPage("home")}>
             <span className="nav-logo-icon">🚀</span>
-            Rclstast
+            RLCLstats
           </div>
           <div className="nav-links">
             <div className={`nav-link ${page === "home"   ? "active" : ""}`} onClick={() => setPage("home")}>Home</div>
@@ -216,7 +215,6 @@ export default function App() {
                   onPlayerClick={openPlayer}
                 />
 
-              {/* ── Refresh Latest Games ── */}
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12, margin: "24px 0 0" }}>
                 <button
                   onClick={handleRefreshLatest}
