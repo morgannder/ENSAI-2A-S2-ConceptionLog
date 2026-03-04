@@ -64,3 +64,32 @@ def test_get_match_by_id_not_found():
     # THEN
     assert result is None
     MatchDAO().get_match_by_parameter.assert_called_once_with("id", "match_inexistant")
+
+
+def test_get_match_by_match_team_id_retourne_match():
+    service = MatchService()
+    match = MagicMock(spec=Match)
+    service.match_dao.get_match_by_match_team_id = MagicMock(return_value=match)
+
+    result = service.get_match_by_match_team_id(42)
+
+    assert result == match
+    service.match_dao.get_match_by_match_team_id.assert_called_once_with(42)
+
+
+def test_get_match_by_match_team_id_retourne_none_si_non_trouve():
+    service = MatchService()
+    service.match_dao.get_match_by_match_team_id = MagicMock(return_value=None)
+
+    result = service.get_match_by_match_team_id(99)
+
+    assert result is None
+
+
+def test_get_match_by_match_team_id_retourne_none_si_dao_retourne_falsy():
+    service = MatchService()
+    service.match_dao.get_match_by_match_team_id = MagicMock(return_value=False)
+
+    result = service.get_match_by_match_team_id(1)
+
+    assert result is None

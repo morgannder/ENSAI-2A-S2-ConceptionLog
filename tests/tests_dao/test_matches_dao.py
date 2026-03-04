@@ -49,6 +49,18 @@ def match_dao(mock_connection):
 
 
 @pytest.fixture
+def match_row():
+    return {
+        "id": "match-abc",
+        "playlist_id": "ranked-standard",
+        "season": 14,
+        "duration": 300,
+        "overtime": False,
+        "date_upload": "2024-01-15",
+    }
+
+
+@pytest.fixture
 def sample_match():
     """Fixture pour créer un match exemple"""
     match = Mock(spec=Match)
@@ -243,3 +255,37 @@ class TestMatchDAOEdgeCases:
         assert result is not None
         assert len(result) == 10
         assert all(isinstance(m, Match) for m in result)
+
+
+class TestGetMatchByMatchTeamId:
+    def test_retourne_match_quand_trouve(self, match_dao, mock_cursor, match_row):
+        mock_cursor.fetchone.return_value = match_row
+
+        result = match_dao.get_match_by_match_team_id(42)
+
+        assert result is not None
+        assert isinstance(result, Match)
+        assert result.id == match_row["id"]
+
+    def test_retourne_none_si_non_trouve(self, match_dao, mock_cursor):
+        mock_cursor.fetchone.return_value = None
+
+        result = match_dao.get_match_by_match_team_id(42)
+
+        assert result is None
+
+    def test_leve_type_error_si_pas_entier(self, match_dao):
+        with pytest.raises(TypeError, match="integer"):
+            match_dao.get_match_by_match_team_id("42")
+
+    def test_leve_type_error_si_float(self, match_dao):
+        with pytest.raises(TypeError, match="integer"):
+            match_dao.get_match_by_match_team_id(42.0)
+
+    def test_requete_contient_match_team_id(self, match_dao, mock_cursor, match_row):
+        mock_cursor.fetchone.return_value = match_row
+
+        match_dao.get_match_by_match_team_id(42)
+
+        params = mock_cursor.execute.call_args[0][1]
+        assert params == (42,)

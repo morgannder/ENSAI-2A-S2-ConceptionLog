@@ -52,6 +52,6 @@ class RanksService(metaclass=Singleton):
         return {
             "tier": rank.tier,
             "division": rank.division,
-            "name": rank.display_name,  # "Bronze I" via property
-            "full_name": rank.name,  # "Bronze I Division 1" depuis la DB
+            "name": rank.display_name,  # "Bronze I"
+            "full_name": rank.name,  # "Bronze I Division 1"
         }
