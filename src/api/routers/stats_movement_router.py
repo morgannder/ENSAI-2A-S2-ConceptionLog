@@ -1,5 +1,10 @@
 from fastapi import APIRouter, HTTPException, status
 
+from src.api.schemas.examples.movement_examples import (
+    MOVEMENT_AGGREGATED_BY_MATCH_DATA_EXAMPLE,
+    MOVEMENT_AGGREGATED_BY_RANK_DATA_EXAMPLE,
+    MOVEMENT_AGGREGATED_PLAYER_DATA_EXAMPLE,
+)
 from src.api.schemas.stats_response import (
     StatsByPlayerMatchResponse,
     StatsByPlayerResponse,
@@ -25,6 +30,17 @@ match_service = MatchService()
 @router.get(
     "/rank/{rank}",
     summary="Récupère les statistiques de movement moyennes par rang",
+    openapi_extra={
+        "responses": {
+            "200": {
+                "content": {
+                    "application/json": {
+                        "example": MOVEMENT_AGGREGATED_BY_RANK_DATA_EXAMPLE
+                    }
+                }
+            }
+        }
+    },
 )
 def get_rank_statistics(
     rank_name: Ranks_enum,
@@ -86,6 +102,17 @@ def get_rank_statistics(
 @router.get(
     "/player/{player_id}/averagemovement",
     summary="Récupère les statistiques de movement moyennes d'un joueur",
+    openapi_extra={
+        "responses": {
+            "200": {
+                "content": {
+                    "application/json": {
+                        "example": MOVEMENT_AGGREGATED_PLAYER_DATA_EXAMPLE
+                    }
+                }
+            }
+        }
+    },
 )
 def get_player_average_statistics(
     platform_id: str,
@@ -153,6 +180,17 @@ def get_player_average_statistics(
 @router.get(
     "/player/{player_id}/match/{match_id}",
     summary="Récupère les statistiques de movement d'un joueur dans un match",
+    openapi_extra={
+        "responses": {
+            "200": {
+                "content": {
+                    "application/json": {
+                        "example": MOVEMENT_AGGREGATED_BY_MATCH_DATA_EXAMPLE
+                    }
+                }
+            }
+        }
+    },
 )
 def get_player_match_statistics(
     platform_id: str,

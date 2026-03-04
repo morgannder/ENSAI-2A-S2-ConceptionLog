@@ -1,6 +1,10 @@
-# src/api/routes/stats_boost_router.py
 from fastapi import APIRouter, HTTPException, status
 
+from src.api.schemas.examples.boost_examples import (
+    BOOST_AGGREGATED_BY_MATCH_DATA_EXAMPLE,
+    BOOST_AGGREGATED_BY_RANK_DATA_EXAMPLE,
+    BOOST_AGGREGATED_PLAYER_DATA_EXAMPLE,
+)
 from src.api.schemas.stats_response import (
     StatsByPlayerMatchResponse,
     StatsByPlayerResponse,
@@ -27,6 +31,17 @@ match_service = MatchService()
     "/rank/{rank}",
     response_model=StatsByRankResponse,
     summary="Récupère les statistiques de boost moyennes par rang",
+    openapi_extra={
+        "responses": {
+            "200": {
+                "content": {
+                    "application/json": {
+                        "example": BOOST_AGGREGATED_BY_RANK_DATA_EXAMPLE
+                    }
+                }
+            }
+        }
+    },
 )
 def get_rank_statistics(
     rank_name: Ranks_enum,
@@ -87,6 +102,17 @@ def get_rank_statistics(
     "/player/{platform_id}/averageboost",
     response_model=StatsByPlayerResponse,
     summary="Récupère les statistiques de boost moyennes d'un joueur",
+    openapi_extra={
+        "responses": {
+            "200": {
+                "content": {
+                    "application/json": {
+                        "example": BOOST_AGGREGATED_PLAYER_DATA_EXAMPLE
+                    }
+                }
+            }
+        }
+    },
 )
 def get_player_average_statistics(
     platform_id: str,
@@ -154,6 +180,17 @@ def get_player_average_statistics(
     "/player/{platform_id}/match/{match_id}",
     response_model=StatsByPlayerMatchResponse,
     summary="Récupère les statistiques de boost d'un joueur dans un match",
+    openapi_extra={
+        "responses": {
+            "200": {
+                "content": {
+                    "application/json": {
+                        "example": BOOST_AGGREGATED_BY_MATCH_DATA_EXAMPLE
+                    }
+                }
+            }
+        }
+    },
 )
 def get_player_match_statistics(
     platform_id: str,

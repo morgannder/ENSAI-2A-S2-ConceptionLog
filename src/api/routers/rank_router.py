@@ -13,6 +13,22 @@ player_service = PlayerService()
 @router.get(
     "/player/{platform_id}/rank",
     summary="Récupère le rang d'un joueur",
+    openapi_extra={
+        "responses": {
+            "200": {
+                "content": {
+                    "application/json": {
+                        "example": {
+                            "player_name": "name",
+                            "platform_id": "id",
+                            "rank": "Diamond II",
+                            "full_rank": "Diamond II Division 3",
+                        }
+                    }
+                }
+            }
+        }
+    },
 )
 def get_player_rank(platform_id: str):
     """

@@ -1,5 +1,10 @@
 from fastapi import APIRouter, HTTPException, status
 
+from src.api.schemas.examples.core_examples import (
+    CORE_AGGREGATED_BY_MATCH_DATA_EXAMPLE,
+    CORE_AGGREGATED_BY_RANK_DATA_EXAMPLE,
+    CORE_AGGREGATED_PLAYER_DATA_EXAMPLE,
+)
 from src.api.schemas.stats_response import (
     StatsByPlayerMatchResponse,
     StatsByPlayerResponse,
@@ -26,7 +31,17 @@ player_service = PlayerService()
     "/average/{rank}",
     response_model=StatsByRankResponse,
     summary="Récupère les statistiques Core moyennes par rang",
-    description="Retourne des statistiques Core moyennes pour un rang donné",
+    openapi_extra={
+        "responses": {
+            "200": {
+                "content": {
+                    "application/json": {
+                        "example": CORE_AGGREGATED_BY_RANK_DATA_EXAMPLE
+                    }
+                }
+            }
+        }
+    },
 )
 def get_average_stats_core_by_rank(
     rank_name: Ranks_enum,
@@ -87,6 +102,15 @@ def get_average_stats_core_by_rank(
     "/player/{player_id}/averagecore",
     response_model=StatsByPlayerResponse,
     summary="Récupère les statistiques core moyennes d'un joueur",
+    openapi_extra={
+        "responses": {
+            "200": {
+                "content": {
+                    "application/json": {"example": CORE_AGGREGATED_PLAYER_DATA_EXAMPLE}
+                }
+            }
+        }
+    },
 )
 def get_player_average_statistics(
     platform_id: str,
@@ -152,6 +176,17 @@ def get_player_average_statistics(
     "/player/{player_id}/match/{match_id}",
     response_model=StatsByPlayerMatchResponse,
     summary="Récupère les statistiques core d'un joueur dans un match",
+    openapi_extra={
+        "responses": {
+            "200": {
+                "content": {
+                    "application/json": {
+                        "example": CORE_AGGREGATED_BY_MATCH_DATA_EXAMPLE
+                    }
+                }
+            }
+        }
+    },
 )
 def get_player_match_statistics(
     platform_id: str,
