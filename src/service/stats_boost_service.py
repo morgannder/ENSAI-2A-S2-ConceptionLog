@@ -13,7 +13,7 @@ class StatBoostService:
         self.stats_boost_dao = StatBoostDAO()
 
     def get_average_stats_boost_by_rank(
-        self, rank: Ranks
+        self, rank: Ranks, game_mode: str | None = None
     ) -> StatsBoostAggregatedDTO | None:
         """
         Récupère les statistiques moyennes de boost pour un rang donné.
@@ -22,23 +22,19 @@ class StatBoostService:
         ----------
         rank : Ranks
             Le rang pour lequel on veut obtenir les statistiques de boost.
+        game_mode : str | None, optional
+            Le mode de jeu sur lequel filtrer, par défaut None (tous les modes).
 
         Returns
         -------
         StatsBoostAggregatedDTO | None
             DTO contenant les statistiques moyennes de boost pour ce rang,
             ou None si aucune statistique n'est disponible.
-
-        Notes
-        -----
-        Les statistiques incluent typiquement les moyennes de boost collecté,
-        boost utilisé, et autres métriques liées au boost pour tous les joueurs
-        de ce rang.
         """
-        return self.stats_boost_dao.get_average_stats_boost_per_rank(rank)
+        return self.stats_boost_dao.get_average_stats_boost_per_rank(rank, game_mode)
 
     def get_player_match_boost_stats(
-        self, player: Player, match: Match
+        self, player: Player, match: Match, game_mode: str | None = None
     ) -> StatsBoost | None:
         """
         Récupère les statistiques de boost d'un joueur pour un match spécifique.
@@ -49,6 +45,8 @@ class StatBoostService:
             Le joueur dont on veut récupérer les statistiques de boost.
         match : Match
             Le match pour lequel on veut obtenir les statistiques.
+        game_mode : str | None, optional
+            Le mode de jeu sur lequel filtrer, par défaut None (tous les modes).
 
         Returns
         -------
@@ -67,10 +65,12 @@ class StatBoostService:
         if not match or not match.id:
             raise ValueError("Le match doit avoir un ID valide")
 
-        return self.stats_boost_dao.get_player_match_stats_boost(player, match)
+        return self.stats_boost_dao.get_player_match_stats_boost(
+            player, match, game_mode
+        )
 
     def get_player_average_boost_stats(
-        self, player: Player
+        self, player: Player, game_mode: str | None = None
     ) -> StatsBoostAggregatedDTO | None:
         """
         Récupère les statistiques moyennes de boost d'un joueur sur tous ses matchs.
@@ -79,6 +79,8 @@ class StatBoostService:
         ----------
         player : Player
             Le joueur dont on veut récupérer les statistiques moyennes de boost.
+        game_mode : str | None, optional
+            Le mode de jeu sur lequel filtrer, par défaut None (tous les modes).
 
         Returns
         -------
@@ -94,4 +96,4 @@ class StatBoostService:
         if not player or not player.id:
             raise ValueError("Le joueur doit avoir un ID valide")
 
-        return self.stats_boost_dao.get_player_average_stats_boost(player)
+        return self.stats_boost_dao.get_player_average_stats_boost(player, game_mode)

@@ -2,8 +2,11 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: rocket-app
+  namespace: user-morgannder
 spec:
   replicas: 1
+  strategy:
+    type: Recreate
   selector:
     matchLabels:
       app: rocket-league
@@ -18,17 +21,14 @@ spec:
         imagePullPolicy: Always
         ports:
         - containerPort: 8000
-        # Configuration des variables d'environnement
         envFrom:
         - configMapRef:
             name: rocket-config
         - secretRef:
             name: rocket-secrets
-        # Montage du volume dans le conteneur
         volumeMounts:
         - name: db-storage
           mountPath: /app/src/database
-      # Définition du volume persistant au niveau du Pod
       volumes:
       - name: db-storage
         persistentVolumeClaim:

@@ -1,3 +1,4 @@
+from datetime import datetime
 from enum import Enum
 
 from pydantic import BaseModel
@@ -14,6 +15,27 @@ from src.dto.stats_positioning_dto import (
 )
 
 
+class MatchResponse(BaseModel):
+    id: str
+    playlist_id: str
+    season: int
+    duration: int
+    overtime: int
+    date_upload: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class MatchTeamResponse(BaseModel):
+    id: int
+    match_id: str
+    color: str
+    score: int
+    possession_time: float
+    time_in_side: float
+
+
 class StatsType(str, Enum):
     CORE = "core"
     BOOST = "boost"
@@ -21,7 +43,7 @@ class StatsType(str, Enum):
     POSITIONING = "positioning"
 
 
-# Union de tous les DTOs (individuels et agrégés) avec |
+# Union de tous les DTOs (individuels et agrégés) avec "|"
 StatsDataDTO = (
     StatsCoreDTO
     | StatsCoreAggregatedDTO
@@ -35,12 +57,14 @@ StatsDataDTO = (
 
 
 class StatsByRankResponse(BaseModel):
+    game_mode: str | None = None
     rank: str
     stats_type: StatsType
     data: StatsDataDTO | None = None
 
 
 class StatsByPlayerMatchResponse(BaseModel):
+    game_mode: str | None = None
     platform_id: str
     match_id: str
     stats_type: StatsType
@@ -48,6 +72,7 @@ class StatsByPlayerMatchResponse(BaseModel):
 
 
 class StatsByPlayerResponse(BaseModel):
+    game_mode: str | None = None
     platform_id: str
     stats_type: StatsType
     data: StatsDataDTO | None = None
@@ -57,15 +82,19 @@ class StatsByPlayerResponse(BaseModel):
 class StatsResponseFactory:
     @staticmethod
     def create_rank_response(
+        game_mode: str,
         rank: str,
         stats_type: StatsType,
         data: StatsDataDTO,
     ) -> StatsByRankResponse:
         """Crée une réponse de statistiques par rang."""
-        return StatsByRankResponse(rank=rank, stats_type=stats_type, data=data)
+        return StatsByRankResponse(
+            game_mode=game_mode, rank=rank, stats_type=stats_type, data=data
+        )
 
     @staticmethod
     def create_player_match_response(
+        game_mode: str,
         platform_id: str,
         match_id: str,
         stats_type: StatsType,
@@ -73,16 +102,24 @@ class StatsResponseFactory:
     ) -> StatsByPlayerMatchResponse:
         """Crée une réponse de statistiques par joueur et match."""
         return StatsByPlayerMatchResponse(
-            platform_id=platform_id, match_id=match_id, stats_type=stats_type, data=data
+            game_mode=game_mode,
+            platform_id=platform_id,
+            match_id=match_id,
+            stats_type=stats_type,
+            data=data,
         )
 
     @staticmethod
     def create_player_response(
+        game_mode: str,
         platform_id: str,
         stats_type: StatsType,
         data: StatsDataDTO,
     ) -> StatsByPlayerResponse:
         """Crée une réponse de statistiques par joueur."""
         return StatsByPlayerResponse(
-            platform_id=platform_id, stats_type=stats_type, data=data
+            game_mode=game_mode,
+            platform_id=platform_id,
+            stats_type=stats_type,
+            data=data,
         )

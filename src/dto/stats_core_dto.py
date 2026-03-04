@@ -21,7 +21,19 @@ class StatsCoreDTO(BaseModel):
 
     @classmethod
     def from_business_object(cls, bo: StatsCore) -> "StatsCoreDTO":
-        """Convertit un Business Object StatsCore en DTO"""
+        """
+        Convertit un Business Object StatsCore en DTO.
+
+        Parameters
+        ----------
+        bo : StatsCore
+            L'objet métier StatsCore à convertir.
+
+        Returns
+        -------
+        StatsCoreDTO
+            Le DTO correspondant à l'objet métier fourni.
+        """
         return cls(
             participation_id=bo._participation_id,
             shots=bo.shots,

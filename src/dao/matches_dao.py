@@ -1,7 +1,6 @@
-from ..models.matches import Match
-from ..models.players import Player
-from ..utils.singleton import Singleton
-from .db_connection import DBConnection
+from src.dao.db_connection import DBConnection
+from src.models.matches import Match
+from src.utils.singleton import Singleton
 
 
 class MatchDAO(metaclass=Singleton):
@@ -17,43 +16,30 @@ class MatchDAO(metaclass=Singleton):
     def __init__(self):
         self.db_connector = DBConnection()
 
-    def create_match(self, match: Match) -> bool:
-        connection = self.db_connector.connection
-        with connection:
-            cursor = connection.cursor()
-            cursor.execute(
-                """
-                    SELECT 1
-                    FROM matches
-                    WHERE id = ?
-                    """,
-                (match.id,),
-            )
-
-            res = cursor.fetchone()
-            if res:
-                return False
-
-            cursor.execute(
-                """
-                    INSERT INTO matches (id, playlist_id, season, duration, overtime, date_upload)
-                    VALUES (?, ?, ?, ?, ?, ?)
-                    """,
-                (
-                    match.id,
-                    match.playlist_id,
-                    match.season,
-                    match.duration,
-                    match.overtime,
-                    match.date_upload,
-                ),
-            )
-
-            return True
-
     def get_match_by_parameter(
         self, parameter_name: str, parameter_value
     ) -> list[Match] | None:
+        """
+        Récupère les matchs correspondant à un critère donné.
+
+        Parameters
+        ----------
+        parameter_name : str
+            Le nom de la colonne sur laquelle filtrer. Doit faire partie
+            des colonnes autorisées (allowed_columns).
+        parameter_value :
+            La valeur recherchée pour le paramètre spécifié.
+
+        Returns
+        -------
+        list[Match] | None
+            La liste des matchs correspondants, ou None si aucun n'est trouvé.
+
+        Raises
+        ------
+        ValueError
+            Si parameter_name ne fait pas partie des colonnes autorisées.
+        """
         if parameter_name not in self.allowed_columns:
             raise ValueError("Invalid column name")
 
@@ -83,87 +69,45 @@ class MatchDAO(metaclass=Singleton):
                 )
             return list_match
 
-    def update_match(self, match: Match):
-        pass
+    def get_match_by_match_team_id(self, match_team_id: int) -> Match | None:
+        """
+        Récupère le match pour un match_team_id donnée
 
-    def delete_match(self, match: Match):
-        connection = self.db_connector.connection
-        with connection:
-            cursor = connection.cursor()
-            cursor.execute(
-                """
-                    DELETE FROM matches
-                    WHERE id = ?
-                    """,
-                (match.id,),
-            )
+        Parameters
+        ----------
+        match_team_id: int
+            L'id du match_team
 
-    def get_20_recent_matches(self, nb_match=20) -> list[Match] | None:
-        connection = self.db_connector.connection
-        with connection:
-            cursor = connection.cursor()
-            cursor.execute(
-                """
-                    SELECT *
-                    FROM matches
-                    ORDER BY date_upload DESC
-                    LIMIT ?
-                    """,
-                (nb_match,),
-            )
-        res = cursor.fetchall()
-        if not res:
-            return None
-        list_match = []
-        for match in res:
-            list_match.append(
-                Match(
-                    match["id"],
-                    match["playlist_id"],
-                    match["season"],
-                    match["duration"],
-                    match["overtime"],
-                    match["date_upload"],
-                )
-            )
-        return list_match
+        Returns
+        -------
+        Match | None
+            Le match correspondant, ou None si aucun n'est trouvé.
 
-    def get_player_last_matches(
-        self, player: Player, nb_match: int = 20
-    ) -> list[Match] | None:
+        Raises
+        ------
+        ValueError
+            Si match_team_id n'est pas un entier'.
+        """
+        if not isinstance(match_team_id, int):
+            raise TypeError("Match_team_id has to be an integer")
         query = """
             SELECT m.*
             FROM matches m
             JOIN match_teams mt ON mt.match_id = m.id
-            JOIN match_participation mp ON mp.match_team_id = mt.id
-            JOIN players p ON p.id = mp.player_id
-            WHERE p.id = ?
-            ORDER BY m.date_upload DESC
-            LIMIT ?
+            WHERE mt.id = ?
             """
         connection = self.db_connector.connection
         with connection:
             cursor = connection.cursor()
-            cursor.execute(
-                query,
-                (
-                    player.id,
-                    nb_match,
-                ),
-            )
-            res = cursor.fetchall()
+            cursor.execute(query, (match_team_id,))
+            res = cursor.fetchone()
             if not res:
                 return None
-            list_match = []
-            for match in res:
-                list_match.append(
-                    Match(
-                        match["id"],
-                        match["playlist_id"],
-                        match["season"],
-                        match["duration"],
-                        match["overtime"],
-                        match["date_upload"],
-                    )
-                )
-            return list_match
+            return Match(
+                res["id"],
+                res["playlist_id"],
+                res["season"],
+                res["duration"],
+                res["overtime"],
+                res["date_upload"],
+            )

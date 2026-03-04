@@ -1,4 +1,8 @@
 class Match:
+    """
+    Représente un match Rocket League.
+    """
+
     def __init__(
         self,
         id: str,
@@ -8,6 +12,25 @@ class Match:
         overtime: bool,
         date_upload: str,
     ):
+        """
+        Initialise un match.
+
+        Parameters
+        ----------
+        id : str
+            Identifiant unique du match.
+        playlist_id : str
+            Identifiant de la playlist (mode de jeu) du match.
+        season : int
+            Numéro de la saison durant laquelle le match a été joué.
+        duration : int
+            Durée du match en secondes.
+        overtime : bool
+            Indique si le match s'est terminé en prolongation.
+        date_upload : str
+            Date d'upload du replay du match.
+        """
+
         self._id = id
         self._playlist_id = playlist_id
         self._season = season

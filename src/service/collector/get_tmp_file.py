@@ -8,7 +8,7 @@ DUMP_DIR = BASE_DIR / "src" / "database" / "temp" / "file-dump-tmp"
 
 def list_files_to_import():
     """
-    List files in file-dump-tmp for the importer
+    établi la liste des fichiers dans file-dump-tmp pour l'importation en DB
     """
 
     if not DUMP_DIR.exists():
@@ -17,8 +17,3 @@ def list_files_to_import():
 
     files = list(DUMP_DIR.glob("*.json"))
     return [str(f) for f in files]
-
-
-if __name__ == "__main__":
-    found_files = list_files_to_import()
-    print(f"📂 {len(found_files)} fichiers trouvés dans le dump.")

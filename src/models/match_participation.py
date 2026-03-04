@@ -1,4 +1,8 @@
 class MatchParticipation:
+    """
+    Représente la participation d'un joueur à un match.
+    """
+
     def __init__(
         self,
         id: int,
@@ -11,6 +15,31 @@ class MatchParticipation:
         start_time: float,
         end_time: float,
     ):
+        """
+        Initialise une participation de joueur à un match.
+
+        Parameters
+        ----------
+        id : int
+            Identifiant unique de la participation.
+        match_team_id : int
+            Identifiant de l'équipe dans le match.
+        player_id : int
+            Identifiant du joueur.
+        rank_id : int
+            Identifiant du rang du joueur au moment du match.
+        car_id : int
+            Identifiant de la voiture utilisée par le joueur.
+        car_name : str
+            Nom de la voiture utilisée par le joueur.
+        mvp : bool
+            Indique si le joueur a été élu MVP du match.
+        start_time : float
+            Timestamp de début de participation au match.
+        end_time : float
+            Timestamp de fin de participation au match.
+        """
+
         self._id = id
         self._match_team_id = match_team_id
         self._player_id = player_id

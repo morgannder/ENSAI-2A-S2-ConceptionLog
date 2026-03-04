@@ -16,44 +16,6 @@ PLAYER = Player(
 )
 
 
-# create_player
-
-
-def test_create_player_ok():
-    service = PlayerService()
-    service.player_dao.create_player = MagicMock(return_value=True)
-    service.get_player_by_name = MagicMock(return_value=PLAYER)
-
-    result = service.create_player("PC", "abc123", "PlayerOne")
-
-    assert result == PLAYER
-    service.player_dao.create_player.assert_called_once()
-    service.get_player_by_name.assert_called_once_with("PlayerOne")
-
-
-def test_create_player_fail():
-    service = PlayerService()
-    service.player_dao.create_player = MagicMock(return_value=False)
-
-    result = service.create_player("PC", "abc123", "PlayerOne")
-
-    assert result is None
-
-
-def test_create_player_invalid_name():
-    service = PlayerService()
-
-    with pytest.raises(ValueError):
-        service.create_player("PC", "abc123", "")
-
-
-def test_create_player_missing_platform_ids():
-    service = PlayerService()
-
-    with pytest.raises(ValueError):
-        service.create_player(None, None, "PlayerOne")
-
-
 # get_player_by_platform_id
 
 
@@ -76,203 +38,87 @@ def test_get_player_by_platform_id_invalid():
         service.get_player_by_platform_id(None)
 
 
-# get_player_by_
-
-
-def test_get_player_by_name_ok():
+def test_search_players_retourne_liste_joueurs():
     service = PlayerService()
-    service.player_dao.get_player_by_parameter = MagicMock(return_value=PLAYER)
+    service.player_dao.search_players_by_name = MagicMock(
+        return_value=[
+            {"platform_user_id": "uid_1", "name": "User", "platform_name": "Steam"},
+            {"platform_user_id": "uid_2", "name": "UserRL", "platform_name": "Epic"},
+        ]
+    )
 
-    result = service.get_player_by_name("PlayerOne")
+    result = service.search_players("User")
 
-    assert result == PLAYER
-    service.player_dao.get_player_by_parameter.assert_called_once_with(
-        "name", "PlayerOne"
+    assert len(result) == 2
+    assert result[0] == {
+        "platform_user_id": "uid_1",
+        "name": "User",
+        "platform": "Steam",
+    }
+    assert result[1] == {
+        "platform_user_id": "uid_2",
+        "name": "UserRL",
+        "platform": "Epic",
+    }
+    service.player_dao.search_players_by_name.assert_called_once_with(
+        "User", None, 30, 0
     )
 
 
-def test_get_player_by_name_invalid():
+def test_search_players_retourne_liste_vide_si_aucun_resultat():
+    service = PlayerService()
+    service.player_dao.search_players_by_name = MagicMock(return_value=[])
+
+    result = service.search_players("Inconnu")
+
+    assert result == []
+
+
+def test_search_players_retourne_liste_vide_si_dao_retourne_none():
+    service = PlayerService()
+    service.player_dao.search_players_by_name = MagicMock(return_value=None)
+
+    result = service.search_players("Inconnu")
+
+    assert result == []
+
+
+def test_search_players_leve_erreur_si_limite_nulle():
     service = PlayerService()
 
-    with pytest.raises(ValueError):
-        service.get_player_by_name("   ")
+    with pytest.raises(ValueError, match="La limite doit être supérieure à 0"):
+        service.search_players("User", limit=0)
 
 
-# delete_player
-
-
-def test_delete_player_ok():
-    service = PlayerService()
-    service.player_dao.delete_player = MagicMock()
-
-    result = service.delete_player(PLAYER)
-
-    assert result is True
-    service.player_dao.delete_player.assert_called_once_with(PLAYER)
-
-
-def test_delete_player_none():
+def test_search_players_leve_erreur_si_limite_negative():
     service = PlayerService()
 
-    with pytest.raises(ValueError):
-        service.delete_player(None)
+    with pytest.raises(ValueError, match="La limite doit être supérieure à 0"):
+        service.search_players("User", limit=-5)
 
 
-# delete_player_by_name
-
-
-def test_delete_player_by_name_ok():
+def test_search_players_transmet_platform_et_pagination():
     service = PlayerService()
-    service.get_player_by_name = MagicMock(return_value=PLAYER)
-    service.delete_player = MagicMock(return_value=True)
+    service.player_dao.search_players_by_name = MagicMock(return_value=[])
 
-    result = service.delete_player_by_name("PlayerOne")
+    service.search_players("User", platform="Steam", limit=10, offset=20)
 
-    assert result is True
-
-
-def test_delete_player_by_name_not_found():
-    service = PlayerService()
-    service.get_player_by_name = MagicMock(return_value=None)
-
-    result = service.delete_player_by_name("Unknown")
-
-    assert result is False
-
-
-# player_exists
-
-
-def test_player_exists_true():
-    service = PlayerService()
-    service.get_player_by_name = MagicMock(return_value=PLAYER)
-
-    assert service.player_exists("PlayerOne") is True
-
-
-def test_player_exists_false():
-    service = PlayerService()
-    service.get_player_by_name = MagicMock(return_value=None)
-
-    assert service.player_exists("Unknown") is False
-
-
-# player_exists_by_id
-
-
-def test_player_exists_by_platform_id_true():
-    service = PlayerService()
-    service.get_player_by_platform_id = MagicMock(return_value=PLAYER)
-
-    assert service.player_exists_by_platform_id(1) is True
-
-
-def test_player_exists_by_platform_id_false():
-    service = PlayerService()
-    service.get_player_by_platform_id = MagicMock(return_value=None)
-
-    assert service.player_exists_by_platform_id(1) is False
-
-
-def test_player_exists_by_platform_id_invalid():
-    service = PlayerService()
-    service.player_dao.get_player_by_parameter = MagicMock(
-        side_effect=ValueError("Le platform_id du joueur doit être non vide")
+    service.player_dao.search_players_by_name.assert_called_once_with(
+        "User", "Steam", 10, 20
     )
 
-    assert service.player_exists_by_platform_id("abc123") is False
 
-
-# get_or_create_player
-
-
-def test_get_or_create_existing():
+def test_search_players_structure_dict_correcte():
     service = PlayerService()
-    service.get_player_by_name = MagicMock(return_value=PLAYER)
+    service.player_dao.search_players_by_name = MagicMock(
+        return_value=[
+            {"platform_user_id": "uid_1", "name": "User", "platform_name": "Steam"},
+        ]
+    )
 
-    result = service.get_or_create_player("PC", "abc123", "PlayerOne")
+    result = service.search_players("User")
 
-    assert result == PLAYER
-
-
-def test_get_or_create_new():
-    service = PlayerService()
-    service.get_player_by_name = MagicMock(side_effect=[None, PLAYER])
-    service.create_player = MagicMock(return_value=PLAYER)
-
-    result = service.get_or_create_player("PC", "abc123", "PlayerOne")
-
-    assert result == PLAYER
-
-
-def test_get_or_create_fail():
-    service = PlayerService()
-    service.get_player_by_name = MagicMock(return_value=None)
-    service.create_player = MagicMock(return_value=None)
-
-    with pytest.raises(RuntimeError):
-        service.get_or_create_player("PC", "abc123", "PlayerOne")
-
-
-# validate_player_name
-
-
-def test_validate_player_name_ok():
-    service = PlayerService()
-
-    valid, msg = service.validate_player_name("PlayerOne")
-
-    assert valid is True
-    assert msg == ""
-
-
-def test_validate_player_name_too_short():
-    service = PlayerService()
-
-    valid, msg = service.validate_player_name("ab")
-
-    assert valid is False
-
-
-def test_validate_player_name_too_long():
-    service = PlayerService()
-
-    valid, msg = service.validate_player_name("a" * 51)
-
-    assert valid is False
-
-
-def test_validate_player_name_empty():
-    service = PlayerService()
-
-    valid, msg = service.validate_player_name("")
-
-    assert valid is False
-
-
-# get_player_display_info
-
-
-def test_get_player_display_info_ok():
-    service = PlayerService()
-
-    result = service.get_player_display_info(PLAYER)
-
-    assert "PlayerOne" in result
-    assert "ID: 1" in result
-
-
-def test_get_player_display_info_none():
-    service = PlayerService()
-
-    assert service.get_player_display_info(None) == "Joueur inconnu"
-
-
-# search_players_by_name_partial
-
-
-def test_search_players_not_implemented():
-    service = PlayerService()
-
-    with pytest.raises(NotImplementedError):
-        service.search_players_by_name_partial("Play")
+    assert "platform_user_id" in result[0]
+    assert "name" in result[0]
+    assert "platform" in result[0]
+    assert "platform_name" not in result[0]

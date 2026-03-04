@@ -12,14 +12,28 @@ class StatBoostDAO(metaclass=Singleton):
         self.db_connector = DBConnection()
 
     def get_average_stats_boost_per_rank(
-        self, rank: Ranks
+        self, rank: Ranks, game_mode: str | None = None
     ) -> StatsBoostAggregatedDTO | None:
         """
-        Récupère les stats moyennes boost pour un rang donné.
-        Retourne un DTO car ce sont des données agrégées.
+        Récupère les statistiques de boost moyennes pour un rang donné.
+
+        Parameters
+        ----------
+        rank : Ranks
+            Le rang pour lequel on souhaite obtenir les statistiques moyennes.
+        game_mode : str | None, optional
+            Le mode de jeu sur lequel filtrer, par défaut None (tous les modes).
+
+        Returns
+        -------
+        StatsBoostAggregatedDTO | None
+            Un DTO contenant les moyennes de toutes les statistiques de boost
+            pour le rang spécifié, ou None si aucune donnée n'est trouvée.
         """
         rank_name = rank.name
-        query = """
+        game_mode_filter = "AND m.playlist_id = ?" if game_mode else ""
+
+        query = f"""
                 SELECT
                     ROUND(AVG(sb.boost_per_minute), 2) AS avg_boost_per_minute,
                     ROUND(AVG(sb.boost_consumed_per_minute), 2) AS avg_boost_consumed_per_minute,
@@ -49,10 +63,11 @@ class StatBoostDAO(metaclass=Singleton):
                     ROUND(AVG(sb.percent_boost_25_50), 2) AS avg_percent_boost_25_50,
                     ROUND(AVG(sb.percent_boost_50_75), 2) AS avg_percent_boost_50_75,
                     ROUND(AVG(sb.percent_boost_75_100), 2) AS avg_percent_boost_75_100
-
                 FROM stats_boost sb
                 INNER JOIN match_participation mp ON sb.participation_id = mp.id
                 INNER JOIN ranks r ON mp.rank_id = r.id
+                INNER JOIN match_teams mt ON mt.id = mp.match_team_id
+                INNER JOIN matches m ON m.id = mt.match_id
                 WHERE CASE
                     WHEN r.tier BETWEEN 1 AND 3 THEN 'Bronze'
                     WHEN r.tier BETWEEN 4 AND 6 THEN 'Silver'
@@ -64,13 +79,17 @@ class StatBoostDAO(metaclass=Singleton):
                     WHEN r.tier = 22 THEN 'Supersonic Legend'
                     ELSE 'Unknown'
                 END = ?
+                {game_mode_filter}
             """
+
+        params = (rank_name, game_mode) if game_mode else (rank_name,)
+
         connection = self.db_connector.connection
         with connection:
             cursor = connection.cursor()
-            cursor.execute(query, (rank_name,))
+            cursor.execute(query, params)
             res = cursor.fetchone()
-            if not res:
+            if not res or res["avg_boost_per_minute"] is None:
                 return None
 
             return StatsBoostAggregatedDTO(
@@ -105,13 +124,26 @@ class StatBoostDAO(metaclass=Singleton):
             )
 
     def get_player_match_stats_boost(
-        self, player: Player, match: Match
+        self, player: Player, match: Match, game_mode: str | None = None
     ) -> StatsBoost | None:
         """
-        Récupère les stats boost d'un match spécifique.
-        Retourne un BO car ce sont des données brutes.
+        Récupère les statistiques de boost d'un joueur pour un match spécifique.
+
+        Parameters
+        ----------
+        player : Player
+            Le joueur dont on souhaite obtenir les statistiques.
+        match : Match
+            Le match concerné.
+
+        Returns
+        -------
+        StatsBoost | None
+            Un objet métier contenant les statistiques de boost brutes du joueur
+            pour ce match, ou None si aucune donnée n'est trouvée.
         """
-        query = """
+        game_mode_filter = "AND m.playlist_id = ?" if game_mode else ""
+        query = f"""
                 SELECT sb.*
                 FROM stats_boost sb
                 JOIN match_participation mp ON mp.id = sb.participation_id
@@ -119,16 +151,17 @@ class StatBoostDAO(metaclass=Singleton):
                 JOIN matches m ON m.id = mt.match_id
                 JOIN players p ON p.id = mp.player_id
                 WHERE m.id = ? and p.id = ?
+                {game_mode_filter}
                 """
+        params = (
+            (match.id, player.id, game_mode) if game_mode else (match.id, player.id)
+        )
         connection = self.db_connector.connection
         with connection:
             cursor = connection.cursor()
             cursor.execute(
                 query,
-                (
-                    match.id,
-                    player.id,
-                ),
+                (params),
             )
             res = cursor.fetchone()
             if not res:
@@ -166,13 +199,25 @@ class StatBoostDAO(metaclass=Singleton):
             )
 
     def get_player_average_stats_boost(
-        self, player: Player
+        self, player: Player, game_mode: str | None = None
     ) -> StatsBoostAggregatedDTO | None:
         """
-        Récupère les stats boost moyennes d'un joueur.
-        Retourne un DTO car ce sont des données agrégées.
+        Récupère les statistiques de boost moyennes d'un joueur sur l'ensemble
+        de ses matchs.
+
+        Parameters
+        ----------
+        player : Player
+            Le joueur dont on souhaite obtenir les statistiques moyennes.
+
+        Returns
+        -------
+        StatsBoostAggregatedDTO | None
+            Un DTO contenant les moyennes de toutes les statistiques de boost
+            du joueur, ou None si aucune donnée n'est trouvée.
         """
-        query = """
+        game_mode_filter = "AND m.playlist_id = ?" if game_mode else ""
+        query = f"""
                 SELECT
                     ROUND(AVG(sb.boost_per_minute), 2) AS avg_boost_per_minute,
                     ROUND(AVG(sb.boost_consumed_per_minute), 2) AS avg_boost_consumed_per_minute,
@@ -202,17 +247,21 @@ class StatBoostDAO(metaclass=Singleton):
                     ROUND(AVG(sb.percent_boost_25_50), 2) AS avg_percent_boost_25_50,
                     ROUND(AVG(sb.percent_boost_50_75), 2) AS avg_percent_boost_50_75,
                     ROUND(AVG(sb.percent_boost_75_100), 2) AS avg_percent_boost_75_100
-                FROM stats_boost sb
-                JOIN match_participation mp ON sb.participation_id = mp.id
-                JOIN players p ON p.id = mp.player_id
-                WHERE p.id = ?
+                    FROM stats_boost sb
+                    JOIN match_participation mp ON sb.participation_id = mp.id
+                    JOIN players p ON p.id = mp.player_id
+                    JOIN match_teams mt ON mt.id = mp.match_team_id
+                    JOIN matches m ON m.id = mt.match_id
+                    WHERE p.id = ?
+                    {game_mode_filter}
                 """
+        params = (player.id, game_mode) if game_mode else (player.id,)
         connection = self.db_connector.connection
         with connection:
             cursor = connection.cursor()
-            cursor.execute(query, (player.id,))
+            cursor.execute(query, params)
             res = cursor.fetchone()
-            if not res:
+            if not res or res["avg_boost_per_minute"] is None:
                 return None
 
             return StatsBoostAggregatedDTO(

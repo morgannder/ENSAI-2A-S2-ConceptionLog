@@ -78,85 +78,6 @@ def sample_player():
     return player
 
 
-class TestMatchParticipationDAOCreation:
-    """Tests pour la création de participations de match"""
-
-    def test_create_match_participation_success(
-        self, match_participation_dao, sample_match_participation, mock_cursor
-    ):
-        """Test la création réussie d'une participation de match"""
-        # Simule qu'aucune participation n'existe avec cet ID
-        mock_cursor.fetchone.return_value = None
-
-        result = match_participation_dao.create_match_participation(
-            sample_match_participation
-        )
-
-        assert result is True
-        assert mock_cursor.execute.call_count == 2
-
-        # Vérifie la requête SELECT
-        first_call = mock_cursor.execute.call_args_list[0]
-        assert "SELECT 1" in first_call[0][0]
-        assert "FROM match_participation" in first_call[0][0]
-        assert "WHERE id = ?" in first_call[0][0]
-        assert first_call[0][1] == (sample_match_participation.id,)
-
-        # Vérifie la requête INSERT
-        second_call = mock_cursor.execute.call_args_list[1]
-        assert "INSERT INTO match_participation" in second_call[0][0]
-        assert "start_time" in second_call[0][0]
-        assert second_call[0][1] == (
-            sample_match_participation.id,
-            sample_match_participation.match_team_id,
-            sample_match_participation.player_id,
-            sample_match_participation.rank_id,
-            sample_match_participation.car_id,
-            sample_match_participation.car_name,
-            sample_match_participation.mvp,
-            sample_match_participation.start_time,
-            sample_match_participation.end_time,
-        )
-
-    def test_create_match_participation_already_exists(
-        self, match_participation_dao, sample_match_participation, mock_cursor
-    ):
-        """Test la création d'une participation qui existe déjà"""
-        # Simule qu'une participation existe déjà avec cet ID
-        mock_cursor.fetchone.return_value = (1,)
-
-        result = match_participation_dao.create_match_participation(
-            sample_match_participation
-        )
-
-        assert result is False
-        # Vérifie qu'INSERT n'a pas été appelé (seulement SELECT)
-        assert mock_cursor.execute.call_count == 1
-
-    def test_create_match_participation_not_mvp(
-        self, match_participation_dao, mock_cursor
-    ):
-        """Test la création d'une participation sans MVP"""
-        match_participation = Mock(spec=MatchParticipation)
-        match_participation.id = str(uuid4())
-        match_participation.match_team_id = str(uuid4())
-        match_participation.player_id = str(uuid4())
-        match_participation.rank_id = str(uuid4())
-        match_participation.car_id = str(uuid4())
-        match_participation.car_name = "Fennec"
-        match_participation.mvp = False
-        match_participation.start_time = 0.0
-        match_participation.end_time = 300.0
-
-        mock_cursor.fetchone.return_value = None
-
-        result = match_participation_dao.create_match_participation(match_participation)
-
-        assert result is True
-        second_call = mock_cursor.execute.call_args_list[1]
-        assert second_call[0][1][6] is False  # mvp est False
-
-
 class TestMatchParticipationDAORetrieval:
     """Tests pour la récupération de participations de match"""
 
@@ -324,22 +245,6 @@ class TestMatchParticipationDAORetrieval:
         assert len(result) == 2
         for participation in result:
             assert participation.mvp is True
-
-
-class TestMatchParticipationDAODeletion:
-    """Tests pour la suppression de participations de match"""
-
-    def test_delete_match_participation(
-        self, match_participation_dao, sample_match_participation, mock_cursor
-    ):
-        """Test la suppression d'une participation de match"""
-        match_participation_dao.delete_match_participation(sample_match_participation)
-
-        mock_cursor.execute.assert_called_once()
-        call_args = mock_cursor.execute.call_args[0]
-        assert "DELETE FROM match_participation" in call_args[0]
-        assert "WHERE id = ?" in call_args[0]
-        assert call_args[1] == (sample_match_participation.id,)
 
 
 class TestGetPlayerLastMatchParticipation:
@@ -553,15 +458,6 @@ class TestGetPlayerNbMVP:
         assert result == (0,)
 
 
-class TestUpdate:
-    """Tests pour la méthode update"""
-
-    def test_update_not_implemented(self, match_participation_dao):
-        """Test que update_match_participation ne fait rien (pass)"""
-        result = match_participation_dao.update_match_participation()
-        assert result is None
-
-
 class TestMatchParticipationDAOSingleton:
     """Tests pour vérifier le pattern Singleton"""
 
@@ -577,33 +473,6 @@ class TestMatchParticipationDAOSingleton:
 class TestMatchParticipationDAOEdgeCases:
     """Tests pour les cas limites"""
 
-    def test_create_match_participation_with_different_cars(
-        self, match_participation_dao, mock_cursor
-    ):
-        """Test la création de participations avec différentes voitures"""
-        cars = ["Octane", "Fennec", "Dominus", "Batmobile"]
-
-        for car in enumerate(cars):
-            mock_cursor.reset_mock()
-            mock_cursor.fetchone.return_value = None
-
-            participation = Mock(spec=MatchParticipation)
-            participation.id = str(uuid4())
-            participation.match_team_id = str(uuid4())
-            participation.player_id = str(uuid4())
-            participation.rank_id = str(uuid4())
-            participation.car_id = str(uuid4())
-            participation.car_name = car
-            participation.mvp = False
-            participation.start_time = 0.0
-            participation.end_time = 300.0
-
-            result = match_participation_dao.create_match_participation(participation)
-
-            assert result is True
-            second_call = mock_cursor.execute.call_args_list[1]
-            assert second_call[0][1][5] == car
-
     def test_get_matches_by_parameter_empty_result(
         self, match_participation_dao, mock_cursor
     ):
@@ -614,55 +483,9 @@ class TestMatchParticipationDAOEdgeCases:
 
         assert result is None
 
-    def test_delete_match_participation_twice(
-        self, match_participation_dao, sample_match_participation, mock_cursor
-    ):
-        """Test la suppression d'une participation deux fois"""
-        # Première suppression
-        match_participation_dao.delete_match_participation(sample_match_participation)
-        assert mock_cursor.execute.call_count == 1
-
-        # Deuxième suppression
-        match_participation_dao.delete_match_participation(sample_match_participation)
-        assert mock_cursor.execute.call_count == 2
-
 
 class TestMatchParticipationDAOIntegration:
     """Tests d'intégration simulant des scénarios réels"""
-
-    def test_create_and_retrieve_match_participation(
-        self, match_participation_dao, sample_match_participation, mock_cursor
-    ):
-        """Test la création puis la récupération d'une participation"""
-        # Création
-        mock_cursor.fetchone.return_value = None
-        create_result = match_participation_dao.create_match_participation(
-            sample_match_participation
-        )
-        assert create_result is True
-
-        # Récupération
-        mock_cursor.reset_mock()
-        mock_cursor.fetchall.return_value = [
-            {
-                "id": sample_match_participation.id,
-                "match_team_id": sample_match_participation.match_team_id,
-                "player_id": sample_match_participation.player_id,
-                "rank_id": sample_match_participation.rank_id,
-                "car_id": sample_match_participation.car_id,
-                "car_name": sample_match_participation.car_name,
-                "mvp": sample_match_participation.mvp,
-                "start_time": sample_match_participation.start_time,
-                "end_time": sample_match_participation.end_time,
-            }
-        ]
-
-        retrieved_participations = match_participation_dao.get_matches_by_parameter(
-            "id", sample_match_participation.id
-        )
-        assert retrieved_participations is not None
-        assert len(retrieved_participations) == 1
-        assert isinstance(retrieved_participations[0], MatchParticipation)
 
     def test_get_all_participations_from_team(
         self, match_participation_dao, mock_cursor

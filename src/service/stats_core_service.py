@@ -13,31 +13,28 @@ class StatsCoreService:
         self.stats_core_dao = StatsCoreDAO()
 
     def get_average_stats_core_by_rank(
-        self, rank: Ranks
+        self, rank: Ranks, game_mode: str | None = None
     ) -> StatsCoreAggregatedDTO | None:
         """
-        Récupère les statistiques core moyennes pour un rang donné (par nom).
+        Récupère les statistiques core moyennes pour un rang donné.
 
         Parameters
         ----------
-        rank_name : str
-            Le nom du rang (ex: "Bronze I", "Silver II", "Gold III").
+        rank : Ranks
+            Le rang pour lequel on veut obtenir les statistiques core.
+        game_mode : str | None, optional
+            Le mode de jeu sur lequel filtrer, par défaut None (tous les modes).
 
         Returns
         -------
-        float | None
+        StatsCoreAggregatedDTO | None
             Les statistiques core moyennes pour ce rang,
             ou None si aucune donnée n'est disponible.
-
-        Notes
-        -----
-        Cette méthode retourne la moyenne des statistiques core pour tous les joueurs
-        du rang spécifié.
         """
-        return self.stats_core_dao.get_average_stats_core_per_rank(rank)
+        return self.stats_core_dao.get_average_stats_core_per_rank(rank, game_mode)
 
     def get_player_match_stats_core(
-        self, player: Player, match: Match
+        self, player: Player, match: Match, game_mode: str | None = None
     ) -> StatsCore | None:
         """
         Récupère les statistiques core d'un joueur pour un match spécifique.
@@ -48,6 +45,8 @@ class StatsCoreService:
             Le joueur dont on veut récupérer les statistiques.
         match : Match
             Le match pour lequel on veut obtenir les statistiques.
+        game_mode : str | None, optional
+            Le mode de jeu sur lequel filtrer, par défaut None (tous les modes).
 
         Returns
         -------
@@ -59,11 +58,6 @@ class StatsCoreService:
         ------
         ValueError
             Si le joueur ou le match n'a pas d'ID valide.
-
-        Notes
-        -----
-        Les statistiques core incluent typiquement les buts, passes décisives,
-        sauvetages, tirs, et autres métriques de base du jeu.
         """
         if not player or not player.id:
             raise ValueError("Le joueur doit avoir un ID valide")
@@ -71,10 +65,10 @@ class StatsCoreService:
         if not match or not match.id:
             raise ValueError("Le match doit avoir un ID valide")
 
-        return self.stats_core_dao.get_player_match_stats_core(player, match)
+        return self.stats_core_dao.get_player_match_stats_core(player, match, game_mode)
 
     def get_player_average_stats_core(
-        self, player: Player
+        self, player: Player, game_mode: str | None = None
     ) -> StatsCoreAggregatedDTO | None:
         """
         Récupère les statistiques core moyennes d'un joueur sur tous ses matchs.
@@ -83,20 +77,21 @@ class StatsCoreService:
         ----------
         player : Player
             Le joueur dont on veut récupérer les statistiques moyennes.
+        game_mode : str | None, optional
+            Le mode de jeu sur lequel filtrer, par défaut None (tous les modes).
 
         Returns
         -------
-        dict | None
-            Dictionnaire contenant les statistiques core moyennes du joueur,
+        StatsCoreAggregatedDTO | None
+            Les statistiques core moyennes du joueur,
             ou None si le joueur n'a aucune statistique disponible.
 
         Raises
         ------
         ValueError
             Si le joueur n'a pas d'ID valide.
-
         """
         if not player or not player.id:
             raise ValueError("Le joueur doit avoir un ID valide")
 
-        return self.stats_core_dao.get_player_average_stats_core(player)
+        return self.stats_core_dao.get_player_average_stats_core(player, game_mode)

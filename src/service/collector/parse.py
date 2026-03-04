@@ -20,7 +20,16 @@ Session = sessionmaker(bind=engine)
 
 def generate_hash_from_list_item(item):
     """
-    Generate an unique ID based on players, match duration and score.
+    Génère un ID unique à partir des joueurs, du temps de la partie et du score.
+    Parameters
+    ----------
+    data : dict
+        dictionnaire contenant toute une partie
+
+    Returns
+    -------
+    str
+        Hash (qui sera l'ID) généré à partir des méta données du match
     """
     p_ids = []
     for side in ["blue", "orange"]:
@@ -40,6 +49,11 @@ def generate_hash_from_list_item(item):
 
 
 def parse_game_list():
+    """
+    Extrait les id es matchs dans les fichiers présents dans raw_game_list.json
+    afin de pouvoir les télécharger par la suite
+    """
+
     if not INPUT_FILE.exists():
         print("File is missing.")
         return
@@ -72,10 +86,10 @@ def parse_game_list():
     with open(OUTPUT_FILE, "w", encoding="utf-8") as f:
         json.dump(matches_to_download, f, indent=4)
 
-    print(f"   - Total analysed : {len(replays)}")
-    print(f"   - Already in DB (skipped) : {skipped_count}")
-    print(f"   - New matches downloaded : {len(matches_to_download)}")
-
-
-if __name__ == "__main__":
-    parse_game_list()
+    return {
+        "data": {
+            "total_analysed": len(replays),
+            "already_in_db": skipped_count,
+            "new_matches_downloaded": len(matches_to_download),
+        }
+    }

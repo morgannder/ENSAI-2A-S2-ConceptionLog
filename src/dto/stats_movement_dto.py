@@ -31,7 +31,19 @@ class StatsMovementDTO(BaseModel):
 
     @classmethod
     def from_business_object(cls, bo: StatsMovement) -> "StatsMovementDTO":
-        """Convertit un Business Object StatsMovement en DTO"""
+        """
+        Convertit un Business Object StatsMovement en DTO.
+
+        Parameters
+        ----------
+        bo : StatsMovement
+            L'objet métier StatsMovement à convertir.
+
+        Returns
+        -------
+        StatsMovementDTO
+            Le DTO correspondant à l'objet métier fourni.
+        """
         return cls(
             participation_id=bo._participation_id,
             avg_speed=bo.avg_speed,

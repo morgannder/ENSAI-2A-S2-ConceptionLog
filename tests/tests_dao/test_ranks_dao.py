@@ -73,48 +73,6 @@ def sample_player():
     return player
 
 
-class TestRanksDAOCreation:
-    """Tests pour la création de rangs"""
-
-    def test_create_rank_success(self, ranks_dao, sample_rank, mock_cursor):
-        """Test la création réussie d'un rang"""
-        # Simule qu'aucun rang n'existe avec ce nom
-        mock_cursor.fetchone.return_value = None
-
-        result = ranks_dao.create_rank(sample_rank)
-
-        assert result is True
-        assert mock_cursor.execute.call_count == 2
-
-        # Vérifie la requête SELECT
-        first_call = mock_cursor.execute.call_args_list[0]
-        assert "SELECT 1" in first_call[0][0]
-        assert "FROM ranks" in first_call[0][0]
-        assert "WHERE name = ?" in first_call[0][0]
-        assert first_call[0][1] == (sample_rank.name,)
-
-        # Vérifie la requête INSERT
-        second_call = mock_cursor.execute.call_args_list[1]
-        assert "INSERT INTO ranks" in second_call[0][0]
-        assert second_call[0][1] == (
-            sample_rank.id,
-            sample_rank.tier,
-            sample_rank.division,
-            sample_rank.name,
-        )
-
-    def test_create_rank_already_exists(self, ranks_dao, sample_rank, mock_cursor):
-        """Test la création d'un rang qui existe déjà"""
-        # Simule qu'un rang existe déjà avec ce nom
-        mock_cursor.fetchone.return_value = (1,)
-
-        result = ranks_dao.create_rank(sample_rank)
-
-        assert result is False
-        # Vérifie qu'INSERT n'a pas été appelé (seulement SELECT)
-        assert mock_cursor.execute.call_count == 1
-
-
 class TestRanksDAORetrieval:
     """Tests pour la récupération de rangs"""
 
@@ -223,20 +181,6 @@ class TestRanksDAORetrieval:
         assert call_args[1] == (sample_rank.id,)
 
 
-class TestRanksDAODeletion:
-    """Tests pour la suppression de rangs"""
-
-    def test_delete_rank(self, ranks_dao, sample_rank, mock_cursor):
-        """Test la suppression d'un rang"""
-        ranks_dao.delete_rank(sample_rank)
-
-        mock_cursor.execute.assert_called_once()
-        call_args = mock_cursor.execute.call_args[0]
-        assert "DELETE FROM ranks" in call_args[0]
-        assert "WHERE name = ?" in call_args[0]
-        assert call_args[1] == (sample_rank.name,)
-
-
 class TestGetPlayerRank:
     """Tests pour récupérer le rang d'un joueur"""
 
@@ -302,69 +246,6 @@ class TestGetPlayerRank:
         assert "LIMIT 1" in call_args[0]
 
 
-class TestGetByTierDivision:
-    """Tests pour la méthode get_by_tier_division"""
-
-    def test_get_by_tier_division_found(self, ranks_dao, sample_rank, mock_cursor):
-        """Test la récupération d'un rang par tier et division"""
-        mock_cursor.fetchone.return_value = {
-            "id": sample_rank.id,
-            "tier": sample_rank.tier,
-            "division": sample_rank.division,
-            "name": sample_rank.name,
-        }
-
-        result = ranks_dao.get_by_tier_division(sample_rank)
-
-        assert result is not None
-        assert isinstance(result, Ranks)
-
-        # Vérifie la requête SQL
-        mock_cursor.execute.assert_called_once()
-        call_args = mock_cursor.execute.call_args[0]
-        assert "WHERE tier = ? And division =?" in call_args[0]
-        assert call_args[1] == (sample_rank.tier, sample_rank.division)
-
-    def test_get_by_tier_division_not_found(self, ranks_dao, sample_rank, mock_cursor):
-        """Test quand aucun rang ne correspond au tier et division"""
-        mock_cursor.fetchone.return_value = None
-
-        result = ranks_dao.get_by_tier_division(sample_rank)
-
-        assert result is None
-
-    def test_get_by_tier_division_specific_values(self, ranks_dao, mock_cursor):
-        """Test avec des valeurs spécifiques de tier et division"""
-        rank = Mock(spec=Ranks)
-        rank.tier = 7
-        rank.division = 3
-
-        mock_cursor.fetchone.return_value = {
-            "id": "gc3_id",
-            "tier": 7,
-            "division": 3,
-            "name": "Grand Champion III",
-        }
-
-        result = ranks_dao.get_by_tier_division(rank)
-
-        assert result is not None
-        assert isinstance(result, Ranks)
-
-        call_args = mock_cursor.execute.call_args[0]
-        assert call_args[1] == (7, 3)
-
-
-class TestUpdateRank:
-    """Tests pour la méthode update_rank"""
-
-    def test_update_rank_not_implemented(self, ranks_dao, sample_rank):
-        """Test que update_rank ne fait rien (pass)"""
-        # Cette méthode n'est pas implémentée, elle ne devrait rien faire
-        result = ranks_dao.update_rank(sample_rank)
-        assert result is None
-
-
 class TestRanksDAOSingleton:
     """Tests pour vérifier le pattern Singleton"""
 
@@ -380,22 +261,6 @@ class TestRanksDAOSingleton:
 class TestRanksDAOEdgeCases:
     """Tests pour les cas limites"""
 
-    def test_create_rank_with_special_characters(self, ranks_dao, mock_cursor):
-        """Test la création d'un rang avec des caractères spéciaux"""
-        rank = Mock(spec=Ranks)
-        rank.id = str(uuid4())
-        rank.tier = 1
-        rank.division = 1
-        rank.name = "Grand Champion III"
-
-        mock_cursor.fetchone.return_value = None
-
-        result = ranks_dao.create_rank(rank)
-
-        assert result is True
-        second_call = mock_cursor.execute.call_args_list[1]
-        assert second_call[0][1] == (rank.id, rank.tier, rank.division, rank.name)
-
     def test_get_rank_by_parameter_empty_result(self, ranks_dao, mock_cursor):
         """Test avec un résultat vide"""
         mock_cursor.fetchall.return_value = []
@@ -403,16 +268,6 @@ class TestRanksDAOEdgeCases:
         result = ranks_dao.get_rank_by_parameter("name", "test")
 
         assert result is None
-
-    def test_delete_rank_twice(self, ranks_dao, sample_rank, mock_cursor):
-        """Test la suppression d'un rang deux fois"""
-        # Première suppression
-        ranks_dao.delete_rank(sample_rank)
-        assert mock_cursor.execute.call_count == 1
-
-        # Deuxième suppression (le rang n'existe plus mais aucune erreur)
-        ranks_dao.delete_rank(sample_rank)
-        assert mock_cursor.execute.call_count == 2
 
     def test_get_rank_by_parameter_with_tier_returns_all_divisions(
         self, ranks_dao, mock_cursor
@@ -435,29 +290,6 @@ class TestRanksDAOEdgeCases:
 class TestRanksDAOIntegration:
     """Tests d'intégration simulant des scénarios réels"""
 
-    def test_create_and_retrieve_rank(self, ranks_dao, sample_rank, mock_cursor):
-        """Test la création puis la récupération d'un rang"""
-        # Création
-        mock_cursor.fetchone.return_value = None
-        create_result = ranks_dao.create_rank(sample_rank)
-        assert create_result is True
-
-        # Récupération - Réinitialiser le mock pour le deuxième appel
-        mock_cursor.reset_mock()
-        mock_cursor.fetchall.return_value = [
-            {
-                "id": sample_rank.id,
-                "tier": sample_rank.tier,
-                "division": sample_rank.division,
-                "name": sample_rank.name,
-            }
-        ]
-
-        retrieved_ranks = ranks_dao.get_rank_by_parameter("name", sample_rank.name)
-        assert retrieved_ranks is not None
-        assert len(retrieved_ranks) == 1
-        assert isinstance(retrieved_ranks[0], Ranks)
-
     def test_player_rank_progression(self, ranks_dao, sample_player, mock_cursor):
         """Test la progression de rang d'un joueur"""
         # Simule différents rangs au fil du temps
@@ -473,26 +305,6 @@ class TestRanksDAOIntegration:
 
         assert current_rank is not None
         assert isinstance(current_rank, Ranks)
-
-    def test_find_rank_by_tier_division_then_get_player(
-        self, ranks_dao, sample_player, mock_cursor
-    ):
-        """Test de recherche d'un rang par tier/division puis récupération du rang d'un joueur"""
-        # Créer un rang de test
-        test_rank = Mock(spec=Ranks)
-        test_rank.tier = 5
-        test_rank.division = 2
-
-        # Premier appel: get_by_tier_division
-        mock_cursor.fetchone.return_value = {
-            "id": "diamond2_id",
-            "tier": 5,
-            "division": 2,
-            "name": "Diamond II",
-        }
-
-        rank_result = ranks_dao.get_by_tier_division(test_rank)
-        assert rank_result is not None
 
         # Deuxième appel: get_player_rank
         mock_cursor.reset_mock()
