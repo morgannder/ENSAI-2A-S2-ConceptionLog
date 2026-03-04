@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException
 
+from src.dto.ranks_dto import RanksDTO
 from src.service.players_service import PlayerService
 from src.service.ranks_service import RanksService
 
@@ -30,7 +31,7 @@ player_service = PlayerService()
         }
     },
 )
-def get_player_rank(platform_id: str):
+def get_player_rank(platform_id: str) -> RanksDTO:
     """
     Récupère le rang actuel d'un joueur par son identifiant de plateforme.
 
@@ -64,18 +65,19 @@ def get_player_rank(platform_id: str):
         rank_info = rank_service.get_player_rank_by_platform_id(platform_id)
 
         if rank_info is None:
-            return {
-                "player_name": player.name,
-                "platform_id": platform_id,
-                "rank": "Unranked",
-            }
+            return RanksDTO(
+                player_name=player.name,
+                platform_id=platform_id,
+                rank="Unranked",
+                full_rank="Unrakned",
+            )
 
-        return {
-            "player_name": player.name,
-            "platform_id": platform_id,
-            "rank": rank_info["name"],  # "Bronze I"
-            "full_rank": rank_info["full_name"],  # "Bronze I Division 1"
-        }
+        return RanksDTO(
+            player_name=player.name,
+            platform_id=platform_id,
+            rank=rank_info.name,
+            full_rank=rank_info.full_name,
+        )
 
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e)) from e

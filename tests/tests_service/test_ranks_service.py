@@ -2,6 +2,7 @@ from unittest.mock import MagicMock
 
 import pytest
 
+from src.dto.ranks_dto import PlayerRankDTO
 from src.models.players import Player
 from src.models.ranks import Ranks
 from src.service.ranks_service import RanksService
@@ -31,12 +32,11 @@ def test_get_player_rank_by_platform_id_ok():
 
     result = service.get_player_rank_by_platform_id("player_123")
 
-    assert result == {
-        "tier": RANK_GOLD_I_DIV_2.tier,
-        "division": RANK_GOLD_I_DIV_2.division,
-        "name": RANK_GOLD_I_DIV_2.display_name,
-        "full_name": RANK_GOLD_I_DIV_2.name,
-    }
+    assert isinstance(result, PlayerRankDTO)
+    assert result.tier == RANK_GOLD_I_DIV_2.tier
+    assert result.division == RANK_GOLD_I_DIV_2.division
+    assert result.name == RANK_GOLD_I_DIV_2.display_name
+    assert result.full_name == RANK_GOLD_I_DIV_2.name
     service.player_dao.get_player_by_parameter.assert_called_once_with(
         "platform_user_id", "player_123"
     )

@@ -1,5 +1,6 @@
 from src.dao.players_dao import PlayerDAO
 from src.dao.ranks_dao import RanksDAO
+from src.dto.ranks_dto import PlayerRankDTO
 from src.utils.singleton import Singleton
 
 
@@ -10,7 +11,7 @@ class RanksService(metaclass=Singleton):
         self.ranks_dao = RanksDAO()
         self.player_dao = PlayerDAO()
 
-    def get_player_rank_by_platform_id(self, platform_id: str) -> dict | None:
+    def get_player_rank_by_platform_id(self, platform_id: str) -> PlayerRankDTO | None:
         """
         Récupère le rang actuel d'un joueur (basé sur son match le plus récent).
 
@@ -21,12 +22,12 @@ class RanksService(metaclass=Singleton):
 
         Returns
         -------
-        dict | None
+        PlayerRankDTO | None
             Un dictionnaire contenant les informations du rang :
             - tier : le tier du rang (int)
             - division : la division du rang (int)
             - name : le nom d'affichage (ex: "Bronze I")
-            - full_name : le nom complet depuis la base de données
+            - full_name : le nom complet (ex: "Bronze I Division 1")
             Retourne None si le joueur n'existe pas ou n'a pas de rang.
 
         Raises
@@ -49,9 +50,9 @@ class RanksService(metaclass=Singleton):
         if rank is None:
             return None
 
-        return {
-            "tier": rank.tier,
-            "division": rank.division,
-            "name": rank.display_name,  # "Bronze I"
-            "full_name": rank.name,  # "Bronze I Division 1"
-        }
+        return PlayerRankDTO(
+            tier=rank.tier,
+            division=rank.division,
+            name=rank.display_name,
+            full_name=rank.name,
+        )
