@@ -14,7 +14,7 @@ class MatchTeamDAO(metaclass=Singleton):
     }
 
     def __init__(self):
-        self.db_connector = DBConnection
+        self.db_connector = DBConnection()
 
     def get_match_teams_by_parameter(
         self, parameter_name: str, parameter_value

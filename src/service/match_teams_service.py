@@ -8,7 +8,7 @@ class MatchTeamService:
     def __init__(self):
         self.match_team_dao = MatchTeamDAO()
 
-    def get_match_team_by_id(self, team_id: str) -> MatchTeam | None:
+    def get_match_team_by_id(self, team_id: int) -> MatchTeam | None:
         """
         Récupère une équipe de match par son ID.
 

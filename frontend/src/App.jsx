@@ -6,6 +6,28 @@ import GlobalStats from "./components/GlobalStats";
 
 const MAX_HISTORY = 10;
 
+// ── Throttled rank fetcher : sequential with delay to avoid 500 floods ────────
+async function fetchRanksSequentially(players, delay = 10) {
+  const results = new Map();
+  for (const p of players) {
+    const id = p.platform_user_id ?? p.id;
+    if (!id) continue;
+    try {
+      const rankData = await getPlayerRank(id);
+      if (rankData) {
+        results.set(id, {
+          rank: rankData.full_rank ?? null,
+          mmr:  rankData.mmr       ?? null,
+        });
+      }
+    } catch {
+      // silently skip — player stays with existing rank
+    }
+    if (delay > 0) await new Promise(r => setTimeout(r, delay));
+  }
+  return results;
+}
+
 export default function App() {
   const [page,           setPage]           = useState("home");
   const [selectedPlayer, setSelectedPlayer] = useState(null);
@@ -23,32 +45,53 @@ export default function App() {
     }
   });
 
+  // Keep a ref to cancel in-flight rank fetches when query changes
+  const [rankFetchId, setRankFetchId] = useState(0);
+
   useEffect(() => {
-    if (searchQuery.length >= 3) {
-      setLoading(true);
-      searchPlayers(searchQuery, null)
-        .then((results) => {
-          if (!results || results.length === 0) { setSuggestions([]); return; }
-          setSuggestions(results);
-          results.forEach(async (p) => {
-            const id = p.platform_user_id ?? p.id;
-            if (!id) return;
-            const rankData = await getPlayerRank(id).catch(() => null);
-            if (!rankData) return;
-            setSuggestions((prev) =>
-              prev.map((s) =>
-                (s.platform_user_id ?? s.id) === id
-                  ? { ...s, rank: rankData.full_rank ?? s.rank, mmr: rankData.mmr ?? s.mmr }
-                  : s
-              )
-            );
-          });
-        })
-        .catch(() => setSuggestions([]))
-        .finally(() => setLoading(false));
-    } else {
+    if (searchQuery.length < 3) {
       setSuggestions([]);
+      return;
     }
+
+    let cancelled = false;
+    const currentFetchId = Date.now();
+    setRankFetchId(currentFetchId);
+    setLoading(true);
+
+    searchPlayers(searchQuery, null)
+      .then(async (results) => {
+        if (cancelled) return;
+        if (!results || results.length === 0) {
+          setSuggestions([]);
+          return;
+        }
+
+        // Only keep what's actually displayed
+        const displayed = results.slice(0, 5);
+        setSuggestions(displayed);
+
+        // Then fetch ranks one by one with a small delay — only for displayed players
+        const rankMap = await fetchRanksSequentially(displayed, 60);
+        if (cancelled) return;
+
+        setSuggestions(prev =>
+          prev.map(p => {
+            const id = p.platform_user_id ?? p.id;
+            const rankInfo = rankMap.get(id);
+            if (!rankInfo) return p;
+            return {
+              ...p,
+              rank: rankInfo.rank ?? p.rank,
+              mmr:  rankInfo.mmr  ?? p.mmr,
+            };
+          })
+        );
+      })
+      .catch(() => { if (!cancelled) setSuggestions([]); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+
+    return () => { cancelled = true; };
   }, [searchQuery]);
 
   const handleSearch = () => {
@@ -57,9 +100,11 @@ export default function App() {
   };
 
   const addToHistory = (player) => {
+    // Strip _openedAt before saving — it must always be fresh on open
+    const { _openedAt, ...playerToSave } = player;
     setHistory((prev) => {
-      const filtered = prev.filter(p => p.platform_user_id !== player.platform_user_id);
-      const next = [player, ...filtered].slice(0, MAX_HISTORY);
+      const filtered = prev.filter(p => p.platform_user_id !== playerToSave.platform_user_id);
+      const next = [playerToSave, ...filtered].slice(0, MAX_HISTORY);
       try { sessionStorage.setItem("rl_history", JSON.stringify(next)); } catch {}
       return next;
     });
@@ -83,26 +128,32 @@ export default function App() {
     try {
       const platform_user_id = basicPlayer.platform_user_id ?? basicPlayer.id;
 
-      const [rankData, statsData] = await Promise.all([
-        getPlayerRank(platform_user_id).catch(() => null),
-        getPlayerCoreStats(platform_user_id).catch(() => null),
+      // Fetch rank & stats in parallel — both are optional (fallback gracefully)
+      const [rankData, statsData] = await Promise.allSettled([
+        getPlayerRank(platform_user_id),
+        getPlayerCoreStats(platform_user_id),
       ]);
+
+      const rank = rankData.status === "fulfilled" ? rankData.value : null;
+      const stats = statsData.status === "fulfilled" ? statsData.value : null;
 
       const enrichedPlayer = {
         ...basicPlayer,
         platform_user_id,
         platform:  basicPlayer.platform ?? "epic",
-        rank:      rankData?.full_rank ?? basicPlayer.rank ?? "Unranked",
-        mmr:       rankData?.mmr       ?? basicPlayer.mmr  ?? 0,
-        coreStats: statsData?.data ? {
-          shots:              statsData.data.shots               ?? 0,
-          goals:              statsData.data.goals               ?? 0,
-          saves:              statsData.data.saves               ?? 0,
-          assists:            statsData.data.assists             ?? 0,
-          score:              statsData.data.score               ?? 0,
-          shootingPercentage: statsData.data.shooting_percentage ?? 0,
-          demoInflicted:      statsData.data.demo_inflicted      ?? 0,
-          demoTaken:          statsData.data.demo_taken          ?? 0,
+        rank:      rank?.full_rank ?? basicPlayer.rank ?? "Unranked",
+        mmr:       rank?.mmr       ?? basicPlayer.mmr  ?? 0,
+        // Store a stable key so PlayerPage knows when to re-fetch
+        _openedAt: Date.now(),
+        coreStats: stats?.data ? {
+          shots:              stats.data.shots               ?? 0,
+          goals:              stats.data.goals               ?? 0,
+          saves:              stats.data.saves               ?? 0,
+          assists:            stats.data.assists             ?? 0,
+          score:              stats.data.score               ?? 0,
+          shootingPercentage: stats.data.shooting_percentage ?? 0,
+          demoInflicted:      stats.data.demo_inflicted      ?? 0,
+          demoTaken:          stats.data.demo_taken          ?? 0,
         } : null,
       };
 
@@ -112,7 +163,11 @@ export default function App() {
       setSearchQuery("");
     } catch (error) {
       console.error("Erreur lors du chargement du profil joueur:", error);
-      const fallback = { ...basicPlayer, platform_user_id: basicPlayer.platform_user_id ?? basicPlayer.id };
+      const fallback = {
+        ...basicPlayer,
+        platform_user_id: basicPlayer.platform_user_id ?? basicPlayer.id,
+        _openedAt: Date.now(),
+      };
       addToHistory(fallback);
       setSelectedPlayer(fallback);
       setPage("player");
@@ -132,7 +187,7 @@ export default function App() {
         <nav>
           <div className="nav-logo" onClick={() => setPage("home")}>
             <span className="nav-logo-icon">🚀</span>
-            RCLStast
+            Rclstast
           </div>
           <div className="nav-links">
             <div className={`nav-link ${page === "home"   ? "active" : ""}`} onClick={() => setPage("home")}>Home</div>
@@ -287,6 +342,7 @@ export default function App() {
 
           {page === "player" && selectedPlayer && (
             <PlayerPage
+              key={selectedPlayer._openedAt}
               player={selectedPlayer}
               onBack={() => setPage("home")}
               onPlayerClick={openPlayer}

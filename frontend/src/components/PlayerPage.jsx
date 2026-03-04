@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { RANKS, PLATFORMS, getPlayerCoreStats, requestPlayerUpdate } from "../api/apiClient";
 import RecentMatches from "./RecentMatches";
 
@@ -11,71 +11,76 @@ const GAME_MODES = [
 const getCoreStatsCards = (stats) => {
   if (!stats) return [];
   return [
-    { label: "Goals",           value: stats.goals               != null ? Number(stats.goals).toFixed(1)                    : "—", sub: "per game",  color: "var(--orange)" },
-    { label: "Assists",         value: stats.assists             != null ? Number(stats.assists).toFixed(1)                  : "—", sub: "per game",  color: "var(--purple)" },
-    { label: "Saves",           value: stats.saves               != null ? Number(stats.saves).toFixed(1)                   : "—", sub: "per game",  color: "#00ff88"       },
-    { label: "Shots",           value: stats.shots               != null ? Number(stats.shots).toFixed(1)                   : "—", sub: "per game",  color: "#ff4e50"       },
+    { label: "Goals",           value: stats.goals               != null ? Number(stats.goals).toFixed(1)                     : "—", sub: "per game",  color: "var(--orange)" },
+    { label: "Assists",         value: stats.assists             != null ? Number(stats.assists).toFixed(1)                   : "—", sub: "per game",  color: "var(--purple)" },
+    { label: "Saves",           value: stats.saves               != null ? Number(stats.saves).toFixed(1)                    : "—", sub: "per game",  color: "#00ff88"       },
+    { label: "Shots",           value: stats.shots               != null ? Number(stats.shots).toFixed(1)                    : "—", sub: "per game",  color: "#ff4e50"       },
     { label: "Shooting %",      value: stats.shooting_percentage != null ? `${Number(stats.shooting_percentage).toFixed(1)}%` : "—", sub: "accuracy",  color: "var(--cyan)"   },
-    { label: "Score",           value: stats.score               != null ? Number(stats.score).toFixed(0)                   : "—", sub: "per match", color: "#ffd700"       },
-    { label: "Demos Inflicted", value: stats.demo_inflicted      != null ? Number(stats.demo_inflicted).toFixed(1)           : "—", sub: "per game",  color: "#ff6b1a"       },
-    { label: "Demos Taken",     value: stats.demo_taken          != null ? Number(stats.demo_taken).toFixed(1)               : "—", sub: "per game",  color: "#b347ff"       },
+    { label: "Score",           value: stats.score               != null ? Number(stats.score).toFixed(0)                    : "—", sub: "per match", color: "#ffd700"       },
+    { label: "Demos Inflicted", value: stats.demo_inflicted      != null ? Number(stats.demo_inflicted).toFixed(1)            : "—", sub: "per game",  color: "#ff6b1a"       },
+    { label: "Demos Taken",     value: stats.demo_taken          != null ? Number(stats.demo_taken).toFixed(1)                : "—", sub: "per game",  color: "#b347ff"       },
   ];
 };
 
-async function fetchWithRetry(platformId, modeId, retries = 2) {
-  for (let i = 0; i <= retries; i++) {
+async function fetchModeWithRetry(platformId, modeId, maxRetries = 3) {
+  for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
-      const data = await getPlayerCoreStats(platformId, modeId);
-      return { stats: data?.data ?? data?.stats ?? data ?? null, error: null };
+      const data  = await getPlayerCoreStats(platformId, modeId);
+      const stats = data?.data ?? data?.stats ?? data ?? null;
+      if (stats && typeof stats === "object" && Object.keys(stats).length === 0) {
+        return { stats: null, error: null };
+      }
+      return { stats, error: null };
     } catch (err) {
-      const is500 = err.message.includes("500");
-      if (is500 && i < retries) {
-        await new Promise((r) => setTimeout(r, 300 * (i + 1)));
+      const is5xx = /5\d\d/.test(err.message);
+      if (is5xx && attempt < maxRetries) {
+        await new Promise(r => setTimeout(r, 300 * Math.pow(2, attempt)));
         continue;
       }
+      if (/404|422/.test(err.message)) return { stats: null, error: null };
       return { stats: null, error: err.message };
     }
   }
+  return { stats: null, error: "Max retries exceeded" };
 }
 
 export default function PlayerPage({ player, onBack, onPlayerClick }) {
-  const [selectedMode,   setSelectedMode]   = useState("ranked-duels");
-  const [modeStats,      setModeStats]      = useState({});
-  const [modeErrors,     setModeErrors]     = useState({});
-  const [loadingStats,   setLoadingStats]   = useState(false);
-  const [refreshing,     setRefreshing]     = useState(false);
-  const [refreshResult,  setRefreshResult]  = useState(null);
-  const [matchesKey,     setMatchesKey]     = useState(0);
+  const [selectedMode,  setSelectedMode]  = useState("ranked-duels");
+  // Array of slots indexed 0/1/2 matching GAME_MODES — never mutated by async order
+  const [modes, setModes] = useState(
+    GAME_MODES.map(m => ({ id: m.id, stats: null, error: null, loading: true }))
+  );
+  const [refreshing,    setRefreshing]    = useState(false);
+  const [refreshResult, setRefreshResult] = useState(null);
+  const [matchesKey,    setMatchesKey]    = useState(0);
+
+  const cancelRef = useRef(false);
 
   const rankMatch = player.rank?.match(/^([A-Za-z\s]+\s[IVX]+)/)?.[1] || player.rank || "Unranked";
-  const rankInfo  = RANKS.find((r) => r.fullName === rankMatch);
-  const platInfo  = PLATFORMS.find((p) => p.id === player.platform);
+  const rankInfo  = RANKS.find(r => r.fullName === rankMatch);
+  const platInfo  = PLATFORMS.find(p => p.id === player.platform);
 
   useEffect(() => {
-    const platform_user_id = player.platform_user_id;
-    if (!platform_user_id) return;
+    const pid = player.platform_user_id;
+    if (!pid) return;
 
-    setLoadingStats(true);
-    setModeStats({});
-    setModeErrors({});
+    cancelRef.current = false;
+    setModes(GAME_MODES.map(m => ({ id: m.id, stats: null, error: null, loading: true })));
 
-    Promise.all(
-      GAME_MODES.map((mode) =>
-        fetchWithRetry(platform_user_id, mode.id).then(({ stats, error }) => ({
-          mode: mode.id, stats, error,
-        }))
-      )
-    ).then((results) => {
-      const statsMap  = {};
-      const errorsMap = {};
-      results.forEach(({ mode, stats, error }) => {
-        statsMap[mode]  = stats;
-        errorsMap[mode] = error;
+    // Each mode updates ONLY its own index — race conditions impossible
+    GAME_MODES.forEach((mode, idx) => {
+      fetchModeWithRetry(pid, mode.id).then(({ stats, error }) => {
+        if (cancelRef.current) return;
+        setModes(prev => {
+          const next = [...prev];
+          next[idx] = { id: mode.id, stats, error, loading: false };
+          return next;
+        });
       });
-      setModeStats(statsMap);
-      setModeErrors(errorsMap);
-    }).finally(() => setLoadingStats(false));
-  }, [player]);
+    });
+
+    return () => { cancelRef.current = true; };
+  }, [player.platform_user_id]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -96,10 +101,13 @@ export default function PlayerPage({ player, onBack, onPlayerClick }) {
     }
   };
 
-  const currentStats = modeStats[selectedMode];
-  const currentError = modeErrors[selectedMode];
-  const hasData      = currentStats && Object.keys(currentStats).length > 0;
-  const coreCards    = getCoreStatsCards(currentStats);
+  const anyLoading    = modes.some(m => m.loading);
+  const currentSlot   = modes.find(m => m.id === selectedMode) ?? modes[0];
+  const isLoadingMode = currentSlot.loading;
+  const currentStats  = currentSlot.stats;
+  const currentError  = currentSlot.error;
+  const hasData       = currentStats && Object.keys(currentStats).length > 0;
+  const coreCards     = getCoreStatsCards(currentStats);
 
   return (
     <div className="fade-in">
@@ -108,65 +116,48 @@ export default function PlayerPage({ player, onBack, onPlayerClick }) {
       {/* ── Header ── */}
       <div className="player-header">
         <div className="player-header-bg" />
-        {rankInfo?.image ? (
-          <img src={rankInfo.image} alt={rankMatch} className="player-avatar-img" />
-        ) : (
-          <div className="player-avatar">{rankInfo?.icon || "🎮"}</div>
-        )}
+        {rankInfo?.image
+          ? <img src={rankInfo.image} alt={rankMatch} className="player-avatar-img" />
+          : <div className="player-avatar">{rankInfo?.icon || "🎮"}</div>
+        }
         <div className="player-info">
           <div className="player-name">{player.name}</div>
           <div className="player-meta">
             <span className="player-badge platform-badge">
-              {platInfo?.logo ? <img src={platInfo.logo} alt={platInfo.label} style={{ width: 14, height: 14, objectFit: "contain", verticalAlign: "middle" }} /> : null} {platInfo?.label}
+              {platInfo?.logo && <img src={platInfo.logo} alt={platInfo.label} style={{ width: 14, height: 14, objectFit: "contain", verticalAlign: "middle" }} />}
+              {" "}{platInfo?.label}
             </span>
-            <span
-              className="player-badge rank-badge"
-              style={{ color: rankInfo?.color, borderColor: rankInfo?.color, background: rankInfo?.glow }}
-            >
+            <span className="player-badge rank-badge" style={{ color: rankInfo?.color, borderColor: rankInfo?.color, background: rankInfo?.glow }}>
               {player.rank}
             </span>
           </div>
         </div>
 
-        {/* ── Refresh button ── */}
         <div style={{ display: "flex", flexDirection: "column", alignItems: "flex-end", gap: 6, flexShrink: 0 }}>
-          <button
-            onClick={handleRefresh}
-            disabled={refreshing}
-            style={{
-              padding: "8px 18px", borderRadius: 8,
-              border: "1px solid rgba(0,229,255,0.3)",
-              background: refreshing ? "rgba(0,229,255,0.04)" : "rgba(0,229,255,0.08)",
-              color: "var(--cyan)", fontFamily: "'Exo 2', sans-serif",
-              fontWeight: 700, fontSize: "0.78rem", letterSpacing: "0.08em",
-              textTransform: "uppercase", transition: "all .2s",
-              display: "flex", alignItems: "center", gap: 6,
-              opacity: refreshing ? 0.6 : 1, cursor: refreshing ? "not-allowed" : "pointer",
-              whiteSpace: "nowrap",
-            }}
-          >
+          <button onClick={handleRefresh} disabled={refreshing} style={{
+            padding: "8px 18px", borderRadius: 8,
+            border: "1px solid rgba(0,229,255,0.3)",
+            background: refreshing ? "rgba(0,229,255,0.04)" : "rgba(0,229,255,0.08)",
+            color: "var(--cyan)", fontFamily: "'Exo 2', sans-serif",
+            fontWeight: 700, fontSize: "0.78rem", letterSpacing: "0.08em",
+            textTransform: "uppercase", transition: "all .2s",
+            display: "flex", alignItems: "center", gap: 6,
+            opacity: refreshing ? 0.6 : 1, cursor: refreshing ? "not-allowed" : "pointer",
+            whiteSpace: "nowrap",
+          }}>
             {refreshing ? "Fetching..." : "↻ Refresh Games"}
           </button>
-
           {refreshResult && (
-            <div style={{
-              fontSize: "0.72rem", fontWeight: 600, textAlign: "right",
-              color: refreshResult.success ? "#00ff88" : "#ff6b6b",
-              fontFamily: "'Share Tech Mono', monospace", lineHeight: 1.6,
-            }}>
+            <div style={{ fontSize: "0.72rem", fontWeight: 600, textAlign: "right", color: refreshResult.success ? "#00ff88" : "#ff6b6b", fontFamily: "'Share Tech Mono', monospace", lineHeight: 1.6 }}>
               {refreshResult.success ? (
                 <>
                   <div>{refreshResult.data.details?.new_matches_downloaded ?? 0} new match(es)</div>
                   <div style={{ color: "var(--muted)" }}>
                     {refreshResult.data.details?.total_analysed ?? "?"} analysed
-                    {refreshResult.data.latest_match_date
-                      ? " · " + new Date(refreshResult.data.latest_match_date).toLocaleDateString()
-                      : ""}
+                    {refreshResult.data.latest_match_date ? " · " + new Date(refreshResult.data.latest_match_date).toLocaleDateString() : ""}
                   </div>
                 </>
-              ) : (
-                <div>Error: {refreshResult.message}</div>
-              )}
+              ) : <div>Error: {refreshResult.message}</div>}
             </div>
           )}
         </div>
@@ -176,45 +167,46 @@ export default function PlayerPage({ player, onBack, onPlayerClick }) {
       <div className="section-header" style={{ marginTop: "2rem" }}>
         <span className="section-title">Core Stats</span>
         <div className="section-line" />
+        {anyLoading && (
+          <span style={{ fontSize: "0.7rem", color: "var(--muted)", fontFamily: "'Share Tech Mono', monospace", display: "flex", alignItems: "center", gap: 6 }}>
+            <span className="spinner" style={{ width: 12, height: 12, borderWidth: 2, display: "inline-block" }} />
+            loading…
+          </span>
+        )}
       </div>
 
       <div className="game-mode-tabs">
-        {GAME_MODES.map((mode) => {
-          const loaded = mode.id in modeStats;
-          const hasErr = loaded && !!modeErrors[mode.id];
-          const hasOk  = loaded && !!modeStats[mode.id];
+        {GAME_MODES.map((mode, idx) => {
+          const slot      = modes[idx];
+          const isLoading = slot.loading;
+          const hasOk     = !isLoading && !!slot.stats;
+          const hasErr    = !isLoading && !!slot.error;
+          const noData    = !isLoading && !slot.stats && !slot.error;
           return (
-            <button
-              key={mode.id}
-              className={`game-mode-btn ${selectedMode === mode.id ? "active" : ""}`}
-              onClick={() => setSelectedMode(mode.id)}
-            >
+            <button key={mode.id} className={`game-mode-btn ${selectedMode === mode.id ? "active" : ""}`} onClick={() => setSelectedMode(mode.id)}>
               {mode.label}
-              {hasOk  && <span style={{ marginLeft: 6, fontSize: "0.65rem", color: "#00ff88" }}>✓</span>}
-              {hasErr && <span style={{ marginLeft: 6, fontSize: "0.65rem", color: "#ff4e50" }}>✕</span>}
+              {isLoading && <span style={{ marginLeft: 6, fontSize: "0.65rem", color: "var(--muted)" }}>…</span>}
+              {hasOk     && <span style={{ marginLeft: 6, fontSize: "0.65rem", color: "#00ff88" }}>✓</span>}
+              {hasErr    && <span style={{ marginLeft: 6, fontSize: "0.65rem", color: "#ff4e50" }}>✕</span>}
+              {noData    && <span style={{ marginLeft: 6, fontSize: "0.65rem", color: "var(--muted)" }}>—</span>}
             </button>
           );
         })}
       </div>
 
-      {loadingStats ? (
+      {isLoadingMode ? (
         <div style={{ textAlign: "center", padding: "3rem" }}>
           <div className="spinner" style={{ margin: "0 auto 16px" }} />
-          <p className="overlay-text">Chargement des statistiques...</p>
+          <p className="overlay-text">Loading stats…</p>
         </div>
       ) : currentError ? (
         <div style={{ padding: "20px 24px", background: "rgba(255,78,80,0.08)", border: "1px solid rgba(255,78,80,0.25)", borderRadius: 12, color: "#ff6b6b", marginTop: 8 }}>
-          <div style={{ fontWeight: 700, marginBottom: 6 }}>Aucune donnée pour ce mode</div>
-          <div style={{ fontSize: "0.8rem", color: "var(--muted)", fontFamily: "'Share Tech Mono', monospace" }}>
-            {currentError.includes("404") ? "Ce mode n'a pas encore de stats enregistrées."
-              : currentError.includes("422") ? "Paramètre refusé — vérifie les noms de game_mode."
-              : currentError.includes("500") ? "Erreur serveur — réessaie plus tard."
-              : currentError}
-          </div>
+          <div style={{ fontWeight: 700, marginBottom: 6 }}>Error loading stats</div>
+          <div style={{ fontSize: "0.8rem", color: "var(--muted)", fontFamily: "'Share Tech Mono', monospace" }}>{currentError}</div>
         </div>
       ) : hasData ? (
         <div className="stats-grid">
-          {coreCards.map((s) => (
+          {coreCards.map(s => (
             <div key={s.label} className="stat-card" style={{ "--stat-color": s.color }}>
               <div className="stat-num">{s.value}</div>
               <div className="stat-label">{s.label}</div>
@@ -224,11 +216,10 @@ export default function PlayerPage({ player, onBack, onPlayerClick }) {
         </div>
       ) : (
         <div style={{ textAlign: "center", padding: "2rem", color: "var(--muted)" }}>
-          Aucune statistique disponible pour ce mode.
+          No stats available for this mode.
         </div>
       )}
 
-      {/* key forces RecentMatches to re-mount and re-fetch after refresh */}
       <RecentMatches key={matchesKey} player={player} onPlayerClick={onPlayerClick} />
     </div>
   );
