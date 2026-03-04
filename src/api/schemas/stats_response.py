@@ -1,3 +1,4 @@
+from datetime import datetime
 from enum import Enum
 
 from pydantic import BaseModel
@@ -12,6 +13,18 @@ from src.dto.stats_positioning_dto import (
     StatsPositioningAggregatedDTO,
     StatsPositioningDTO,
 )
+
+
+class MatchResponse(BaseModel):
+    id: str
+    playlist_id: str
+    season: int
+    duration: int
+    overtime: int
+    date_upload: datetime
+
+    class Config:
+        from_attributes = True
 
 
 class StatsType(str, Enum):

@@ -68,3 +68,46 @@ class MatchDAO(metaclass=Singleton):
                     )
                 )
             return list_match
+
+    def get_match_by_match_team_id(self, match_team_id: int) -> Match | None:
+        """
+        Récupère le match pour un match_team_id donnée
+
+        Parameters
+        ----------
+        match_team_id: int
+            L'id du match_team
+
+        Returns
+        -------
+        Match | None
+            Le match correspondant, ou None si aucun n'est trouvé.
+
+        Raises
+        ------
+        ValueError
+            Si match_team_id n'est pas un entier'.
+        """
+        if not isinstance(match_team_id, int):
+            raise TypeError("Match_team_id has to be an integer")
+        query = """
+            SELECT m.*
+            FROM matches m
+            JOIN match_teams mt ON mt.match_id = m.id
+            WHERE mt.id = ?
+            """
+        connection = self.db_connector.connection
+        with connection:
+            cursor = connection.cursor()
+            cursor.execute(query, (match_team_id,))
+            res = cursor.fetchone()
+            if not res:
+                return None
+            return Match(
+                res["id"],
+                res["playlist_id"],
+                res["season"],
+                res["duration"],
+                res["overtime"],
+                res["date_upload"],
+            )

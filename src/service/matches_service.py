@@ -57,3 +57,20 @@ class MatchService:
                 blue_count += 1
 
         return MatchPlayersDTO(**dto_data)
+
+    def get_match_by_match_team_id(self, match_team_id: int) -> Match | None:
+        """
+        Récupère un match par un match team ID.
+
+        Parameters
+        ----------
+        match_team_id: int
+            L'ID du match_team
+
+        Returns
+        -------
+        Optional[Match]
+            Le match trouvé ou None
+        """
+        match = self.match_dao.get_match_by_match_team_id(match_team_id)
+        return match if match else None
