@@ -105,7 +105,10 @@ function BarChart({ field, data, loading }) {
   }, [loading, data, field.key]);
 
   const values = RANK_GROUPS.map(r => data?.[r.key]?.[field.key] ?? null);
-  const maxVal = Math.max(...values.filter(v => v != null), 0.001);
+  const nonNull = values.filter(v => v != null);
+  const minVal = nonNull.length ? Math.min(...nonNull) : 0;
+  const maxVal = nonNull.length ? Math.max(...nonNull) : 0.001;
+  const range  = maxVal - minVal || 0.001;
 
   const formatVal = (v) => {
     if (v == null) return "—";
@@ -136,7 +139,7 @@ function BarChart({ field, data, loading }) {
       <div style={{ display: "flex", alignItems: "flex-end", gap: 4, height: 110 }}>
         {RANK_GROUPS.map((rank, i) => {
           const val = values[i];
-          const pct = val != null ? (val / maxVal) * 100 : 0;
+          const pct = val != null ? ((val - minVal) / range) * 85 + 5 : 0; // 5% min height so bar is always visible
           return (
             <div
               key={rank.key}
@@ -261,7 +264,7 @@ export default function GlobalStats() {
               transition: "all .2s", letterSpacing: 0.5,
               display: "flex", alignItems: "center", gap: 6,
             }}>
-              {t.icon} {t.label}
+              {t.label}
             </button>
           );
         })}

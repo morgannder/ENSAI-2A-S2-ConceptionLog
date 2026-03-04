@@ -37,7 +37,8 @@ const CAR_COLORS = {
 // ── Rank badge inline ─────────────────────────────────────────────────────────
 function RankBadge({ rankStr }) {
   if (!rankStr || rankStr === "Unranked") return null;
-  const rankInfo = RANKS.find((r) => r.fullName === rankStr || r.name === rankStr);
+  const extracted = rankStr.match(/^([A-Za-z\s]+\s[IVX]+)/)?.[1]?.trim() || rankStr.trim();
+  const rankInfo = RANKS.find((r) => r.fullName === extracted || r.fullName === rankStr.trim() || r.name === rankStr.trim());
   if (!rankInfo) return null;
   return rankInfo.image ? (
     <img
@@ -63,6 +64,7 @@ function TeamColumn({ label, players, accentColor, currentPlayerId, onPlayerClic
           const isCurrent   = p.platform_user_id === currentPlayerId;
           const isClickable = !isCurrent && !!p.platform_user_id;
           const rankStr     = p.rank ?? p.full_rank ?? null;
+          const isMvp       = p._mvp === 1 || p._mvp === true;
           return (
             <div
               key={p.id ?? p.platform_user_id}
@@ -71,9 +73,25 @@ function TeamColumn({ label, players, accentColor, currentPlayerId, onPlayerClic
               title={isClickable ? `View ${p.name}'s profile` : undefined}
             >
               <RankBadge rankStr={rankStr} />
-              <span className="team-player-name" style={{ color: isCurrent ? "var(--cyan)" : "var(--text)" }}>
-                {p.name}
-              </span>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <span
+                  className="team-player-name"
+                  style={{
+                    color: isMvp ? "#ffd700" : isCurrent ? "var(--cyan)" : "var(--text)",
+                    display: "block",
+                  }}
+                >
+                  {p.name}
+                </span>
+                {isMvp && (
+                  <span style={{
+                    fontSize: "0.58rem", fontWeight: 800, color: "#ffd700",
+                    letterSpacing: "0.1em", textTransform: "uppercase", opacity: 0.85,
+                  }}>
+                    mvp
+                  </span>
+                )}
+              </div>
               {p.score != null && (
                 <span style={{
                   fontFamily: "'Share Tech Mono', monospace",
@@ -85,9 +103,6 @@ function TeamColumn({ label, players, accentColor, currentPlayerId, onPlayerClic
                   {Math.round(p.score)}pts
                 </span>
               )}
-              {p._mvp === 1 || p._mvp === true ? (
-                <span style={{ fontSize: "0.75rem", flexShrink: 0 }} title="MVP">⭐</span>
-              ) : null}
               {isCurrent  && <span className="team-player-you">You</span>}
               {isClickable && <span className="team-player-arrow">→</span>}
             </div>
@@ -105,7 +120,6 @@ function MatchDetailModal({ match, onClose, onPlayerClick, currentPlayerId }) {
   const [error,   setError]   = useState(null);
 
   const matchId  = match._match_team_id ?? match._id;
-  const isMvp    = match._mvp === 1 || match._mvp === true;
   const duration = formatDuration(match._start_time, match._end_time);
   const carName  = match._car_name ?? "Unknown";
   const carColor = CAR_COLORS[carName] ?? "var(--muted)";
@@ -127,11 +141,6 @@ function MatchDetailModal({ match, onClose, onPlayerClick, currentPlayerId }) {
     ? ["blue1","blue2","blue3","blue4"].map((k) => players[k]).filter(Boolean)
     : [];
 
-  // Compute team scores from players if available
-  const orangeScore = orangePlayers.reduce((acc, p) => acc + (p._team_score ?? p.team_score ?? 0), 0) || null;
-  const blueScore   = bluePlayers.reduce((acc, p) => acc + (p._team_score ?? p.team_score ?? 0), 0) || null;
-
-  // Try direct match fields for team goals
   const matchOrangeGoals = match._orange_goals ?? match.orange_goals ?? null;
   const matchBlueGoals   = match._blue_goals   ?? match.blue_goals   ?? null;
 
@@ -146,7 +155,6 @@ function MatchDetailModal({ match, onClose, onPlayerClick, currentPlayerId }) {
             <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "0.8rem", color: "var(--muted)" }}>
               #{String(matchId ?? "").slice(-6)}
             </span>
-            {isMvp && <span className="match-mvp-badge">⭐ MVP</span>}
             <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "0.8rem", color: "var(--muted)" }}>
               ⏱ {duration}
             </span>
@@ -161,7 +169,7 @@ function MatchDetailModal({ match, onClose, onPlayerClick, currentPlayerId }) {
           background: "rgba(255,255,255,0.03)", borderRadius: 10,
           border: "1px solid var(--border)",
         }}>
-          {/* Team goals if available */}
+          {/* Team goals */}
           {(matchOrangeGoals != null && matchBlueGoals != null) && (
             <div style={{ display: "flex", alignItems: "center", gap: 8, fontFamily: "'Share Tech Mono', monospace" }}>
               <span style={{ color: "#ff6b1a", fontWeight: 800, fontSize: "1.1rem" }}>{matchOrangeGoals}</span>
@@ -178,7 +186,6 @@ function MatchDetailModal({ match, onClose, onPlayerClick, currentPlayerId }) {
               </span>
             </div>
           )}
-          {/* Goals / Assists / Saves / Shots */}
           {[
             { key: "_goals",   label: "G",  color: "var(--orange)" },
             { key: "_assists", label: "A",  color: "var(--purple)" },
@@ -246,108 +253,58 @@ function MatchDetailModal({ match, onClose, onPlayerClick, currentPlayerId }) {
           position: relative;
           box-shadow: 0 0 80px rgba(0,0,0,0.7), 0 0 40px rgba(0,229,255,0.05);
         }
-
         .match-teams-grid {
           display: grid;
           grid-template-columns: 1fr auto 1fr;
           gap: 16px;
           align-items: start;
         }
-
         .match-vs-divider {
-          display: flex;
-          flex-direction: column;
-          align-items: center;
-          gap: 8px;
-          padding-top: 32px;
+          display: flex; flex-direction: column; align-items: center;
+          gap: 8px; padding-top: 32px;
         }
-
-        .match-vs-line {
-          width: 1px;
-          height: 40px;
-          background: var(--border);
-        }
-
+        .match-vs-line { width: 1px; height: 40px; background: var(--border); }
         .match-vs-text {
-          font-size: 0.65rem;
-          font-weight: 900;
-          color: var(--muted);
+          font-size: 0.65rem; font-weight: 900; color: var(--muted);
           letter-spacing: 0.15em;
-          writing-mode: horizontal-tb;
         }
-
-        .team-column {
-          display: flex;
-          flex-direction: column;
-          gap: 8px;
-        }
-
+        .team-column { display: flex; flex-direction: column; gap: 8px; }
         .team-label {
-          font-size: 0.7rem;
-          font-weight: 800;
-          text-transform: uppercase;
-          letter-spacing: 0.1em;
-          margin-bottom: 4px;
+          font-size: 0.7rem; font-weight: 800;
+          text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px;
         }
-
         .team-player {
-          display: flex;
-          align-items: center;
-          gap: 7px;
-          padding: 10px 12px;
-          background: var(--card);
-          border: 1px solid var(--border);
-          border-radius: 8px;
+          display: flex; align-items: center; gap: 7px;
+          padding: 10px 12px; background: var(--card);
+          border: 1px solid var(--border); border-radius: 8px;
           transition: border-color 0.2s, background 0.2s, transform 0.15s;
           min-width: 0;
         }
-
-        .team-player.clickable {
-          cursor: pointer;
-        }
-
+        .team-player.clickable { cursor: pointer; }
         .team-player.clickable:hover {
-          background: var(--bg2);
-          border-color: rgba(0,229,255,0.3);
+          background: var(--bg2); border-color: rgba(0,229,255,0.3);
           transform: translateX(3px);
         }
-
         .team-player.is-current {
           border-color: rgba(0,229,255,0.35);
           background: rgba(0,229,255,0.05);
         }
-
         .team-player-name {
-          font-size: 0.85rem;
-          font-weight: 700;
-          flex: 1;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
+          font-size: 0.85rem; font-weight: 700;
+          white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
         }
-
         .team-player-you {
-          font-size: 0.6rem;
-          color: var(--cyan);
-          font-weight: 800;
-          letter-spacing: 0.08em;
-          text-transform: uppercase;
-          border: 1px solid rgba(0,229,255,0.3);
-          border-radius: 4px;
-          padding: 1px 6px;
-          flex-shrink: 0;
+          font-size: 0.6rem; color: var(--cyan); font-weight: 800;
+          letter-spacing: 0.08em; text-transform: uppercase;
+          border: 1px solid rgba(0,229,255,0.3); border-radius: 4px;
+          padding: 1px 6px; flex-shrink: 0;
         }
-
         .team-player-arrow {
-          font-size: 0.75rem;
-          color: var(--muted);
-          flex-shrink: 0;
+          font-size: 0.75rem; color: var(--muted); flex-shrink: 0;
           transition: color 0.2s, transform 0.2s;
         }
-
         .team-player.clickable:hover .team-player-arrow {
-          color: var(--cyan);
-          transform: translateX(2px);
+          color: var(--cyan); transform: translateX(2px);
         }
       `}</style>
     </div>
@@ -363,6 +320,9 @@ function MatchCard({ match, index, onClick }) {
   const matchId  = String(match._id ?? match._match_team_id ?? index).slice(-6);
   const score    = match._score ?? match.score ?? null;
 
+  const orangeGoals = match._orange_goals ?? match.orange_goals ?? null;
+  const blueGoals   = match._blue_goals   ?? match.blue_goals   ?? null;
+
   return (
     <div
       className="match-card"
@@ -370,34 +330,55 @@ function MatchCard({ match, index, onClick }) {
       onClick={() => onClick(match)}
     >
       <div className="match-timeline-line">
-        <div className="match-dot" style={{
-          background: isMvp ? "#ffd700" : "var(--border)",
-          boxShadow:  isMvp ? "0 0 12px #ffd700" : "none",
-        }} />
+        <div className="match-dot" />
       </div>
       <div className="match-content">
         <div className="match-header">
           <span className="match-id">#{matchId}</span>
-          {isMvp && <span className="match-mvp-badge">⭐ MVP</span>}
           <span className="match-duration">⏱ {duration}</span>
+
+          {/* Team score */}
+          {orangeGoals != null && blueGoals != null && (
+            <span style={{
+              fontFamily: "'Share Tech Mono', monospace", fontSize: "0.8rem", fontWeight: 800,
+              display: "flex", alignItems: "center", gap: 4,
+            }}>
+              <span style={{ color: "#ff6b1a" }}>{orangeGoals}</span>
+              <span style={{ color: "var(--muted)", fontSize: "0.65rem" }}>–</span>
+              <span style={{ color: "var(--cyan)" }}>{blueGoals}</span>
+            </span>
+          )}
+
+          {/* Personal score */}
           {score != null && (
             <span style={{
               fontFamily: "'Share Tech Mono', monospace",
-              fontSize: "0.72rem",
-              color: "#ffd700",
-              fontWeight: 700,
+              fontSize: "0.72rem", color: "#ffd700", fontWeight: 700,
             }}>
               {Math.round(score)}pts
             </span>
           )}
+
           <span style={{ marginLeft: "auto", fontSize: "0.7rem", color: "var(--muted)", paddingLeft: 8, flexShrink: 0 }}>
             Details →
           </span>
         </div>
-        <div className="match-car" style={{ color: carColor }}>
-          <span className="match-car-icon">🚗</span>
-          <span className="match-car-name">{carName}</span>
+
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <div className="match-car" style={{ color: carColor }}>
+            <span className="match-car-icon">🚗</span>
+            <span className="match-car-name">{carName}</span>
+          </div>
+          {isMvp && (
+            <span style={{
+              fontSize: "0.62rem", fontWeight: 800, color: "#ffd700",
+              letterSpacing: "0.1em", textTransform: "uppercase",
+            }}>
+              mvp
+            </span>
+          )}
         </div>
+
         <div className="match-bar" style={{
           background:  `linear-gradient(90deg, ${carColor}33, transparent)`,
           borderColor: `${carColor}44`,
@@ -452,7 +433,6 @@ export default function RecentMatches({ player, onPlayerClick }) {
     <div className="recent-matches-section">
       <style>{`
         .recent-matches-section { margin-top: 2rem; }
-
         .matches-summary { display: flex; gap: 12px; margin-bottom: 28px; flex-wrap: wrap; }
         .summary-chip {
           padding: 8px 16px; border-radius: 20px;
@@ -462,14 +442,12 @@ export default function RecentMatches({ player, onPlayerClick }) {
         }
         .summary-chip .chip-val { color: var(--cyan); font-family: 'Share Tech Mono', monospace; }
         .summary-chip.mvp-chip .chip-val { color: #ffd700; }
-
         .matches-feed { position: relative; padding-left: 24px; }
         .matches-feed::before {
           content: ''; position: absolute; left: 7px; top: 12px; bottom: 12px;
           width: 2px;
           background: linear-gradient(to bottom, var(--cyan), var(--border) 80%, transparent);
         }
-
         .match-card {
           display: flex; gap: 0; margin-bottom: 12px;
           animation: matchSlideIn 0.4s ease both;
@@ -479,7 +457,6 @@ export default function RecentMatches({ player, onPlayerClick }) {
           from { opacity: 0; transform: translateX(-12px); }
           to   { opacity: 1; transform: translateX(0); }
         }
-
         .match-timeline-line {
           display: flex; flex-direction: column; align-items: center;
           margin-right: 16px; position: relative; top: 14px; flex-shrink: 0;
@@ -487,10 +464,10 @@ export default function RecentMatches({ player, onPlayerClick }) {
         .match-dot {
           width: 14px; height: 14px; border-radius: 50%;
           border: 2px solid var(--bg); flex-shrink: 0;
+          background: var(--border);
           transition: transform 0.2s; margin-left: -21px;
         }
         .match-card:hover .match-dot { transform: scale(1.4); }
-
         .match-content {
           flex: 1; background: var(--card); border-radius: 12px;
           padding: 14px 18px; border: 1px solid var(--border);
@@ -501,7 +478,6 @@ export default function RecentMatches({ player, onPlayerClick }) {
           border-color: rgba(0,229,255,0.25);
           box-shadow: 0 4px 20px rgba(0,229,255,0.08);
         }
-
         .match-header {
           display: flex; align-items: center; gap: 10px; margin-bottom: 8px; flex-wrap: wrap;
         }
@@ -512,13 +488,10 @@ export default function RecentMatches({ player, onPlayerClick }) {
           color: #ffd700; font-size: 0.7rem; font-weight: 800; letter-spacing: 0.08em;
         }
         .match-duration { font-family: 'Share Tech Mono', monospace; font-size: 0.78rem; color: var(--muted); }
-
         .match-car { display: flex; align-items: center; gap: 8px; font-size: 0.92rem; font-weight: 700; }
         .match-car-icon { font-size: 1rem; }
         .match-car-name { letter-spacing: 0.03em; }
-
         .match-bar { position: absolute; bottom: 0; left: 0; right: 0; height: 2px; border-top: 1px solid; }
-
         .matches-empty {
           text-align: center; padding: 3rem; color: var(--muted);
           background: var(--card); border-radius: 12px; border: 1px solid var(--border);

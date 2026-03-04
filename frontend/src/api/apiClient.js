@@ -2,10 +2,7 @@
  * Client API pour communiquer avec le backend Rocket League Stats
  */
 
-// ── Configuration Dynamique de l'URL ──────────────────────────────────────────
-// En production, Vite lira l'URL "http://rocketcl..." depuis ton fichier .env.production
-// En local, s'il ne trouve pas la variable, il utilisera "/api" (ton proxy local)
-const API_BASE = import.meta.env.VITE_API_URL || "/api";
+const API_BASE = "/api"; // Utilise le proxy Vite
 
 // ── Données statiques des Rangs avec icônes, couleurs et images ────────────
 export const RANKS = [
@@ -56,8 +53,7 @@ export const PLATFORMS = [
   { id: "steam",   label: "Steam",       icon: "⬡",  logo: "/images/platforms/steam.png" },
   { id: "psn",     label: "PlayStation", icon: "▲",  logo: "/images/platforms/psn.png"   },
   { id: "xbox",    label: "Xbox",        icon: "⊞",  logo: "/images/platforms/xbox.png"  },
-  { id: "switch",  label: "Switch",      icon: "⊕",  logo: "/images/platforms/switch.png"},
-  { id: "psynet",  label: "PsyNet",      icon: "⬡",  logo: null                          },
+  { id: "psynet", label: "Switch", icon: "⊕", logo: "/images/platforms/switch.png" },
 ];
 
 // Normalize any platform string the API might return → canonical id

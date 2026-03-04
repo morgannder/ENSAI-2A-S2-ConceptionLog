@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { searchPlayers, getPlayerRank, getPlayerCoreStats, PLATFORMS, findRankInfo } from "./api/apiClient";
+import { searchPlayers, getPlayerRank, getPlayerCoreStats, PLATFORMS, findRankInfo, requestPlayerUpdate } from "./api/apiClient";
 import SearchBar   from "./components/SearchBar";
 import PlayerPage  from "./components/PlayerPage";
 import GlobalStats from "./components/GlobalStats";
@@ -13,6 +13,8 @@ export default function App() {
   const [suggestions,    setSuggestions]    = useState([]);
   const [loading,        setLoading]        = useState(false);
   const [loadingPlayer,  setLoadingPlayer]  = useState(false);
+  const [refreshing,     setRefreshing]     = useState(false);
+  const [refreshResult,  setRefreshResult]  = useState(null);
   const [history,        setHistory]        = useState(() => {
     try {
       return JSON.parse(sessionStorage.getItem("rl_history") || "[]");
@@ -22,33 +24,32 @@ export default function App() {
   });
 
   useEffect(() => {
-  if (searchQuery.length >= 3) {
-    setLoading(true);
-    searchPlayers(searchQuery, null)
-      .then((results) => {
-        if (!results || results.length === 0) { setSuggestions([]); return; }
-        // Affiche immédiatement sans rang, puis enrichit chaque joueur dès que son rang arrive
-        setSuggestions(results);
-        results.forEach(async (p) => {
-          const id = p.platform_user_id ?? p.id;
-          if (!id) return;
-          const rankData = await getPlayerRank(id).catch(() => null);
-          if (!rankData) return;
-          setSuggestions((prev) =>
-            prev.map((s) =>
-              (s.platform_user_id ?? s.id) === id
-                ? { ...s, rank: rankData.full_rank ?? s.rank, mmr: rankData.mmr ?? s.mmr }
-                : s
-            )
-          );
-        });
-      })
-      .catch(() => setSuggestions([]))
-      .finally(() => setLoading(false));
-  } else {
-    setSuggestions([]);
-  }
-}, [searchQuery]);
+    if (searchQuery.length >= 3) {
+      setLoading(true);
+      searchPlayers(searchQuery, null)
+        .then((results) => {
+          if (!results || results.length === 0) { setSuggestions([]); return; }
+          setSuggestions(results);
+          results.forEach(async (p) => {
+            const id = p.platform_user_id ?? p.id;
+            if (!id) return;
+            const rankData = await getPlayerRank(id).catch(() => null);
+            if (!rankData) return;
+            setSuggestions((prev) =>
+              prev.map((s) =>
+                (s.platform_user_id ?? s.id) === id
+                  ? { ...s, rank: rankData.full_rank ?? s.rank, mmr: rankData.mmr ?? s.mmr }
+                  : s
+              )
+            );
+          });
+        })
+        .catch(() => setSuggestions([]))
+        .finally(() => setLoading(false));
+    } else {
+      setSuggestions([]);
+    }
+  }, [searchQuery]);
 
   const handleSearch = () => {
     if (!searchQuery.trim() || suggestions.length === 0) return;
@@ -64,6 +65,19 @@ export default function App() {
     });
   };
 
+  const handleRefreshLatest = async () => {
+    setRefreshing(true);
+    setRefreshResult(null);
+    try {
+      const res = await requestPlayerUpdate({ gameCount: 10, createdAfter: "2024-01-01T00:00:00Z" });
+      setRefreshResult({ success: true, data: res });
+    } catch (err) {
+      setRefreshResult({ success: false, message: err.message });
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
   const openPlayer = async (basicPlayer) => {
     setLoadingPlayer(true);
     try {
@@ -77,6 +91,7 @@ export default function App() {
       const enrichedPlayer = {
         ...basicPlayer,
         platform_user_id,
+        platform:  basicPlayer.platform ?? "epic",
         rank:      rankData?.full_rank ?? basicPlayer.rank ?? "Unranked",
         mmr:       rankData?.mmr       ?? basicPlayer.mmr  ?? 0,
         coreStats: statsData?.data ? {
@@ -117,7 +132,7 @@ export default function App() {
         <nav>
           <div className="nav-logo" onClick={() => setPage("home")}>
             <span className="nav-logo-icon">🚀</span>
-            RLSTATS
+            RCLStast
           </div>
           <div className="nav-links">
             <div className={`nav-link ${page === "home"   ? "active" : ""}`} onClick={() => setPage("home")}>Home</div>
@@ -145,6 +160,52 @@ export default function App() {
                   onSuggestionClick={openPlayer}
                   onPlayerClick={openPlayer}
                 />
+
+              {/* ── Refresh Latest Games ── */}
+              <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12, margin: "24px 0 0" }}>
+                <button
+                  onClick={handleRefreshLatest}
+                  disabled={refreshing}
+                  style={{
+                    padding: "10px 28px", borderRadius: 8,
+                    border: "1px solid rgba(0,229,255,0.3)",
+                    background: refreshing ? "rgba(0,229,255,0.04)" : "rgba(0,229,255,0.08)",
+                    color: "var(--cyan)", fontFamily: "'Exo 2', sans-serif",
+                    fontWeight: 700, fontSize: "0.85rem", letterSpacing: "0.08em",
+                    textTransform: "uppercase", transition: "all .2s",
+                    display: "flex", alignItems: "center", gap: 8,
+                    opacity: refreshing ? 0.6 : 1, cursor: refreshing ? "not-allowed" : "pointer",
+                  }}
+                >
+                  {refreshing ? "Fetching..." : "↻  Refresh Latest Games"}
+                </button>
+
+                {refreshResult && (
+                  <div style={{
+                    padding: "10px 20px", borderRadius: 8, fontSize: "0.8rem", fontWeight: 600,
+                    background: refreshResult.success ? "rgba(0,255,136,0.06)" : "rgba(255,78,80,0.06)",
+                    border: `1px solid ${refreshResult.success ? "rgba(0,255,136,0.2)" : "rgba(255,78,80,0.2)"}`,
+                    color: refreshResult.success ? "#00ff88" : "#ff6b6b",
+                    display: "flex", flexDirection: "column", alignItems: "center", gap: 4,
+                    fontFamily: "'Share Tech Mono', monospace", textAlign: "center",
+                  }}>
+                    {refreshResult.success ? (
+                      <>
+                        <span>{refreshResult.data.details?.new_matches_downloaded ?? 0} new match(es) downloaded</span>
+                        <span style={{ color: "var(--muted)", fontSize: "0.72rem" }}>
+                          {refreshResult.data.details?.total_analysed ?? "?"} analysed
+                          {" · "}{refreshResult.data.details?.already_in_db ?? "?"} already in DB
+                          {refreshResult.data.latest_match_date
+                            ? " · Latest: " + new Date(refreshResult.data.latest_match_date).toLocaleDateString()
+                            : ""}
+                        </span>
+                      </>
+                    ) : (
+                      <span>Error: {refreshResult.message}</span>
+                    )}
+                  </div>
+                )}
+              </div>
               </div>
 
               {history.length > 0 && (
@@ -195,7 +256,6 @@ export default function App() {
                           <div className="history-info">
                             <div className="history-name">{p.name}</div>
                             <div className="history-meta">
-                              {/* Platform logo */}
                               <span className="history-platform">
                                 {platLogo
                                   ? <img src={platLogo} alt={platInfo?.label || p.platform} style={{ width: 14, height: 14, objectFit: "contain", verticalAlign: "middle" }} />
