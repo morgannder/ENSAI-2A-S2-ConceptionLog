@@ -1,93 +1,98 @@
-# ENSAI-2A-projet-Conception-Logicielle : Rocket League data analyst
+# ENSAI-2A-projet-Conception-Logicielle : Rocket League Data Analyst
 
 [![CI/CD Pipeline](https://github.com/morgannder/ENSAI-2A-S2-ConceptionLog/actions/workflows/deploy.yml/badge.svg?branch=develop)](https://github.com/morgannder/ENSAI-2A-S2-ConceptionLog/actions/workflows/deploy.yml)
 
-## :arrow_forward: Software and tools
+Welcome to our Rocket League Data Analyst project! This application allows you to search for Rocket League players across all platforms, view their global statistics, and analyze their recent matches.
 
-- [Visual Studio Code](https://code.visualstudio.com/)
-- [Python 3.13](https://www.python.org/)
+---
+
+## Live Version (Deployed on SSPCloud)
+
+You don't need to install anything to try the application. It is currently deployed and accessible online:
+- **Frontend (Website)**: [http://rocketclstats.api.kub.sspcloud.fr/](http://rocketclstats.api.kub.sspcloud.fr/)
+- **Backend API (Swagger)**: [http://rocketcl.api.kub.sspcloud.fr/](http://rocketcl.api.kub.sspcloud.fr/)
+
+---
+
+## Prerequisites & Tools
+
+If you want to run the project locally, you will need the following tools installed on your machine:
+- [Visual Studio Code](https://code.visualstudio.com/) (Recommended IDE)
+- [Python 3.13](https://www.python.org/) (Backend)
+- [Node.js & npm](https://nodejs.org/) (Frontend - Required to run the website)
 - [Git](https://git-scm.com/)
-- [SQLite](https://www.sqlite.org/)
-- [SSPCloud](https://datalab.sspcloud.fr/) : Databse hoster
+- [uv](https://github.com/astral-sh/uv) (Extremely fast Python package installer and resolver)
 
+---
+## Local Installation Guide
 
-### Option 1
+### 1. Clone the repository
+Open Git Bash or your terminal and run the following commands one by one:
+* `git clone https://github.com/morgannder/ENSAI-2A-S2-ConceptionLog`
+* `cd ENSAI-2A-S2-ConceptionLog`
 
-- [ ] Go to http://rocketcl.api.kub.sspcloud.fr/
+*Open this folder in Visual Studio Code (File > Open Folder). Make sure ENSAI-2A-S2-ConceptionLog is the root of your Explorer, otherwise the application might not launch properly.*
 
+### 2. Backend Setup (FastAPI / Python)
+1. **Sync dependencies**: In your terminal, run the command: `uv sync`
+2. **Environment Variables**: Create a `.env` file at the root of the project (use `.env.template` as a guide) and fill in the required variables.
+3. **Database Setup**:
+   - Download the pre-filled SQLite database (~70,000 matches) here: [rocket_league.db](https://www.dropbox.com/scl/fi/nquvnhja079u5v6gfs1lp/rocket_league.db?rlkey=faf14s3qzon59k5utb2d1xdqs&st=dr943fdl&dl=0)
+   - Rename the downloaded file to `rocket_league.db` and place it inside the `src/database/` directory.
+4. **Start the API**: Run the command `python main.py`
+   *The API will be accessible at http://localhost:8000.*
 
-### Option 2
+### 3. Frontend Setup (React / Vite)
+To run the website interface, you need to use npm (Node Package Manager).
+1. Open a **new** terminal window (keep the backend running in the first one).
+2. Navigate to the frontend directory using: `cd frontend/`
+3. **Install dependencies**: Run `npm install` (This will download all the required Javascript packages).
+4. **Start the development server**: Run `npm run dev`
+   *The website will be accessible locally, usually at http://localhost:5173.*
 
-## :arrow_forward: Clone the repository
+   ---
 
-- [ ] Open VSCode
-- [ ] Open **Git Bash**
-- [ ] Clone the repo
-  - `git clone https://github.com/morgannder/ENSAI-2A-S2-ConceptionLog`
+## API Key Generation (Ballchasing)
 
+To fully use the local version and fetch new matches, you will need a Ballchasing API Key.
+1. Create an account on [Ballchasing.com](https://ballchasing.com/) using your Steam account.
+2. Go to the **Upload** tab.
+3. Under **Upload Token**, generate a new token.
+4. Copy this token and paste it into your `.env` file as `BALLCHASING_API_KEY`.
 
-### Open Folder
+> **Note on Rate Limits**:
+> * A standard personal key is limited to **2 requests/second** and **500 requests/hour**.
+> * The live version deployed on SSPCloud has an upgraded limit of **1000 requests/hour**.
 
-- [ ] Open **Visual Studio Code**
-- [ ] File > Open Folder
-- [ ] Select folder *ENSAI-2A-S2-ConceptionLog*
-  - *ENSAI-2A-S2-ConceptionLog* should be the root of your Explorer
-  - :warning: if not the application will not launch. Retry open folder
+---
 
+## Repository Overview
 
-### Commands to execute
-
-- [ ] in Git Bash : uv sync
-- [ ] Create .env file (.env.template is here to help you) and fill it
-- [ ] Download DB at https://www.dropbox.com/scl/fi/nquvnhja079u5v6gfs1lp/rocket_league.db?rlkey=faf14s3qzon59k5utb2d1xdqs&st=dr943fdl&dl=0
-- [ ] Name it "rocket_league.db" and put it in [database] directory
-- [ ] run main.py to start API process
-
-NB : Before the start of the project, we already had around 70 000 matches in json files. The folder scripts explains how we created the DB with those files. It is not used anymore, just explains how we started to fill our DB.
-
-### API Key Generation
-
-To run locally you'll need a Ballchasing API Key, here are the instructions to create your own key :
-
-- [ ] Create an account on Ballchasing.com using a Steam account
-- [ ] Go to [Upload] tab
-- [ ] Upload Token -> Generate one and put it in your .env
-
-NB2 : You have a limited number of requests : 2/second, 500/hour
-NB3 : On http://rocketcl.api.kub.sspcloud.fr/, you can go up to 1000 requests/hour and 2/second
-
-## Repository Files Overview
-
-
-| Item                       | Description                                                              |
-| -------------------------- | ------------------------------------------------------------------------ |
-| `README.md`                | Provides useful information to present, install, and use the application |
-| `LICENSE`                  | Specifies the usage rights and licensing terms for the repository        |
-| `main.py`                  | execute to launch the API Swagger                                        |
-
-
-### Configuration files
-
-| Item                       | Description                                                              |
-| -------------------------- | ------------------------------------------------------------------------ |
-| `.env.template`            | Provides a template to create your own .env                              |
-
-
+### Main Files
+| Item | Description |
+| --- | --- |
+| `README.md` | Provides useful information to present, install, and use the application |
+| `LICENSE` | Specifies the usage rights and licensing terms for the repository |
+| `main.py` | Entry point to execute and launch the FastAPI backend server |
+| `.env.template` | Provides a template to create your own local `.env` configuration file |
 
 ### Folders
+| Folder | Description |
+| --- | --- |
+| `src/` | Contains the Python backend code (FastAPI router, database models, etc.) |
+| `frontend/` | Contains the React/Vite website source code, assets, and components |
+| `kubernetes/` | Contains the YAML deployment files (Ingress, Services, Deployments) |
+| `scripts/` | Contains old scripts used to parse JSON files and initialize the DB |
+| `tests/` | Contains the Python unit tests for the backend |
+| `.github/workflows/` | Contains the CI/CD pipeline configuration (`deploy.yml`) |
 
+> *Note: Before the start of the project, we gathered around 70,000 matches in JSON files. The `scripts/` folder contains the logic we used to initially populate our database. It is not used actively anymore but remains for documentation purposes.*
 
+---
 
+## Unit Tests
 
-### Settings files
+To ensure the backend is working correctly, you can run the test suite. In your terminal (at the root of the project), run the command:
+* `uv run pytest --cov=src tests/`
 
-This repository contains a large number of configuration files for setting the parameters of the various tools used.
-
-Normally, for the purposes of your project, you won't need to modify these files, except for `.env`.
-
-
-
-## :arrow_forward: Unit tests
-
-- [ ] In Git Bash: `uv run pytest --cov=src tests/`
-  - (run every tests and give a total coverage)
+This will execute all tests and provide a total coverage report for the `src` directory.
