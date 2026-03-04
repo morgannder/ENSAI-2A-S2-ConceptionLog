@@ -6,38 +6,34 @@ import GlobalStats from "./components/GlobalStats";
 
 const MAX_HISTORY = 10;
 
-// ── Throttled rank fetcher : sequential with delay to avoid 500 floods ────────
-async function fetchRanksSequentially(players, delay = 10) {
-  const results = new Map();
+// ── Rank fetcher: updates suggestions live as each rank arrives ──────────────
+// onRankLoaded(id, rank, mmr) is called immediately after each player's rank loads
+async function fetchRanksLive(players, onRankLoaded, isCancelled, delay = 60) {
   for (const p of players) {
+    if (isCancelled()) return;
     const id = p.platform_user_id ?? p.id;
     if (!id) continue;
     try {
       const rankData = await getPlayerRank(id);
-      if (rankData) {
-        results.set(id, {
-          rank: rankData.full_rank ?? null,
-          mmr:  rankData.mmr       ?? null,
-        });
-      }
+      if (isCancelled()) return;
+      if (rankData) onRankLoaded(id, rankData.full_rank ?? null, rankData.mmr ?? null);
     } catch {
-      // silently skip — player stays with existing rank
+      // silently skip
     }
     if (delay > 0) await new Promise(r => setTimeout(r, delay));
   }
-  return results;
 }
 
 export default function App() {
-  const [page,              setPage]             = useState("home");
-  const [selectedPlayer,    setSelectedPlayer]   = useState(null);
-  const [searchQuery,       setSearchQuery]      = useState("");
-  const [suggestions,       setSuggestions]      = useState([]);
-  const [loading,           setLoading]          = useState(false);
-  const [loadingPlayer,     setLoadingPlayer]    = useState(false);
-  const [refreshing,        setRefreshing]       = useState(false);
-  const [refreshResult,     setRefreshResult]    = useState(null);
-  const [history,           setHistory]          = useState(() => {
+  const [page,           setPage]           = useState("home");
+  const [selectedPlayer, setSelectedPlayer] = useState(null);
+  const [searchQuery,    setSearchQuery]    = useState("");
+  const [suggestions,    setSuggestions]    = useState([]);
+  const [loading,        setLoading]        = useState(false);
+  const [loadingPlayer,  setLoadingPlayer]  = useState(false);
+  const [refreshing,     setRefreshing]     = useState(false);
+  const [refreshResult,  setRefreshResult]  = useState(null);
+  const [history,        setHistory]        = useState(() => {
     try {
       return JSON.parse(sessionStorage.getItem("rl_history") || "[]");
     } catch {
@@ -45,6 +41,7 @@ export default function App() {
     }
   });
 
+  // Keep a ref to cancel in-flight rank fetches when query changes
   const [rankFetchId, setRankFetchId] = useState(0);
 
   useEffect(() => {
@@ -66,31 +63,22 @@ export default function App() {
           return;
         }
 
-        // 1. On affiche directement toute la liste complète
+        // Show all results with scrollable list
         setSuggestions(results);
 
-        // 2. On fetch les rangs un par un sur cette liste complète (results)
-        const rankMap = await fetchRanksSequentially(results, 60);
-        if (cancelled) return;
-
-        // 3. On met à jour l'affichage au fur et à mesure
-        setSuggestions(prev =>
-          prev.map(p => {
-            const id = p.platform_user_id ?? p.id;
-            const rankInfo = rankMap.get(id);
-            if (!rankInfo) return p;
-            return {
-              ...p,
-              rank: rankInfo.rank ?? p.rank,
-              mmr:  rankInfo.mmr  ?? p.mmr,
-            };
-          })
+        // Fetch ranks live — each one updates the list as soon as it arrives
+        await fetchRanksLive(
+          results,
+          (id, rank, mmr) => {
+            setSuggestions(prev => prev.map(p =>
+              (p.platform_user_id ?? p.id) === id ? { ...p, rank, mmr } : p
+            ));
+          },
+          () => cancelled,
+          60
         );
       })
-      .catch((err) => {
-        console.error("Erreur recherche:", err);
-        if (!cancelled) setSuggestions([]);
-      })
+      .catch(() => { if (!cancelled) setSuggestions([]); })
       .finally(() => { if (!cancelled) setLoading(false); });
 
     return () => { cancelled = true; };
@@ -102,6 +90,7 @@ export default function App() {
   };
 
   const addToHistory = (player) => {
+    // Strip _openedAt before saving — it must always be fresh on open
     const { _openedAt, ...playerToSave } = player;
     setHistory((prev) => {
       const filtered = prev.filter(p => p.platform_user_id !== playerToSave.platform_user_id);
@@ -129,6 +118,7 @@ export default function App() {
     try {
       const platform_user_id = basicPlayer.platform_user_id ?? basicPlayer.id;
 
+      // Fetch rank & stats in parallel — both are optional (fallback gracefully)
       const [rankData, statsData] = await Promise.allSettled([
         getPlayerRank(platform_user_id),
         getPlayerCoreStats(platform_user_id),
@@ -143,16 +133,17 @@ export default function App() {
         platform:  basicPlayer.platform ?? "epic",
         rank:      rank?.full_rank ?? basicPlayer.rank ?? "Unranked",
         mmr:       rank?.mmr       ?? basicPlayer.mmr  ?? 0,
+        // Store a stable key so PlayerPage knows when to re-fetch
         _openedAt: Date.now(),
         coreStats: stats?.data ? {
-          shots:              stats.data.shots              ?? 0,
-          goals:              stats.data.goals              ?? 0,
-          saves:              stats.data.saves              ?? 0,
-          assists:            stats.data.assists            ?? 0,
-          score:              stats.data.score              ?? 0,
+          shots:              stats.data.shots               ?? 0,
+          goals:              stats.data.goals               ?? 0,
+          saves:              stats.data.saves               ?? 0,
+          assists:            stats.data.assists             ?? 0,
+          score:              stats.data.score               ?? 0,
           shootingPercentage: stats.data.shooting_percentage ?? 0,
-          demoInflicted:      stats.data.demo_inflicted     ?? 0,
-          demoTaken:          stats.data.demo_taken         ?? 0,
+          demoInflicted:      stats.data.demo_inflicted      ?? 0,
+          demoTaken:          stats.data.demo_taken          ?? 0,
         } : null,
       };
 
@@ -186,7 +177,7 @@ export default function App() {
         <nav>
           <div className="nav-logo" onClick={() => setPage("home")}>
             <span className="nav-logo-icon">🚀</span>
-            RLCLstats
+            RCLStast
           </div>
           <div className="nav-links">
             <div className={`nav-link ${page === "home"   ? "active" : ""}`} onClick={() => setPage("home")}>Home</div>
@@ -215,6 +206,7 @@ export default function App() {
                   onPlayerClick={openPlayer}
                 />
 
+              {/* ── Refresh Latest Games ── */}
               <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12, margin: "24px 0 0" }}>
                 <button
                   onClick={handleRefreshLatest}
