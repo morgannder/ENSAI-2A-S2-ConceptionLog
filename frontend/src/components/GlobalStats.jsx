@@ -139,7 +139,7 @@ function BarChart({ field, data, loading }) {
       <div style={{ display: "flex", alignItems: "flex-end", gap: 4, height: 110 }}>
         {RANK_GROUPS.map((rank, i) => {
           const val = values[i];
-          const pct = val != null ? ((val - minVal) / range) * 85 + 5 : 0; // 5% min height so bar is always visible
+          const pct = val != null ? ((val - minVal) / range) * 85 + 5 : 0;
           return (
             <div
               key={rank.key}

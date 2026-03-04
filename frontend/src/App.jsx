@@ -17,7 +17,6 @@ async function fetchRanksLive(players, onRankLoaded, isCancelled, delay = 60) {
       if (isCancelled()) return;
       if (rankData) onRankLoaded(id, rankData.full_rank ?? null, rankData.mmr ?? null);
     } catch {
-      // silently skip
     }
     if (delay > 0) await new Promise(r => setTimeout(r, delay));
   }
@@ -32,7 +31,7 @@ export default function App() {
   const [loadingPlayer,  setLoadingPlayer]  = useState(false);
   const [refreshing,     setRefreshing]     = useState(false);
   const [refreshResult,  setRefreshResult]  = useState(null);
-  const [homeKey,        setHomeKey]        = useState(0); // forces home re-mount on logo click
+  const [homeKey,        setHomeKey]        = useState(0);
   const [history,        setHistory]        = useState(() => {
     try {
       return JSON.parse(sessionStorage.getItem("rl_history") || "[]");
@@ -111,7 +110,7 @@ export default function App() {
     setPage("home");
     setSearchQuery("");
     setSuggestions([]);
-    setHomeKey(k => k + 1); // reload home even if already on it
+    setHomeKey(k => k + 1);
   };
 
   const openPlayer = async (basicPlayer) => {
