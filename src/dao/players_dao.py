@@ -111,6 +111,16 @@ class PlayerDAO(metaclass=Singleton):
     def get_players_in_match(self, match_id: int) -> list[dict] | None:
         """
         Récupère tous les joueurs ayant participé à un match, associés à leur couleur d'équipe.
+
+        Parameters
+        ----------
+        match_id : int
+            id du match recherché
+
+        Returns
+        -------
+        list
+            La liste des joueurs ayant participé au match
         """
         connection = self.db_connector.connection
         with connection:

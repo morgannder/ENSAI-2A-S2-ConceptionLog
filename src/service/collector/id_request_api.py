@@ -14,7 +14,13 @@ DUMP_DIR = TEMP_DIR / "file-dump-tmp"
 
 def download_replays_from_list():
     """
-    Run extracted ID list and download each JSON file.
+    Lit la liste des ID extraits dans le fichier id-date-list-temp.json et les
+    télécharge dans  file-dump-tmp
+
+    Returns
+    --------
+    dict
+        Informations concernant la réussite ou l'échec
     """
 
     if not INPUT_LIST.exists():

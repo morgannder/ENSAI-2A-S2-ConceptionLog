@@ -20,7 +20,7 @@ def run_full_update(
     user_input=None, player_id=None, num_input=1, date_max="2024-01-01T00:00:00Z"
 ):
     """
-    Run update based on user playername or user id
+    Met à jour la base à l'aide d'un pseudonyme ou dans id de joueur et de sa plateforme
 
     Parameters
     ----------
@@ -43,11 +43,12 @@ def run_full_update(
 
     Returns
     -------
-        Bool : Réussite / Echec
+    Dict :
+        Informations concernant la réussite ou l'échec
 
-        Raises
-        ------
-        ValueError
+    Raises
+    ------
+    ValueError
 
     """
 
