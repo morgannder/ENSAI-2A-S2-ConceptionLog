@@ -42,7 +42,7 @@ def get_player_rank(platform_id: str) -> RanksDTO:
 
     Returns
     -------
-    dict
+    RanksDTO
         Un dictionnaire contenant le nom du joueur, son platform_id, son rang
         et son rang complet. Si le joueur n'a pas de rang, retourne "Unranked".
 
@@ -69,7 +69,7 @@ def get_player_rank(platform_id: str) -> RanksDTO:
                 player_name=player.name,
                 platform_id=platform_id,
                 rank="Unranked",
-                full_rank="Unrakned",
+                full_rank="Unranked",
             )
 
         return RanksDTO(

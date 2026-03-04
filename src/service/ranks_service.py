@@ -23,12 +23,11 @@ class RanksService(metaclass=Singleton):
         Returns
         -------
         PlayerRankDTO | None
-            Un dictionnaire contenant les informations du rang :
+            Un DTO contenant les informations du rang :
             - tier : le tier du rang (int)
             - division : la division du rang (int)
             - name : le nom d'affichage (ex: "Bronze I")
             - full_name : le nom complet (ex: "Bronze I Division 1")
-            Retourne None si le joueur n'existe pas ou n'a pas de rang.
 
         Raises
         ------
