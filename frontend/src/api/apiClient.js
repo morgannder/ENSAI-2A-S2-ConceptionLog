@@ -2,7 +2,7 @@
  * Client API pour communiquer avec le backend Rocket League Stats
  */
 
-const API_BASE = "/api"; // Utilise le proxy Vite
+const API_BASE = import.meta.env.VITE_API_URL || "/api";
 
 // ── Données statiques des Rangs avec icônes, couleurs et images ────────────
 export const RANKS = [
