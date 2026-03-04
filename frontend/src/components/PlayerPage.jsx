@@ -25,7 +25,9 @@ const getCoreStatsCards = (stats) => {
 async function fetchModeWithRetry(platformId, modeId, maxRetries = 3) {
   for (let attempt = 0; attempt <= maxRetries; attempt++) {
     try {
-      const data  = await getPlayerCoreStats(platformId, modeId);
+      if (attempt > 0) await new Promise(r => setTimeout(r, 400 * Math.pow(2, attempt - 1)));
+      const data = await getPlayerCoreStats(platformId, modeId);
+      if (data === null) return { stats: null, error: null };
       const stats = data?.data ?? data?.stats ?? data ?? null;
       if (stats && typeof stats === "object" && Object.keys(stats).length === 0) {
         return { stats: null, error: null };
@@ -37,17 +39,32 @@ async function fetchModeWithRetry(platformId, modeId, maxRetries = 3) {
         await new Promise(r => setTimeout(r, 300 * Math.pow(2, attempt)));
         continue;
       }
-      if (/404|422/.test(err.message)) return { stats: null, error: null };
-      return { stats: null, error: err.message };
+      return { stats: null, error: null };
     }
   }
-  return { stats: null, error: "Max retries exceeded" };
+  return { stats: null, error: null };
+}
+
+function loadAllModes(pid, cancelRef, setModes) {
+  setModes(GAME_MODES.map(m => ({ id: m.id, stats: null, error: null, loading: true })));
+  GAME_MODES.forEach((mode, idx) => {
+    setTimeout(() => {
+      if (cancelRef.current) return;
+      fetchModeWithRetry(pid, mode.id).then(({ stats, error }) => {
+        if (cancelRef.current) return;
+        setModes(prev => {
+          const next = [...prev];
+          next[idx] = { id: mode.id, stats, error, loading: false };
+          return next;
+        });
+      });
+    }, idx * 300);
+  });
 }
 
 export default function PlayerPage({ player, onBack, onPlayerClick }) {
   const [selectedMode,  setSelectedMode]  = useState("ranked-duels");
-  // Array of slots indexed 0/1/2 matching GAME_MODES — never mutated by async order
-  const [modes, setModes] = useState(
+  const [modes,         setModes]         = useState(
     GAME_MODES.map(m => ({ id: m.id, stats: null, error: null, loading: true }))
   );
   const [refreshing,    setRefreshing]    = useState(false);
@@ -63,22 +80,8 @@ export default function PlayerPage({ player, onBack, onPlayerClick }) {
   useEffect(() => {
     const pid = player.platform_user_id;
     if (!pid) return;
-
     cancelRef.current = false;
-    setModes(GAME_MODES.map(m => ({ id: m.id, stats: null, error: null, loading: true })));
-
-    // Each mode updates ONLY its own index — race conditions impossible
-    GAME_MODES.forEach((mode, idx) => {
-      fetchModeWithRetry(pid, mode.id).then(({ stats, error }) => {
-        if (cancelRef.current) return;
-        setModes(prev => {
-          const next = [...prev];
-          next[idx] = { id: mode.id, stats, error, loading: false };
-          return next;
-        });
-      });
-    });
-
+    loadAllModes(pid, cancelRef, setModes);
     return () => { cancelRef.current = true; };
   }, [player.platform_user_id]);
 
@@ -92,7 +95,15 @@ export default function PlayerPage({ player, onBack, onPlayerClick }) {
         gameCount:      5,
         createdAfter:   "2024-01-01T00:00:00Z",
       });
-      setRefreshResult({ success: true, data: res });
+
+      const newMatches = res?.details?.new_matches_downloaded ?? res?.new_matches_downloaded ?? 0;
+      const total      = res?.details?.total_analysed ?? res?.total_analysed ?? 0;
+
+      setRefreshResult({ success: true, newMatches, total, data: res });
+
+      await new Promise(r => setTimeout(r, 1500));
+      cancelRef.current = false;
+      loadAllModes(player.platform_user_id, cancelRef, setModes);
       setMatchesKey(k => k + 1);
     } catch (err) {
       setRefreshResult({ success: false, message: err.message });
@@ -105,7 +116,6 @@ export default function PlayerPage({ player, onBack, onPlayerClick }) {
   const currentSlot   = modes.find(m => m.id === selectedMode) ?? modes[0];
   const isLoadingMode = currentSlot.loading;
   const currentStats  = currentSlot.stats;
-  const currentError  = currentSlot.error;
   const hasData       = currentStats && Object.keys(currentStats).length > 0;
   const coreCards     = getCoreStatsCards(currentStats);
 
@@ -147,17 +157,22 @@ export default function PlayerPage({ player, onBack, onPlayerClick }) {
           }}>
             {refreshing ? "Fetching..." : "↻ Refresh Games"}
           </button>
+
           {refreshResult && (
-            <div style={{ fontSize: "0.72rem", fontWeight: 600, textAlign: "right", color: refreshResult.success ? "#00ff88" : "#ff6b6b", fontFamily: "'Share Tech Mono', monospace", lineHeight: 1.6 }}>
-              {refreshResult.success ? (
-                <>
-                  <div>{refreshResult.data.details?.new_matches_downloaded ?? 0} new match(es)</div>
-                  <div style={{ color: "var(--muted)" }}>
-                    {refreshResult.data.details?.total_analysed ?? "?"} analysed
-                    {refreshResult.data.latest_match_date ? " · " + new Date(refreshResult.data.latest_match_date).toLocaleDateString() : ""}
-                  </div>
-                </>
-              ) : <div>Error: {refreshResult.message}</div>}
+            <div style={{ fontSize: "0.72rem", fontWeight: 600, textAlign: "right", fontFamily: "'Share Tech Mono', monospace", lineHeight: 1.6 }}>
+              {refreshResult.success ? (<>
+                <div style={{ color: refreshResult.newMatches > 0 ? "#00ff88" : "var(--muted)" }}>
+                  {refreshResult.newMatches} new match(es)
+                </div>
+                <div style={{ color: "var(--muted)" }}>
+                  {refreshResult.total} analysed
+                  {refreshResult.data.latest_match_date
+                    ? " · " + new Date(refreshResult.data.latest_match_date).toLocaleDateString()
+                    : ""}
+                </div>
+              </>) : (
+                <div style={{ color: "#ff6b6b" }}>Error: {refreshResult.message}</div>
+              )}
             </div>
           )}
         </div>
@@ -180,14 +195,12 @@ export default function PlayerPage({ player, onBack, onPlayerClick }) {
           const slot      = modes[idx];
           const isLoading = slot.loading;
           const hasOk     = !isLoading && !!slot.stats;
-          const hasErr    = !isLoading && !!slot.error;
-          const noData    = !isLoading && !slot.stats && !slot.error;
+          const noData    = !isLoading && !slot.stats;
           return (
             <button key={mode.id} className={`game-mode-btn ${selectedMode === mode.id ? "active" : ""}`} onClick={() => setSelectedMode(mode.id)}>
               {mode.label}
               {isLoading && <span style={{ marginLeft: 6, fontSize: "0.65rem", color: "var(--muted)" }}>…</span>}
               {hasOk     && <span style={{ marginLeft: 6, fontSize: "0.65rem", color: "#00ff88" }}>✓</span>}
-              {hasErr    && <span style={{ marginLeft: 6, fontSize: "0.65rem", color: "#ff4e50" }}>✕</span>}
               {noData    && <span style={{ marginLeft: 6, fontSize: "0.65rem", color: "var(--muted)" }}>—</span>}
             </button>
           );
@@ -198,11 +211,6 @@ export default function PlayerPage({ player, onBack, onPlayerClick }) {
         <div style={{ textAlign: "center", padding: "3rem" }}>
           <div className="spinner" style={{ margin: "0 auto 16px" }} />
           <p className="overlay-text">Loading stats…</p>
-        </div>
-      ) : currentError ? (
-        <div style={{ padding: "20px 24px", background: "rgba(255,78,80,0.08)", border: "1px solid rgba(255,78,80,0.25)", borderRadius: 12, color: "#ff6b6b", marginTop: 8 }}>
-          <div style={{ fontWeight: 700, marginBottom: 6 }}>Error loading stats</div>
-          <div style={{ fontSize: "0.8rem", color: "var(--muted)", fontFamily: "'Share Tech Mono', monospace" }}>{currentError}</div>
         </div>
       ) : hasData ? (
         <div className="stats-grid">

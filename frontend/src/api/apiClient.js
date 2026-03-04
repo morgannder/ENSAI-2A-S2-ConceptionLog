@@ -31,11 +31,6 @@ export const RANKS = [
   { name: "Unranked",          fullName: "Unranked",          color: "#888888", glow: "#88888855", icon: "❓", image: "/images/ranks/unranked.png"        },
 ];
 
-/**
- * Extract the base rank name from any API rank string, then find the matching entry.
- * Uses the same regex as PlayerPage: captures "Word(s) + Roman numerals" at the start.
- * e.g. "Platinum II Division 2" → "Platinum II" → RANKS entry for Platinum II
- */
 export function findRankInfo(rankStr) {
   if (!rankStr) return null;
   const extracted = rankStr.match(/^([A-Za-z\s]+\s[IVX]+)/)?.[1]?.trim() || rankStr.trim();
@@ -49,27 +44,20 @@ export function findRankInfo(rankStr) {
 
 // ── Données statiques des Plateformes ────────────────────────────────────────
 export const PLATFORMS = [
-  { id: "epic",    label: "Epic",        icon: "◈",  logo: "/images/platforms/epic.png"  },
-  { id: "steam",   label: "Steam",       icon: "⬡",  logo: "/images/platforms/steam.png" },
-  { id: "psn",     label: "PlayStation", icon: "▲",  logo: "/images/platforms/psn.png"   },
-  { id: "xbox",    label: "Xbox",        icon: "⊞",  logo: "/images/platforms/xbox.png"  },
-  { id: "psynet", label: "Switch", icon: "⊕", logo: "/images/platforms/switch.png" },
+  { id: "epic",   label: "Epic",        icon: "◈", logo: "/images/platforms/epic.png"   },
+  { id: "steam",  label: "Steam",       icon: "⬡", logo: "/images/platforms/steam.png"  },
+  { id: "ps4",    label: "PlayStation", icon: "▲", logo: "/images/platforms/psn.png"    },
+  { id: "xbox",   label: "Xbox",        icon: "⊞", logo: "/images/platforms/xbox.png"   },
+  { id: "psynet", label: "Switch",      icon: "⊕", logo: "/images/platforms/switch.png" },
 ];
 
-// Normalize any platform string the API might return → canonical id
 const PLATFORM_MAPPING = {
-  // Epic
   "epic": "epic", "Epic": "epic", "EPIC": "epic",
-  // Steam
   "steam": "steam", "Steam": "steam", "STEAM": "steam",
-  // PlayStation — accept both ps4 and psn
-  "psn": "psn", "PlayStation": "psn", "PSN": "psn",
-  "ps4": "psn", "PS4": "psn", "playstation": "psn",
-  // Xbox
+  "psn": "ps4", "PlayStation": "ps4", "PSN": "ps4",
+  "ps4": "ps4", "PS4": "ps4", "playstation": "ps4",
   "xbox": "xbox", "Xbox": "xbox", "XBOX": "xbox",
-  // Switch
   "switch": "switch", "Switch": "switch", "SWITCH": "switch",
-  // PsyNet
   "psynet": "psynet", "PsyNet": "psynet", "PSYNET": "psynet",
 };
 
@@ -102,12 +90,17 @@ export async function getPlayerRank(platformId) {
 }
 
 // ── Stats Core ────────────────────────────────────────────────────────────────
+// Returns null (no error) when the backend has no data for this player/mode (404/422)
 export async function getPlayerCoreStats(platformId, gameMode = null) {
   const params = new URLSearchParams({ platform_id: platformId });
   if (gameMode) params.append("game_mode", gameMode);
 
   const url = `${API_BASE}/statscore/player/${platformId}/averagecore?${params}`;
   const response = await fetch(url);
+
+  // No data for this player/mode — treat as empty, not an error
+  if (response.status === 404 || response.status === 422) return null;
+
   if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
   return response.json();
 }
@@ -119,11 +112,11 @@ export async function getPlayerBoostStats(platformId) {
   return response.json();
 }
 
-// ── Player research update ─────────────────────────────────────────────────
+// ── Player research update ────────────────────────────────────────────────────
 export async function requestPlayerUpdate({ playerPlatform, playerId, playerExactPseudo, gameCount = 1, createdAfter = "2024-01-01T00:00:00Z" }) {
   const params = new URLSearchParams();
-  if (playerPlatform) params.append("player_platform", playerPlatform);
-  if (playerId)       params.append("player_id", playerId);
+  if (playerPlatform)    params.append("player_platform", playerPlatform);
+  if (playerId)          params.append("player_id", playerId);
   if (playerExactPseudo) params.append("player_exact_pseudo", playerExactPseudo);
   params.append("game_count", gameCount);
   params.append("created_after", createdAfter);

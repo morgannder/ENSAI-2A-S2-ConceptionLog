@@ -7,7 +7,6 @@ import GlobalStats from "./components/GlobalStats";
 const MAX_HISTORY = 10;
 
 // ── Rank fetcher: updates suggestions live as each rank arrives ──────────────
-// onRankLoaded(id, rank, mmr) is called immediately after each player's rank loads
 async function fetchRanksLive(players, onRankLoaded, isCancelled, delay = 60) {
   for (const p of players) {
     if (isCancelled()) return;
@@ -33,6 +32,7 @@ export default function App() {
   const [loadingPlayer,  setLoadingPlayer]  = useState(false);
   const [refreshing,     setRefreshing]     = useState(false);
   const [refreshResult,  setRefreshResult]  = useState(null);
+  const [homeKey,        setHomeKey]        = useState(0); // forces home re-mount on logo click
   const [history,        setHistory]        = useState(() => {
     try {
       return JSON.parse(sessionStorage.getItem("rl_history") || "[]");
@@ -41,7 +41,6 @@ export default function App() {
     }
   });
 
-  // Keep a ref to cancel in-flight rank fetches when query changes
   const [rankFetchId, setRankFetchId] = useState(0);
 
   useEffect(() => {
@@ -62,11 +61,7 @@ export default function App() {
           setSuggestions([]);
           return;
         }
-
-        // Show all results with scrollable list
         setSuggestions(results);
-
-        // Fetch ranks live — each one updates the list as soon as it arrives
         await fetchRanksLive(
           results,
           (id, rank, mmr) => {
@@ -90,7 +85,6 @@ export default function App() {
   };
 
   const addToHistory = (player) => {
-    // Strip _openedAt before saving — it must always be fresh on open
     const { _openedAt, ...playerToSave } = player;
     setHistory((prev) => {
       const filtered = prev.filter(p => p.platform_user_id !== playerToSave.platform_user_id);
@@ -113,19 +107,34 @@ export default function App() {
     }
   };
 
+  const goHome = () => {
+    setPage("home");
+    setSearchQuery("");
+    setSuggestions([]);
+    setHomeKey(k => k + 1); // reload home even if already on it
+  };
+
   const openPlayer = async (basicPlayer) => {
     setLoadingPlayer(true);
+
+    await new Promise(r => setTimeout(r, 300));
+
     try {
       const platform_user_id = basicPlayer.platform_user_id ?? basicPlayer.id;
 
-      // Fetch rank & stats in parallel — both are optional (fallback gracefully)
+      const hasExistingStats = !!basicPlayer.coreStats;
+
       const [rankData, statsData] = await Promise.allSettled([
         getPlayerRank(platform_user_id),
-        getPlayerCoreStats(platform_user_id),
+        hasExistingStats
+          ? Promise.resolve({ data: basicPlayer.coreStats })
+          : getPlayerCoreStats(platform_user_id),
       ]);
 
-      const rank = rankData.status === "fulfilled" ? rankData.value : null;
+      const rank  = rankData.status  === "fulfilled" ? rankData.value  : null;
       const stats = statsData.status === "fulfilled" ? statsData.value : null;
+
+      const rawStats = stats?.data ?? (hasExistingStats ? basicPlayer.coreStats : null);
 
       const enrichedPlayer = {
         ...basicPlayer,
@@ -133,17 +142,16 @@ export default function App() {
         platform:  basicPlayer.platform ?? "epic",
         rank:      rank?.full_rank ?? basicPlayer.rank ?? "Unranked",
         mmr:       rank?.mmr       ?? basicPlayer.mmr  ?? 0,
-        // Store a stable key so PlayerPage knows when to re-fetch
         _openedAt: Date.now(),
-        coreStats: stats?.data ? {
-          shots:              stats.data.shots               ?? 0,
-          goals:              stats.data.goals               ?? 0,
-          saves:              stats.data.saves               ?? 0,
-          assists:            stats.data.assists             ?? 0,
-          score:              stats.data.score               ?? 0,
-          shootingPercentage: stats.data.shooting_percentage ?? 0,
-          demoInflicted:      stats.data.demo_inflicted      ?? 0,
-          demoTaken:          stats.data.demo_taken          ?? 0,
+        coreStats: rawStats ? {
+          shots:              rawStats.shots               ?? 0,
+          goals:              rawStats.goals               ?? 0,
+          saves:              rawStats.saves               ?? 0,
+          assists:            rawStats.assists             ?? 0,
+          score:              rawStats.score               ?? 0,
+          shootingPercentage: rawStats.shooting_percentage ?? rawStats.shootingPercentage ?? 0,
+          demoInflicted:      rawStats.demo_inflicted      ?? rawStats.demoInflicted      ?? 0,
+          demoTaken:          rawStats.demo_taken          ?? rawStats.demoTaken          ?? 0,
         } : null,
       };
 
@@ -175,19 +183,19 @@ export default function App() {
 
       <div className="app">
         <nav>
-          <div className="nav-logo" onClick={() => setPage("home")}>
+          <div className="nav-logo" onClick={goHome}>
             <span className="nav-logo-icon">🚀</span>
             RCLStast
           </div>
           <div className="nav-links">
-            <div className={`nav-link ${page === "home"   ? "active" : ""}`} onClick={() => setPage("home")}>Home</div>
+            <div className={`nav-link ${page === "home"   ? "active" : ""}`} onClick={goHome}>Home</div>
             <div className={`nav-link ${page === "global" ? "active" : ""}`} onClick={() => setPage("global")}>Global Stats</div>
           </div>
         </nav>
 
         <main>
           {page === "home" && (
-            <div className="fade-in">
+            <div key={homeKey} className="fade-in">
               <div className="hero">
                 <h1 className="hero-title">
                   <span className="line1">TRACK YOUR</span>

@@ -18,21 +18,18 @@ async function getMatchPlayers(matchTeamId) {
   return res.json();
 }
 
-// Step 1: _match_team_id hash → { id (= match_id), playlist_id, ... }
 async function getMatchByMatchTeamId(matchTeamId) {
   const res = await fetch(`${API_BASE}/match/by-match-team/${matchTeamId}`);
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json();
 }
 
-// Step 2: match_id → [{ id, match_id, color, score, ... }, ...]  (2 entries)
 async function getMatchTeamsByMatchId(matchId) {
   const res = await fetch(`${API_BASE}/match_team/match/${matchId}`);
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json();
 }
 
-// Chain: _match_team_id → match_id → both team scores
 async function fetchMatchScore(matchTeamId) {
   try {
     const matchInfo = await getMatchByMatchTeamId(matchTeamId);
@@ -86,7 +83,6 @@ function TeamColumn({ label, players, accentColor, currentPlayerId, onPlayerClic
       ) : players.map(p => {
         const isCurrent   = p.platform_user_id === currentPlayerId;
         const isClickable = !isCurrent && !!p.platform_user_id;
-        const isMvp       = p._mvp === 1 || p._mvp === true;
         return (
           <div
             key={p.id ?? p.platform_user_id}
@@ -96,10 +92,9 @@ function TeamColumn({ label, players, accentColor, currentPlayerId, onPlayerClic
           >
             <RankBadge rankStr={p.rank ?? p.full_rank ?? null} />
             <div style={{ flex: 1, minWidth: 0 }}>
-              <span className="team-player-name" style={{ color: isMvp ? "#ffd700" : isCurrent ? "var(--cyan)" : "var(--text)", display: "block" }}>
+              <span className="team-player-name" style={{ color: isCurrent ? "var(--cyan)" : "var(--text)", display: "block" }}>
                 {p.name}
               </span>
-              {isMvp && <span style={{ fontSize: "0.58rem", fontWeight: 800, color: "#ffd700", letterSpacing: "0.1em", textTransform: "uppercase", opacity: 0.85 }}>mvp</span>}
             </div>
             {p.score != null && (
               <span style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "0.7rem", color: "#ffd700", marginLeft: "auto", flexShrink: 0 }}>
@@ -117,10 +112,10 @@ function TeamColumn({ label, players, accentColor, currentPlayerId, onPlayerClic
 
 // ── MatchDetailModal ──────────────────────────────────────────────────────────
 function MatchDetailModal({ match, onClose, onPlayerClick, currentPlayerId }) {
-  const [players,  setPlayers]  = useState(null);
-  const [loadingPl,setLoadingPl]= useState(true);
-  const [score,    setScore]    = useState(null);
-  const [errorPl,  setErrorPl]  = useState(null);
+  const [players,   setPlayers]   = useState(null);
+  const [loadingPl, setLoadingPl] = useState(true);
+  const [score,     setScore]     = useState(null);
+  const [errorPl,   setErrorPl]   = useState(null);
 
   const matchTeamId   = match._match_team_id;
   const duration      = formatDuration(match._start_time, match._end_time);
@@ -154,7 +149,6 @@ function MatchDetailModal({ match, onClose, onPlayerClick, currentPlayerId }) {
       <div className="match-detail-modal fade-in" onClick={e => e.stopPropagation()}>
         <button className="modal-close" onClick={onClose} style={{ position: "absolute", top: 16, right: 16 }}>✕</button>
 
-        {/* ── Score hero ── */}
         <div style={{ textAlign: "center", marginBottom: 24, paddingRight: 32 }}>
           {/* meta row */}
           <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 10, marginBottom: 16, flexWrap: "wrap" }}>
@@ -200,23 +194,6 @@ function MatchDetailModal({ match, onClose, onPlayerClick, currentPlayerId }) {
           ) : loadingPl ? (
             <div style={{ fontFamily: "'Share Tech Mono', monospace", fontSize: "0.78rem", color: "var(--muted)", marginBottom: 14 }}>Loading score…</div>
           ) : null}
-
-          {/* MVP badge */}
-          {(() => {
-            const allP = players ? Object.values(players).filter(Boolean) : [];
-            const mvp  = allP.find(p => p._mvp === 1 || p._mvp === true);
-            return mvp ? (
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 7, marginBottom: 14 }}>
-                <span style={{ fontSize: "1rem" }}>🏆</span>
-                <span style={{ fontSize: "0.7rem", fontWeight: 800, color: "#ffd700", letterSpacing: "0.12em", textTransform: "uppercase" }}>MVP</span>
-                <span style={{
-                  fontFamily: "'Exo 2', sans-serif", fontSize: "0.85rem", fontWeight: 800, color: "#ffd700",
-                  background: "rgba(255,215,0,0.1)", border: "1px solid rgba(255,215,0,0.3)",
-                  borderRadius: 6, padding: "2px 10px",
-                }}>{mvp.name}</span>
-              </div>
-            ) : null;
-          })()}
 
           {/* personal stats row */}
           <div style={{ display: "flex", justifyContent: "center", gap: 20, flexWrap: "wrap" }}>
@@ -306,11 +283,8 @@ function MatchCard({ match, index, onClick }) {
 
   return (
     <div className="match-card" style={{ "--delay": `${index * 60}ms`, "--car-color": carColor, cursor: "pointer" }} onClick={() => onClick(match)}>
-      {/* left accent bar */}
       <div className="match-accent-bar" />
-
       <div className="match-content">
-        {/* top row: id + duration + MVP badge */}
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10, flexWrap: "wrap" }}>
           <span className="match-id">#{displayId}</span>
           <span style={{ width: 3, height: 3, borderRadius: "50%", background: "var(--muted)", opacity: 0.4, flexShrink: 0 }} />
@@ -326,8 +300,6 @@ function MatchCard({ match, index, onClick }) {
             Details <span style={{ fontSize: "0.8rem" }}>→</span>
           </span>
         </div>
-
-        {/* bottom row: car + personal score */}
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
             <span style={{ fontSize: "1rem" }}>🚗</span>
@@ -408,8 +380,7 @@ export default function RecentMatches({ player, onPlayerClick }) {
           width: 3px; flex-shrink: 0;
           background: var(--car-color, var(--cyan));
           box-shadow: 0 0 8px var(--car-color, var(--cyan));
-          opacity: 0.7;
-          transition: opacity 0.2s;
+          opacity: 0.7; transition: opacity 0.2s;
         }
         .match-card:hover .match-accent-bar { opacity: 1; }
         .match-content { flex: 1; background: var(--card); padding: 14px 18px; }

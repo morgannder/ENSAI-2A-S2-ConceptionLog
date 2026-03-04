@@ -4,13 +4,23 @@ import { PLATFORMS, RANKS, requestPlayerUpdate } from "../api/apiClient";
 const PLATFORM_LOGOS = {
   epic:   "/images/platforms/epic.png",
   steam:  "/images/platforms/steam.png",
-  psn:    "/images/platforms/psn.png",
+  ps4:    "/images/platforms/psn.png",
   xbox:   "/images/platforms/xbox.png",
   switch: "/images/platforms/switch.png",
 };
 
+const MODAL_PLATFORMS = [
+  { id: "epic",    label: "Epic"        },
+  { id: "steam",   label: "Steam"       },
+  { id: "ps4",     label: "PlayStation" },
+  { id: "xbox",    label: "Xbox"        },
+  { id: "psynet",  label: "PsyNet"      },
+  { id: "unknown", label: "Unknown"     },
+];
+
 // ── Modal "Add your games" ────────────────────────────────────────────────────
-function AddGamesModal({ onClose, onPlayerClick }) {
+function AddGamesModal({ onClose }) {
+  const [mode,         setMode]         = useState("pseudo");
   const [platform,     setPlatform]     = useState("epic");
   const [playerId,     setPlayerId]     = useState("");
   const [pseudo,       setPseudo]       = useState("");
@@ -19,42 +29,39 @@ function AddGamesModal({ onClose, onPlayerClick }) {
   const [loading,      setLoading]      = useState(false);
   const [result,       setResult]       = useState(null);
 
-  const MODAL_PLATFORMS = [
-    { id: "epic",    label: "Epic"        },
-    { id: "steam",   label: "Steam"       },
-    { id: "ps4",     label: "PlayStation" },
-    { id: "xbox",    label: "Xbox"        },
-    { id: "psynet",  label: "PsyNet"      },
-    { id: "unknown", label: "Unknown"     },
-  ];
+  function switchMode(m) {
+    setMode(m);
+    setResult(null);
+    setPseudo("");
+    setPlayerId("");
+    setPlatform("epic");
+  }
 
   async function handleSubmit() {
-    if (!playerId.trim() && !pseudo.trim()) {
-      setResult({ success: false, message: "Please fill in at least Player ID or Exact Pseudo." });
+    setResult(null);
+    if (mode === "pseudo" && !pseudo.trim()) {
+      setResult({ success: false, message: "Please enter a pseudo." });
       return;
     }
-    if (playerId.trim() && !platform) {
-      setResult({ success: false, message: "Platform is required when using a Player ID." });
-      return;
+    if (mode === "id") {
+      if (!playerId.trim()) { setResult({ success: false, message: "Please enter a Player ID." }); return; }
+      if (!platform)        { setResult({ success: false, message: "Please select a platform." }); return; }
     }
     setLoading(true);
-    setResult(null);
     try {
       const res = await requestPlayerUpdate({
-        playerPlatform:    playerId.trim() ? platform : undefined,
-        playerId:          playerId.trim() || undefined,
-        playerExactPseudo: pseudo.trim()   || undefined,
+        playerPlatform:    mode === "id" ? platform : undefined,
+        playerId:          mode === "id" ? playerId.trim() : undefined,
+        playerExactPseudo: mode === "pseudo" ? pseudo.trim() : undefined,
         gameCount,
-        createdAfter:      `${createdAfter}T00:00:00Z`,
+        createdAfter: `${createdAfter}T00:00:00Z`,
       });
-
       const newMatches = res?.details?.new_matches_downloaded ?? res?.new_matches_downloaded ?? 0;
       const total      = res?.details?.total_analysed ?? res?.total_analysed ?? null;
-
       if (newMatches > 0) {
-        setResult({ success: true, message: `${newMatches} new match(es) added to the database${total != null ? ` (${total} analysed)` : ""}.` });
+        setResult({ success: true,  message: `${newMatches} new match(es) added to the database${total != null ? ` (${total} analysed)` : ""}.` });
       } else {
-        setResult({ success: false, message: `No new matches found${total != null ? ` — ${total} analysed, already up to date` : ""}.` });
+        setResult({ success: false, message: `No new matches found — ${total ?? 0} analysed, already up to date.` });
       }
     } catch (err) {
       setResult({ success: false, message: err.message });
@@ -63,50 +70,73 @@ function AddGamesModal({ onClose, onPlayerClick }) {
     }
   }
 
+  const tabBtn = (id, label) => (
+    <button onClick={() => switchMode(id)} style={{
+      flex: 1, padding: "9px 0", borderRadius: 8, cursor: "pointer",
+      border: `1px solid ${mode === id ? "var(--cyan)" : "var(--border)"}`,
+      background: mode === id ? "rgba(0,229,255,0.1)" : "var(--bg2)",
+      color: mode === id ? "var(--cyan)" : "var(--muted)",
+      fontFamily: "'Exo 2', sans-serif", fontWeight: 700, fontSize: "0.8rem",
+      letterSpacing: "0.06em", textTransform: "uppercase", transition: "all .2s",
+    }}>{label}</button>
+  );
+
   return (
     <div className="modal-overlay" onClick={onClose}>
       <div className="modal-box add-games-modal fade-in" onClick={(e) => e.stopPropagation()}>
-        <div className="modal-header" style={{ marginBottom: "20px" }}>
-          <div style={{ fontSize: "1.6rem" }}>🚀</div>
-          <div>
-            <div className="modal-title" style={{ color: "var(--cyan)", fontSize: "1.2rem" }}>
-              Add your games
-            </div>
+        <div style={{ marginBottom: "20px", position: "relative" }}>
+          <div style={{ textAlign: "center" }}>
+            <div className="modal-title" style={{ color: "var(--cyan)", fontSize: "1.2rem" }}>Add your games</div>
             <div style={{ fontSize: "0.78rem", color: "var(--muted)", marginTop: 2 }}>
               Register your account to populate our database
             </div>
           </div>
-          <button className="modal-close" onClick={onClose}>✕</button>
+          <button className="modal-close" onClick={onClose} style={{ position: "absolute", top: 0, right: 0 }}>✕</button>
+        </div>
+
+        <div style={{ display: "flex", gap: 8, marginBottom: 20 }}>
+          {tabBtn("pseudo", "By Pseudo")}
+          {tabBtn("id",     "By Player ID")}
         </div>
 
         <div className="add-games-form">
-          <div className="form-group">
-            <label className="form-label">Platform</label>
-            <select className="form-select" value={platform} onChange={(e) => setPlatform(e.target.value)}>
-              {MODAL_PLATFORMS.map((p) => (
-                <option key={p.id} value={p.id}>{p.label}</option>
-              ))}
-            </select>
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Player ID <span className="form-hint">(optional)</span></label>
-            <input className="form-input" placeholder="e.g. abc123xyz" value={playerId} onChange={(e) => setPlayerId(e.target.value)} />
-          </div>
-
-          <div className="form-group">
-            <label className="form-label">Exact Pseudo <span className="form-hint">(optional)</span></label>
-            <input className="form-input" placeholder="e.g. Squishy" value={pseudo} onChange={(e) => setPseudo(e.target.value)} />
-          </div>
+          {mode === "pseudo" ? (
+            <div className="form-group">
+              <label className="form-label">Exact Pseudo <span style={{ color: "#ff4e50", fontSize: "0.65rem" }}>required</span></label>
+              <input
+                className="form-input" placeholder="e.g. Squishy" autoFocus
+                value={pseudo} onChange={(e) => setPseudo(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
+              />
+            </div>
+          ) : (<>
+            <div className="form-group">
+              <label className="form-label">Platform <span style={{ color: "#ff4e50", fontSize: "0.65rem" }}>required</span></label>
+              <select className="form-select" value={platform} onChange={(e) => setPlatform(e.target.value)}>
+                {MODAL_PLATFORMS.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
+              </select>
+            </div>
+            <div className="form-group">
+              <label className="form-label">Player ID <span style={{ color: "#ff4e50", fontSize: "0.65rem" }}>required</span></label>
+              <input
+                className="form-input" placeholder="e.g. abc123xyz" autoFocus
+                value={playerId} onChange={(e) => setPlayerId(e.target.value)}
+                onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
+              />
+            </div>
+          </>)}
 
           <div className="form-group">
             <label className="form-label">Games to import <span className="form-hint">(max 200)</span></label>
-            <input
-              type="number" className="form-input" min={1} max={200} value={gameCount}
-              onChange={(e) => setGameCount(Math.min(200, Math.max(1, Number(e.target.value))))}
-            />
+            <div className="number-stepper">
+              <button type="button" className="stepper-btn" onClick={() => setGameCount(v => Math.max(1, v - 1))}>−</button>
+              <input
+                type="number" min={1} max={200} value={gameCount}
+                onChange={(e) => setGameCount(Math.min(200, Math.max(1, Number(e.target.value))))}
+              />
+              <button type="button" className="stepper-btn" onClick={() => setGameCount(v => Math.min(200, v + 1))}>+</button>
+            </div>
           </div>
-
           <div className="form-group">
             <label className="form-label">Games after</label>
             <input type="date" className="form-input" value={createdAfter} onChange={(e) => setCreatedAfter(e.target.value)} />
@@ -178,40 +208,22 @@ export default function SearchBar({ query, setQuery, onSearch, suggestions, onSu
       </div>
 
       {suggestions.length > 0 && (
-        <div
-          className="search-suggestions"
-          style={{
-            maxHeight: "240px", /* Forcer l'apparition de la barre de défilement */
-            overflowY: "auto",  /* Active le défilement vertical */
-            overflowX: "hidden" /* Empêche le scroll horizontal indésirable */
-          }}
-        >
+        <div className="search-suggestions" style={{ maxHeight: "240px", overflowY: "auto", overflowX: "hidden" }}>
           {suggestions.map((p) => {
-            const playerId = p.platform_user_id || p.id;
+            const playerId    = p.platform_user_id || p.id;
             const currentRank = p.rank || "Unranked";
-
-            const rankMatch = currentRank.match(/^([A-Za-z\s]+\s[IVX]+)/)?.[1] || currentRank;
-            const rankInfo = RANKS.find(r => r.fullName === rankMatch || r.name === rankMatch);
-            const platInfo = PLATFORMS.find(pl => pl.id === p.platform);
-            const platLogo = PLATFORM_LOGOS[p.platform];
-
+            const rankMatch   = currentRank.match(/^([A-Za-z\s]+\s[IVX]+)/)?.[1] || currentRank;
+            const rankInfo    = RANKS.find(r => r.fullName === rankMatch || r.name === rankMatch);
+            const platInfo    = PLATFORMS.find(pl => pl.id === p.platform);
+            const platLogo    = PLATFORM_LOGOS[p.platform];
             return (
-              <div
-                key={playerId || p.name}
-                className="suggestion-item"
-                onClick={() => onSuggestionClick(p)}
-                style={{ display: "flex", alignItems: "center", gap: "10px" }}
-              >
-                {/* Rank image ou icon */}
+              <div key={playerId || p.name} className="suggestion-item" onClick={() => onSuggestionClick(p)}
+                style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                 {rankInfo?.image
                   ? <img src={rankInfo.image} alt={currentRank} style={{ width: 22, height: 22, objectFit: "contain" }} />
                   : <span>{rankInfo?.icon || "❓"}</span>
                 }
-
-                {/* Pseudo du joueur */}
                 <span style={{ fontWeight: 700 }}>{p.name}</span>
-
-                {/* Plateforme */}
                 <span className="suggestion-platform">
                   {platLogo
                     ? <img src={platLogo} alt={platInfo?.label || p.platform} style={{ width: 12, height: 12, objectFit: "contain", verticalAlign: "middle" }} />
@@ -219,18 +231,9 @@ export default function SearchBar({ query, setQuery, onSearch, suggestions, onSu
                   }
                   {" "}{platInfo?.label || p.platform || "Unknown"}
                 </span>
-
-                {/* ID du joueur aligné tout à droite */}
-                <span style={{
-                  marginLeft: "auto",
-                  fontSize: "0.75rem",
-                  color: "var(--muted)",
-                  fontFamily: "monospace"
-                }}>
+                <span style={{ marginLeft: "auto", fontSize: "0.75rem", color: "var(--muted)", fontFamily: "monospace" }}>
                   {playerId}
                 </span>
-
-                {/* MMR (s'il existe) */}
                 {p.mmr && <span className="suggestion-mmr">{p.mmr} MMR</span>}
               </div>
             );
@@ -252,9 +255,7 @@ export default function SearchBar({ query, setQuery, onSearch, suggestions, onSu
         </span>
       </div>
 
-      {showModal && (
-        <AddGamesModal onClose={() => setShowModal(false)} onPlayerClick={onPlayerClick} />
-      )}
+      {showModal && <AddGamesModal onClose={() => setShowModal(false)} />}
     </div>
   );
 }

@@ -147,6 +147,47 @@ nav {
 }
 .suggestion-mmr { margin-left: auto; color: var(--muted); font-size: 0.8rem; font-family: 'Share Tech Mono', monospace; }
 
+/* ── Number input — harmonized spinners ── */
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  appearance: none;
+  margin: 0;
+}
+
+/* Custom stepper wrapper — used in the modal */
+.number-stepper {
+  display: flex; align-items: stretch;
+  background: var(--bg2); border: 1px solid var(--border); border-radius: 8px;
+  overflow: hidden; transition: border-color 0.2s, box-shadow 0.2s;
+}
+.number-stepper:focus-within {
+  border-color: rgba(0,229,255,0.5);
+  box-shadow: 0 0 0 3px rgba(0,229,255,0.08);
+}
+.number-stepper input {
+  flex: 1; background: transparent; border: none; outline: none;
+  color: var(--text); font-family: 'Exo 2', sans-serif; font-size: 0.9rem;
+  padding: 10px 14px; text-align: center; min-width: 0;
+  -moz-appearance: textfield;
+}
+.number-stepper input::-webkit-outer-spin-button,
+.number-stepper input::-webkit-inner-spin-button { -webkit-appearance: none; }
+.stepper-btn {
+  width: 36px; flex-shrink: 0;
+  background: var(--bg3); border: none; border-left: 1px solid var(--border);
+  color: var(--muted); font-size: 1rem; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  transition: background 0.15s, color 0.15s;
+  font-family: monospace;
+}
+.stepper-btn:first-child { border-left: none; border-right: 1px solid var(--border); }
+.stepper-btn:hover { background: rgba(0,229,255,0.08); color: var(--cyan); }
+.stepper-btn:active { background: rgba(0,229,255,0.15); }
+
 /* ── Leaderboard ── */
 .leaderboard { background: var(--card); border-radius: 16px; border: 1px solid var(--border); overflow: hidden; margin-bottom: 48px; }
 .lb-row {
@@ -296,7 +337,6 @@ nav {
 .modal-stat-label { font-size: 0.65rem; color: var(--muted); text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 4px; }
 .modal-stat-value { font-size: 1.3rem; font-weight: 800; font-family: 'Share Tech Mono', monospace; }
 
-/* Animations */
 /* Game mode tabs */
 .game-mode-tabs {
   display: flex; gap: 1rem; margin-bottom: 2rem; flex-wrap: wrap;
@@ -323,9 +363,7 @@ nav {
   border: 1px solid var(--border); border-radius: 16px; padding: 40px;
   margin-top: 2rem;
 }
-.core-stats-container .stats-grid {
-  margin-bottom: 0;
-}
+.core-stats-container .stats-grid { margin-bottom: 0; }
 
 /* Loading Overlay */
 .stats-overlay {
@@ -342,9 +380,7 @@ nav {
   border-radius: 50%; animation: spin 1s linear infinite;
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
-}
+@keyframes spin { to { transform: rotate(360deg); } }
 
 .overlay-text {
   margin-top: 20px; color: var(--cyan);
@@ -357,7 +393,6 @@ nav {
   50% { opacity: 1; }
 }
 
-/* Loading state */
 .loading-text {
   text-align: center; padding: 2rem; color: var(--muted);
   font-size: 0.95rem; letter-spacing: 0.05em;
