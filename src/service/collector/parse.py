@@ -21,15 +21,6 @@ Session = sessionmaker(bind=engine)
 def generate_hash_from_list_item(item):
     """
     Génère un ID unique à partir des joueurs, du temps de la partie et du score.
-    Parameters
-    ----------
-    data : dict
-        dictionnaire contenant toute une partie
-
-    Returns
-    -------
-    str
-        Hash (qui sera l'ID) généré à partir des méta données du match
     """
     p_ids = []
     for side in ["blue", "orange"]:
@@ -40,8 +31,16 @@ def generate_hash_from_list_item(item):
 
     p_ids.sort()
 
-    blue_score = item.get("blue", {}).get("goals", 0)
-    orange_score = item.get("orange", {}).get("goals", 0)
+    b_team = item.get("blue", {})
+    blue_score = b_team.get("goals")
+    if blue_score is None:
+        blue_score = b_team.get("stats", {}).get("core", {}).get("goals", 0)
+
+    o_team = item.get("orange", {})
+    orange_score = o_team.get("goals")
+    if orange_score is None:
+        orange_score = o_team.get("stats", {}).get("core", {}).get("goals", 0)
+
     duration = item.get("duration", 0)
 
     raw_str = f"{''.join(p_ids)}_{duration}_{blue_score}_{orange_score}"
