@@ -53,7 +53,7 @@ class BallchasingClient:
         params = {
             "created-after": created_after,
             "count": count,
-            "sort-by": "replay-date",
+            "sort-by": "upload-date",
             "sort-dir": "desc",
         }
 
