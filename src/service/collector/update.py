@@ -56,7 +56,7 @@ def run_full_update(
     players_dao = PlayerDAO()
 
     if num_input > 200 or num_input < 1:
-        num_input = 200
+        return "compteur de game à chercher invalide (must be between 1 and 200)"
 
     raw_list = client.search_games(
         player_name=user_input,
