@@ -55,7 +55,7 @@ def run_full_update(
     client = BallchasingClient()
     players_dao = PlayerDAO()
 
-    if num_input > 200:
+    if num_input > 200 or num_input < 1:
         num_input = 200
 
     raw_list = client.search_games(
